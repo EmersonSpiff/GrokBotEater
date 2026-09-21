@@ -631,6 +631,7 @@ final class StatusBarController: NSObject {
 
         let appView = MainAppView()
             .environmentObject(usageStore)
+            .environmentObject(grokBotUsageStore)
             .environmentObject(themeStore)
             .environmentObject(settingsStore)
             .environmentObject(updateStore)
