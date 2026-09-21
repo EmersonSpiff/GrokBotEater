@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsSectionView: View {
     @EnvironmentObject private var usageStore: UsageStore
+    @EnvironmentObject private var grokBotUsageStore: GrokBotUsageStore
     @EnvironmentObject private var settingsStore: SettingsStore
     @EnvironmentObject private var themeStore: ThemeStore
     @EnvironmentObject private var updateStore: UpdateStore
@@ -33,40 +34,44 @@ struct SettingsSectionView: View {
                     cardLabel(String(localized: "settings.tab.connection"))
                     HStack(spacing: 8) {
                         Circle()
-                            .fill(usageStore.hasConfig && !usageStore.isDisconnected ? Color.green : Color.red)
+                            .fill(grokConnected ? Color.green : Color.red)
                             .frame(width: 8, height: 8)
-                        Text(usageStore.hasConfig && !usageStore.isDisconnected
+                        Text(grokConnected
                              ? String(localized: "settings.connected")
                              : String(localized: "settings.disconnected"))
                             .font(.system(size: 13))
                             .foregroundStyle(DS.Palette.textPrimary)
                         Spacer()
-                        if isImporting {
+                        if isImporting || grokBotUsageStore.isLoading {
                             ProgressView().scaleEffect(0.6)
                         }
                         Button(String(localized: "settings.redetect")) {
-                            connectAutoDetect()
+                            reconnectGrokBot()
                         }
                         .buttonStyle(.plain)
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(.blue)
+                        .disabled(isImporting || grokBotUsageStore.isLoading)
                     }
+                    Text(grokBotUsageStore.statusMessage)
+                        .font(.system(size: 11))
+                        .foregroundStyle(DS.Palette.textSecondary)
                     if let message = importMessage {
                         Text(message)
                             .font(.system(size: 11))
                             .foregroundStyle(importSuccess ? .green : .orange)
                     }
-                    if usageStore.errorState == .rateLimited {
+                    if grokBotUsageStore.errorState == .rateLimited {
                         VStack(alignment: .leading, spacing: 3) {
                             Label {
-                                Text("error.banner.apiunavailable.settings")
+                                Text(String(localized: "error.banner.apiunavailable.settings"))
                                     .font(.system(size: 11))
                             } icon: {
                                 Image(systemName: "icloud.slash")
                                     .font(.system(size: 10))
                             }
                             .foregroundStyle(.orange.opacity(0.8))
-                            if let last = usageStore.lastUpdate {
+                            if let last = grokBotUsageStore.lastUpdate {
                                 Text(String(format: String(localized: "error.banner.lastupdate"),
                                             last.formatted(.relative(presentation: .named))))
                                     .font(.system(size: 10))
@@ -356,28 +361,29 @@ struct SettingsSectionView: View {
         return "\(minutes) min"
     }
 
-    private func connectAutoDetect() {
+    /// True when Grok Bot session is usable (cookie + successful usage read).
+    private var grokConnected: Bool {
+        grokBotUsageStore.hasGrokBot
+            || (grokBotUsageStore.lastUpdate != nil && !grokBotUsageStore.errorState.hasError)
+    }
+
+    private func reconnectGrokBot() {
         isImporting = true
         importMessage = nil
-        guard settingsStore.credentialsTokenExists() else {
-            isImporting = false
-            importMessage = String(localized: "connect.noclaudecode")
-            importSuccess = false
-            return
-        }
+        testResult = nil
         Task {
-            let result = await usageStore.connectAutoDetect()
-            isImporting = false
+            let result = await grokBotUsageStore.testConnection()
             if result.success {
+                await grokBotUsageStore.refresh(force: true)
                 importMessage = String(localized: "connect.oauth.success")
                 importSuccess = true
-                usageStore.proxyConfig = settingsStore.proxyConfig
-                usageStore.reloadConfig(thresholds: themeStore.thresholds)
-                themeStore.syncToSharedFile()
             } else {
+                grokBotUsageStore.reloadConfig()
                 importMessage = result.message
                 importSuccess = false
             }
+            testResult = result
+            isImporting = false
         }
     }
 }
