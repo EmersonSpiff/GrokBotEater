@@ -926,3 +926,8 @@
 "widget.grokBot.unavailable" = "L'usage Grok Bot n'est pas disponible pour ce plan";
 "widget.title.grokBot" = "Grok Bot";
 "widget.description.grokBot" = "Usage hebdomadaire Grok Bot depuis ta session Cursor";
+
+"history.coming.title" = "Historique";
+"history.coming.subtitle" = "Usage Grok Bot dans le temps";
+"history.coming.badge" = "Bientôt";
+"history.coming.body" = "Cet onglet montrait les jetons Claude Code. L’historique Grok Bot n’est pas encore branché.";
