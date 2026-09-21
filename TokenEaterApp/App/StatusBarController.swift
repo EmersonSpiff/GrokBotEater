@@ -206,37 +206,19 @@ final class StatusBarController: NSObject {
     }
 
     private func bootstrapRefresh() {
-        usageStore.proxyConfig = settingsStore.proxyConfig
-        usageStore.pacingMargin = settingsStore.pacingMargin
-        usageStore.pacingSchedule = settingsStore.pacingSchedule
-        usageStore.refreshIntervalSeconds = TimeInterval(settingsStore.refreshInterval)
-        usageStore.notifTogglesProvider = { [weak self] in self?.makeNotificationToggles() }
+        // GrokBotEater: do NOT refresh Claude UsageStore / TokenProvider.
+        // That path shells out to `/usr/bin/security` and trips Keychain
+        // password prompts on every poll — useless for Grok Bot sand-usage.
         vendorStatusStore.notifTogglesProvider = { [weak self] in self?.makeNotificationToggles() }
         vendorStatusStore.healthyPollInterval = TimeInterval(settingsStore.statusPollInterval)
-        usageStore.reloadConfig(thresholds: themeStore.thresholds)
-        usageStore.startAutoRefresh(thresholds: themeStore.thresholds)
         themeStore.syncToSharedFile()
-        
-        // Grok Bot refresh
+
         grokBotUsageStore.refreshIntervalSeconds = TimeInterval(settingsStore.refreshInterval)
         grokBotUsageStore.reloadConfig()
         grokBotUsageStore.startAutoRefresh(interval: TimeInterval(settingsStore.refreshInterval))
 
-        // Monitor token files (credentials + config.json) for changes
-        tokenFileMonitor.startMonitoring()
-        tokenFileMonitor.tokenChanged
-            .receive(on: RunLoop.main)
-            .sink { [weak self] in
-                guard let self else { return }
-                self.usageStore.handleTokenChange()
-                Task {
-                    await self.usageStore.refresh(force: true)
-                    await self.grokBotUsageStore.refresh(force: true)
-                }
-            }
-            .store(in: &cancellables)
-
-        // Refresh after wake from sleep
+        // Do not monitor Claude credential files — avoids Keychain ACL prompts.
+        // Refresh Grok Bot after wake only.
         NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.screensDidWakeNotification,
             object: nil,
@@ -244,7 +226,6 @@ final class StatusBarController: NSObject {
         ) { [weak self] _ in
             guard let self else { return }
             Task { @MainActor in
-                await self.usageStore.refreshIfStale()
                 await self.grokBotUsageStore.refresh(force: false)
             }
         }
@@ -396,7 +377,7 @@ final class StatusBarController: NSObject {
             keyEquivalent: "r"
         )
         refresh.target = self
-        refresh.isEnabled = !usageStore.isLoading
+        refresh.isEnabled = !grokBotUsageStore.isLoading
         menu.addItem(refresh)
 
         let openDashboard = NSMenuItem(
@@ -521,7 +502,6 @@ final class StatusBarController: NSObject {
 
     @objc private func contextRefresh() {
         Task {
-            await usageStore.refresh(force: true)
             await grokBotUsageStore.refresh(force: true)
         }
     }

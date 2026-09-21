@@ -449,7 +449,7 @@ enum MenuBarRenderer {
 
         let s = NSMutableAttributedString()
         // Match menu-bar height (~22pt); Claude's sun sits near full height.
-        let iconHeight: CGFloat = 18
+        let iconHeight: CGFloat = 20
         if let icon = menuBarGrokBotIcon(side: iconHeight) {
             let attachment = NSTextAttachment()
             attachment.image = icon
