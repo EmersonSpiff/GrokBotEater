@@ -161,98 +161,11 @@ final class UsageStore: ObservableObject {
     }
 
     func refresh(thresholds: UsageThresholds = .default, force: Bool = false) async {
-        // Prevent concurrent refreshes
-        guard !isLoading else { return }
-
-        // Resolve token
-        guard let token = tokenProvider.currentToken() else {
-            hasConfig = false
-            errorState = .tokenUnavailable
-            return
-        }
-        hasConfig = true
-
-        // Decay fast mode after 10 minutes
-        if currentSpeed == .fast, let start = fastModeStart,
-           Date().timeIntervalSince(start) > 600 {
-            currentSpeed = .normal
-            fastModeStart = nil
-        }
-
-        // Interval check using currentSpeed
-        if !force, let last = lastUpdate,
-           Date().timeIntervalSince(last) < effectiveInterval {
-            return
-        }
-
-        // Respect Retry-After from previous 429 response
-        if !force, let retryAfter = retryAfterDate, Date() < retryAfter {
-            return
-        }
-
-        isLoading = true
-        defer { isLoading = false }
-
-        do {
-            let usage = try await repository.refreshUsage(token: token, proxyConfig: proxyConfig)
-            applySuccess(usage: usage)
-        } catch let error as APIError {
-            lastAPIError = error.diagnosticSnapshot
-            switch error {
-            case .tokenExpired, .noToken:
-                // Invalidate cached token so next read re-checks Keychain for a fresh one
-                tokenProvider.invalidateToken()
-                // Retry once with a fresh token
-                if let freshToken = tokenProvider.currentToken(), freshToken != token {
-                    do {
-                        let usage = try await repository.refreshUsage(token: freshToken, proxyConfig: proxyConfig)
-                        applySuccess(usage: usage)
-                        return
-                    } catch {
-                        // Retry also failed - fall through to set error
-                    }
-                }
-                errorState = .tokenUnavailable
-                if let toggles = notifTogglesProvider?() {
-                    notificationService.notifyTokenExpired(toggle: toggles.tokenExpired)
-                }
-            case .rateLimited(let retryAfter, _, _):
-                currentSpeed = .slow
-                // /api/oauth/usage returns 429 with Retry-After: 0 (or no header)
-                // when the throttle kicks in. Anthropic has known issues making
-                // this endpoint return persistent 429s for hours with no useful
-                // Retry-After (see anthropics/claude-code#31637 + #31021).
-                //
-                // Strategy: if the server gives us a real positive Retry-After
-                // we honor it. Otherwise use exponential backoff capped at 6h.
-                // Earlier passes (30 min, 1h, 2h, 4h) recover quickly when the
-                // throttle lifts on its own.
-                let result = RateLimitBackoff.nextRetryDate(
-                    consecutiveRateLimits: consecutiveRateLimits,
-                    serverRetryAfter: retryAfter
-                )
-                consecutiveRateLimits = result.consecutiveRateLimits
-                retryAfterDate = result.date
-                errorState = .rateLimited
-            default:
-                errorState = .networkError
-            }
-        } catch {
-            lastAPIError = LastAPIError(
-                httpStatusCode: nil,
-                retryAfterHeader: nil,
-                endpoint: "(unknown)",
-                timestamp: Date(),
-                underlyingError: error.localizedDescription
-            )
-            errorState = .networkError
-        }
+        // GrokBotEater: Claude Code usage disabled (avoids Keychain password prompts via /usr/bin/security).
     }
-
     /// Only refreshes if lastUpdate is older than 120 seconds (for wake handler)
     func refreshIfStale(thresholds: UsageThresholds = .default) async {
-        guard lastUpdate == nil || Date().timeIntervalSince(lastUpdate!) > 120 else { return }
-        await refresh(thresholds: thresholds, force: true)
+        // GrokBotEater: Claude refresh disabled.
     }
 
     /// Switch to fast mode for FSEvents token changes
@@ -265,9 +178,7 @@ final class UsageStore: ObservableObject {
     /// Invalidates the cached token so the next refresh reads a fresh one,
     /// and clears the rate-limit backoff so the refresh actually fires.
     func handleTokenChange() {
-        tokenProvider.invalidateToken()
-        retryAfterDate = nil
-        switchToFastMode()
+        // GrokBotEater: ignore Claude credential file changes.
     }
 
     /// Detects an OAuth token rotation that the file watcher cannot see: on
@@ -296,42 +207,13 @@ final class UsageStore: ObservableObject {
     }
 
     func reloadConfig(thresholds: UsageThresholds = .default) {
-        let token = tokenProvider.currentToken()
-        hasConfig = token != nil
-        errorState = token != nil ? .none : .tokenUnavailable
-        loadCached()
-        notificationService.requestPermission()
-        WidgetReloader.scheduleReload()
-        refreshTask?.cancel()
-        refreshTask = Task {
-            await refresh(thresholds: thresholds, force: true)
-            // Fetch the profile right after the first usage refresh so the
-            // plan badge (PRO / MAX / TEAM) shows up immediately instead of
-            // waiting 10 minutes for the auto-refresh cycle. `refreshProfile`
-            // is internally throttled to 5 min, so this is safe to call on
-            // every reload.
-            await refreshProfile()
-        }
+        // GrokBotEater: skip Claude config reload / Keychain probe.
+        hasConfig = false
+        errorState = .none
     }
 
     func startAutoRefresh(interval: TimeInterval = 600, thresholds: UsageThresholds = .default) {
-        autoRefreshTask?.cancel()
-        autoRefreshTask = Task { [weak self] in
-            // Wait first - reloadConfig already triggers an initial refresh
-            try? await Task.sleep(for: .seconds(interval))
-            // Fetch profile once on first cycle (deferred from startup to save rate limit)
-            if let self { await self.refreshProfile() }
-            while !Task.isCancelled {
-                guard let self else { return }
-                // Catch account swaps (cswap / claude login) the file watcher
-                // misses because the token rotates in the Keychain.
-                let rotated = self.reconcileTokenIfChanged()
-                await self.refresh(thresholds: thresholds, force: rotated)
-                if rotated { await self.refreshProfile() }
-                let delay = self.effectiveInterval
-                try? await Task.sleep(for: .seconds(delay))
-            }
-        }
+        // GrokBotEater: no Claude auto-refresh (would prompt Keychain via /usr/bin/security).
     }
 
     func stopAutoRefresh() {

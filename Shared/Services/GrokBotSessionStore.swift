@@ -11,6 +11,9 @@ final class GrokBotSessionStore: @unchecked Sendable {
 
     private let service = "com.emersonspiff.grokboteater.cursor-session"
     private let account = "WorkosCursorSessionToken"
+    /// Process-lifetime cache — avoid Keychain SecItemCopyMatching on every poll.
+    private var memoryCookie: String?
+    private let lock = NSLock()
 
     func savedCookie() -> String? {
         if let value = readAccount(account) { return value }
