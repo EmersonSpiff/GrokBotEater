@@ -151,7 +151,7 @@ private struct StudioMenuBarThumbnail: View {
         let image = MenuBarRenderer.render(data)
         return ZStack {
             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(Color(nsColor: NSColor(red: 0.13, green: 0.13, blue: 0.14, alpha: 1)))
+                .fill(Color(nsColor: NSColor(red: 0.92, green: 0.92, blue: 0.94, alpha: 1)))
                 .overlay(
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
                         .stroke(.white.opacity(0.08), lineWidth: 0.5)
@@ -162,7 +162,7 @@ private struct StudioMenuBarThumbnail: View {
                 .aspectRatio(contentMode: .fit)
                 .frame(maxWidth: 96, maxHeight: 18)
         }
-        .environment(\.colorScheme, .dark)
+        .environment(\.colorScheme, .light)
     }
 }
 

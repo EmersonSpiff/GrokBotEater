@@ -60,20 +60,11 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
 
     // MARK: - Migrations
 
-    /// v4.x migration: users who installed early TokenEater with the `com.tokeneater.*`
-    /// bundle IDs still have the old directory. Move its content into the new one.
+    /// Intentionally a no-op. This fork must NEVER read, copy, or delete
+    /// `~/Library/Application Support/com.tokeneater.shared` — that belongs to
+    /// the real TokenEater install and deleting it breaks the user's Claude meter.
     private func migrateFromOldProductName() {
-        let fm = FileManager.default
-        guard fm.fileExists(atPath: oldProductFileURL.path) else { return }
-
-        let legacyDir = legacyHomeRelativeFileURL.deletingLastPathComponent()
-        try? fm.createDirectory(at: legacyDir, withIntermediateDirectories: true)
-
-        if !fm.fileExists(atPath: legacyHomeRelativeFileURL.path) {
-            try? fm.copyItem(at: oldProductFileURL, to: legacyHomeRelativeFileURL)
-        }
-
-        try? fm.removeItem(at: oldProductFileURL.deletingLastPathComponent())
+        // Do not touch TokenEater's Application Support directory.
     }
 
     /// Reverse migration: previous v5.0 builds wrote to the App Group container

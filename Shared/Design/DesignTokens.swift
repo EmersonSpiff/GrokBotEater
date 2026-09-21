@@ -22,29 +22,30 @@ enum DS {
         // L0 (window) -> bgBase.
         // L1 (outer panels: Settings content + SubSidebar siblings, Stats Hero, pacing, settings.* sections) -> bgElevated.
         // L2 (innermost: nested metric tiles inside grids) -> bgPanel.
-        static let bgBase     = Color(hex: "#0E0E0E") // L0
-        static let bgElevated = Color(hex: "#141414") // L1
-        static let bgPanel    = Color(hex: "#1A1A1A") // L2
-        static let bgOverlay  = Color(hex: "#1C1C1C")
-        static let bgHover    = Color(hex: "#202020")
-        static let bgActive   = Color(hex: "#242424")
+        // Light chrome so GrokBotEater reads differently from TokenEater's near-black UI.
+        static let bgBase     = Color(hex: "#F2F2F7") // L0
+        static let bgElevated = Color(hex: "#FFFFFF") // L1
+        static let bgPanel    = Color(hex: "#EBEBF0") // L2
+        static let bgOverlay  = Color(hex: "#E5E5EA")
+        static let bgHover    = Color(hex: "#E0E0E5")
+        static let bgActive   = Color(hex: "#D8D8DE")
 
-        // Ambient gradient -> top-left lift (L1) -> bottom-right floor (L0)
-        static let gradientTopLeft     = Color(hex: "#141414")
-        static let gradientBottomRight = Color(hex: "#0E0E0E")
+        // Ambient gradient -> soft lift
+        static let gradientTopLeft     = Color(hex: "#FFFFFF")
+        static let gradientBottomRight = Color(hex: "#F2F2F7")
 
-        // Glass
-        static let glassFill     = Color.white.opacity(0.03)
-        static let glassFillHi   = Color.white.opacity(0.06)
-        static let glassBorder   = Color.white.opacity(0.08) // bumped from 0.06 for clearer panel edges
-        static let glassBorderHi = Color.white.opacity(0.14)
-        static let glassBorderLo = Color.white.opacity(0.04)
+        // Glass (dark hairlines on light surfaces)
+        static let glassFill     = Color.black.opacity(0.03)
+        static let glassFillHi   = Color.black.opacity(0.05)
+        static let glassBorder   = Color.black.opacity(0.08)
+        static let glassBorderHi = Color.black.opacity(0.14)
+        static let glassBorderLo = Color.black.opacity(0.04)
 
-        // Text -> exact site values
-        static let textPrimary   = Color(hex: "#F5F5F7")
-        static let textSecondary = Color(hex: "#A1A1AA")
-        static let textTertiary  = Color(hex: "#63636E")
-        static let textDisabled  = Color(hex: "#63636E").opacity(0.4)
+        // Text on light chrome
+        static let textPrimary   = Color(hex: "#1C1C1E")
+        static let textSecondary = Color(hex: "#636366")
+        static let textTertiary  = Color(hex: "#8E8E93")
+        static let textDisabled  = Color(hex: "#8E8E93").opacity(0.45)
 
         // Module accents -> hues native to the site plus the Studio violet.
         // Stats = lime green (brand primary), History = info blue,
