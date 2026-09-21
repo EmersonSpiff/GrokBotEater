@@ -447,7 +447,7 @@ enum MenuBarRenderer {
         }
 
         let s = NSMutableAttributedString()
-        let iconHeight: CGFloat = 20
+        let iconHeight: CGFloat = 22
         if let icon = menuBarGrokBotIcon(side: iconHeight) {
             let attachment = NSTextAttachment()
             attachment.image = icon
@@ -730,7 +730,7 @@ enum MenuBarRenderer {
 
     /// Fallback when usage isn't ready — Canva GBE face, not TokenEater's E / "GB".
     private static func renderLogoTemplate() -> NSImage {
-        let side: CGFloat = 20
+        let side: CGFloat = 22
         if let icon = menuBarGrokBotIcon(side: side) {
             let height = imageHeight
             let img = NSImage(size: NSSize(width: side + 2, height: height), flipped: false) { _ in
