@@ -19,6 +19,7 @@ final class StatusBarController: NSObject {
     private var countdownCancellable: AnyCancellable?
 
     private let usageStore: UsageStore
+    private let grokBotUsageStore: GrokBotUsageStore
     private let themeStore: ThemeStore
     private let settingsStore: SettingsStore
     private let updateStore: UpdateStore
@@ -28,6 +29,7 @@ final class StatusBarController: NSObject {
 
     init(
         usageStore: UsageStore,
+        grokBotUsageStore: GrokBotUsageStore,
         themeStore: ThemeStore,
         settingsStore: SettingsStore,
         updateStore: UpdateStore,
@@ -36,6 +38,7 @@ final class StatusBarController: NSObject {
         tokenFileMonitor: TokenFileMonitorProtocol = TokenFileMonitor()
     ) {
         self.usageStore = usageStore
+        self.grokBotUsageStore = grokBotUsageStore
         self.themeStore = themeStore
         self.settingsStore = settingsStore
         self.updateStore = updateStore
@@ -52,7 +55,7 @@ final class StatusBarController: NSObject {
         // (#236). A distinct autosaveName gives the item a fresh tracking
         // identity, sidestepping the stuck "Item-0" state, and persists its
         // position properly going forward.
-        self.statusItem.autosaveName = "TokenEaterStatusItem"
+        self.statusItem.autosaveName = "GrokBotEaterStatusItem"
         self.statusItem.isVisible = settingsStore.showMenuBar
 
         super.init()
@@ -110,6 +113,7 @@ final class StatusBarController: NSObject {
     private func installPopoverContent() {
         let popoverView = MenuBarPopoverView()
             .environmentObject(usageStore)
+            .environmentObject(grokBotUsageStore)
             .environmentObject(themeStore)
             .environmentObject(settingsStore)
             .environmentObject(updateStore)
@@ -120,6 +124,7 @@ final class StatusBarController: NSObject {
     private func observeStoreChanges() {
         Publishers.MergeMany(
             usageStore.objectWillChange.map { _ in () }.eraseToAnyPublisher(),
+            grokBotUsageStore.objectWillChange.map { _ in () }.eraseToAnyPublisher(),
             themeStore.objectWillChange.map { _ in () }.eraseToAnyPublisher(),
             settingsStore.objectWillChange.map { _ in () }.eraseToAnyPublisher(),
             vendorStatusStore.objectWillChange.map { _ in () }.eraseToAnyPublisher()
@@ -201,29 +206,17 @@ final class StatusBarController: NSObject {
     }
 
     private func bootstrapRefresh() {
-        usageStore.proxyConfig = settingsStore.proxyConfig
-        usageStore.pacingMargin = settingsStore.pacingMargin
-        usageStore.pacingSchedule = settingsStore.pacingSchedule
-        usageStore.refreshIntervalSeconds = TimeInterval(settingsStore.refreshInterval)
-        usageStore.notifTogglesProvider = { [weak self] in self?.makeNotificationToggles() }
+        pruneClaudeMenuBarSegments()
+        // Never start Claude UsageStore / TokenFileMonitor — those watch
+        // ~/.claude and shell out to /usr/bin/security (Keychain/TCC prompts).
         vendorStatusStore.notifTogglesProvider = { [weak self] in self?.makeNotificationToggles() }
         vendorStatusStore.healthyPollInterval = TimeInterval(settingsStore.statusPollInterval)
-        usageStore.reloadConfig(thresholds: themeStore.thresholds)
-        usageStore.startAutoRefresh(thresholds: themeStore.thresholds)
         themeStore.syncToSharedFile()
 
-        // Monitor token files (credentials + config.json) for changes
-        tokenFileMonitor.startMonitoring()
-        tokenFileMonitor.tokenChanged
-            .receive(on: RunLoop.main)
-            .sink { [weak self] in
-                guard let self else { return }
-                self.usageStore.handleTokenChange()
-                Task { await self.usageStore.refresh(force: true) }
-            }
-            .store(in: &cancellables)
+        grokBotUsageStore.refreshIntervalSeconds = TimeInterval(settingsStore.refreshInterval)
+        grokBotUsageStore.reloadConfig()
+        grokBotUsageStore.startAutoRefresh(interval: TimeInterval(settingsStore.refreshInterval))
 
-        // Refresh after wake from sleep
         NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.screensDidWakeNotification,
             object: nil,
@@ -231,7 +224,7 @@ final class StatusBarController: NSObject {
         ) { [weak self] _ in
             guard let self else { return }
             Task { @MainActor in
-                await self.usageStore.refreshIfStale()
+                await self.grokBotUsageStore.refresh(force: false)
             }
         }
 
@@ -322,9 +315,24 @@ final class StatusBarController: NSObject {
 
     private func updateMenuBarIcon() {
         let image = MenuBarRenderer.render(
-            .live(usage: usageStore, theme: themeStore, settings: settingsStore, vendor: vendorStatusStore)
+            .live(usage: usageStore, grokBotUsage: grokBotUsageStore, theme: themeStore, settings: settingsStore, vendor: vendorStatusStore)
         )
         statusItem.button?.image = image
+    }
+
+    /// Grok Bot-focused menu bar: drop leftover Claude-only segments and
+    /// restore the classic Grok template when nothing remains.
+    private func pruneClaudeMenuBarSegments() {
+        let claude: Set<MenuBarSegmentKind> = [
+            .session, .weekly, .sonnet, .fable, .extraCredits,
+            .sessionPacing, .weeklyPacing, .fablePacing,
+            .sessionReset, .serviceStatus
+        ]
+        settingsStore.menuBarComposition.segments.removeAll { claude.contains($0.kind) }
+        let hasGrok = settingsStore.menuBarComposition.segments.contains { $0.kind == .grokBot }
+        if settingsStore.menuBarComposition.segments.isEmpty || !hasGrok {
+            settingsStore.menuBarComposition = MenuBarBuiltinTemplate.classic.composition
+        }
     }
 
     /// Run a 1-second redraw ONLY while an outage badge is visible, so the
@@ -382,7 +390,7 @@ final class StatusBarController: NSObject {
             keyEquivalent: "r"
         )
         refresh.target = self
-        refresh.isEnabled = !usageStore.isLoading
+        refresh.isEnabled = !grokBotUsageStore.isLoading
         menu.addItem(refresh)
 
         let openDashboard = NSMenuItem(
@@ -506,7 +514,7 @@ final class StatusBarController: NSObject {
     }
 
     @objc private func contextRefresh() {
-        Task { await usageStore.refresh(force: true) }
+        Task { await grokBotUsageStore.refresh(force: true) }
     }
 
     @objc private func contextOpenDashboard() {
@@ -621,6 +629,7 @@ final class StatusBarController: NSObject {
 
         let appView = MainAppView()
             .environmentObject(usageStore)
+            .environmentObject(grokBotUsageStore)
             .environmentObject(themeStore)
             .environmentObject(settingsStore)
             .environmentObject(updateStore)
@@ -669,7 +678,7 @@ final class StatusBarController: NSObject {
         } else {
             window.minSize = NSSize(width: 600, height: 440)
             window.contentMinSize = NSSize(width: 600, height: 440)
-            window.setFrameAutosaveName("TokenEaterMain")
+            window.setFrameAutosaveName("GrokBotEaterMain")
         }
 
         window.makeKeyAndOrderFront(nil)
@@ -706,7 +715,7 @@ final class StatusBarController: NSObject {
         window.contentMaxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
         window.minSize = NSSize(width: 600, height: 440)
         window.isMovableByWindowBackground = false
-        window.setFrameAutosaveName("TokenEaterMain")
+        window.setFrameAutosaveName("GrokBotEaterMain")
         let mainSize = NSSize(width: 940, height: 700)
         window.setContentSize(mainSize)
         window.center()

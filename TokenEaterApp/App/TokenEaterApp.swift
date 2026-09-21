@@ -4,6 +4,7 @@ import Combine
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     var usageStore: UsageStore!
+    var grokBotUsageStore: GrokBotUsageStore!
     var themeStore: ThemeStore!
     var settingsStore: SettingsStore!
     var updateStore: UpdateStore!
@@ -38,18 +39,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         statusBarController = StatusBarController(
             usageStore: usageStore,
+            grokBotUsageStore: grokBotUsageStore,
             themeStore: themeStore,
             settingsStore: settingsStore,
             updateStore: updateStore,
             sessionStore: sessionStore,
             vendorStatusStore: vendorStatusStore
         )
-        // Apply persisted watcher scan settings before the first tick uses them.
-        sessionStore.setScanInterval(settingsStore.watcherScanInterval.seconds)
-        sessionStore.setVisibility(settingsStore.watcherVisibility.seconds)
-        if settingsStore.overlayEnabled {
-            sessionStore.startMonitoring()
-        }
+        // GrokBotEater does not monitor Claude Code sessions. Keep overlay off
+        // until a Cursor/Grok Bot agent watcher exists.
+        settingsStore.overlayEnabled = false
+        sessionStore.stopMonitoring()
         overlayWindowController = OverlayWindowController(
             sessionStore: sessionStore,
             settingsStore: settingsStore
@@ -57,33 +57,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         updateStore.checkBrewMigration()
         updateStore.checkForUpdates()
-
-        monitorCancellable = settingsStore.overlay.$overlayEnabled
-            .dropFirst()
-            .sink { [weak self] enabled in
-                guard let self else { return }
-                if enabled {
-                    self.sessionStore.startMonitoring()
-                } else {
-                    self.sessionStore.stopMonitoring()
-                }
-            }
-
-        settingsStore.overlay.$watcherScanInterval
-            .dropFirst()
-            .removeDuplicates()
-            .sink { [weak self] interval in
-                self?.sessionStore.setScanInterval(interval.seconds)
-            }
-            .store(in: &cancellables)
-
-        settingsStore.overlay.$watcherVisibility
-            .dropFirst()
-            .removeDuplicates()
-            .sink { [weak self] visibility in
-                self?.sessionStore.setVisibility(visibility.seconds)
-            }
-            .store(in: &cancellables)
     }
 }
 
@@ -92,6 +65,7 @@ struct TokenEaterApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     private let usageStore: UsageStore
+    private let grokBotUsageStore: GrokBotUsageStore
     private let themeStore: ThemeStore
     private let settingsStore: SettingsStore
     private let updateStore: UpdateStore
@@ -117,6 +91,7 @@ struct TokenEaterApp: App {
         LegacyHelperCleanupService().migratePrefsIfNeeded()
 
         self.usageStore = UsageStore()
+        self.grokBotUsageStore = GrokBotUsageStore()
         self.themeStore = ThemeStore()
         self.settingsStore = SettingsStore()
         self.updateStore = UpdateStore()
@@ -125,6 +100,7 @@ struct TokenEaterApp: App {
 
         NotificationService().setupDelegate()
         appDelegate.usageStore = usageStore
+        appDelegate.grokBotUsageStore = grokBotUsageStore
         appDelegate.themeStore = themeStore
         appDelegate.settingsStore = settingsStore
         appDelegate.updateStore = updateStore

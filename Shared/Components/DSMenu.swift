@@ -26,13 +26,13 @@ struct DSMenu<Value: Hashable>: View {
             HStack(spacing: 6) {
                 Text(label(selection))
                     .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.white.opacity(enabled ? 0.9 : 0.3))
+                    .foregroundStyle(DS.Palette.textPrimary.opacity(enabled ? 0.95 : 0.35))
                 Image(systemName: "chevron.down")
                     .font(.system(size: 8, weight: .semibold))
                     .foregroundStyle(
                         enabled
-                            ? (isHovering ? DS.Palette.accentSettings : .white.opacity(0.5))
-                            : .white.opacity(0.25)
+                            ? (isHovering ? DS.Palette.accentSettings : DS.Palette.textSecondary)
+                            : DS.Palette.textTertiary
                     )
             }
             .padding(.horizontal, 10)

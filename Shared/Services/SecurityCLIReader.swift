@@ -1,7 +1,7 @@
 import Foundation
 import os.log
 
-private let logger = Logger(subsystem: "com.tokeneater.app", category: "SecurityCLIReader")
+private let logger = Logger(subsystem: "com.emersonspiff.grokboteater.app", category: "SecurityCLIReader")
 
 /// Shells out to `/usr/bin/security find-generic-password -s "Claude Code-credentials" -w`
 /// and extracts `claudeAiOauth.accessToken` from the JSON value Claude Code stores.

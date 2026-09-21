@@ -16,6 +16,7 @@
 "dashboard.extra.monthly" = "ce mois-ci";
 "dashboard.extra.noLimit" = "Limite mensuelle non définie";
 "metric.extraCredits" = "Crédits sup.";
+"metric.grokBot" = "Grok Bot";
 "metric.sessionReset" = "Compte à rebours de session";
 "settings.pacing.style" = "Style du pacing";
 "settings.group.session" = "Session (5h)";
@@ -63,7 +64,7 @@
 "widget.history.vsYesterday" = "vs hier";
 "widget.history.stale" = "Ouvrez l'app pour rafraîchir";
 "widget.history.empty.title" = "Pas encore d'historique";
-"widget.history.empty.body" = "Ouvrez TokenEater pour qu'il indexe vos sessions";
+"widget.history.empty.body" = "Ouvrez GrokBotEater pour qu'il indexe vos sessions";
 
 /* Settings */
 "settings.subtitle" = "Surveillez votre consommation Claude";
@@ -122,7 +123,7 @@
 "settings.redetect" = "Re-détecter";
 "settings.general.title" = "Général";
 "settings.launchAtLogin" = "Lancer au démarrage";
-"settings.launchAtLogin.hint" = "Ouvre TokenEater automatiquement quand vous vous connectez à macOS. Vous pouvez aussi gérer ce réglage depuis Réglages système → Général → Éléments de connexion.";
+"settings.launchAtLogin.hint" = "Ouvre GrokBotEater automatiquement quand vous vous connectez à macOS. Vous pouvez aussi gérer ce réglage depuis Réglages système → Général → Éléments de connexion.";
 "settings.launchInBackground" = "Lancer en arrière-plan";
 "settings.launchInBackground.hint" = "Démarre uniquement dans la barre des menus, sans ouvrir la fenêtre du tableau de bord. Ouvrez-la quand vous voulez depuis la barre des menus (clic droit sur l'icône, puis Ouvrir).";
 "settings.general.replayOnboarding" = "Rejouer l'onboarding";
@@ -141,10 +142,10 @@
 "guide.oauth.title" = "Claude Code";
 "guide.oauth.badge" = "Recommandé";
 "guide.oauth.step1" = "Installez **Claude Code** (le CLI d'Anthropic)";
-"guide.oauth.step2" = "Ouvrez TokenEater et cliquez sur **Connecter**";
+"guide.oauth.step2" = "Ouvrez GrokBotEater et cliquez sur **Connecter**";
 "guide.oauth.step3" = "Terminé - le token se rafraîchit automatiquement";
 "guide.widget" = "Ajouter le widget";
-"guide.widget.detail" = "Clic droit sur le bureau > **Modifier les widgets** > **TokenEater**";
+"guide.widget.detail" = "Clic droit sur le bureau > **Modifier les widgets** > **GrokBotEater**";
 
 /* Errors - API */
 "error.notoken" = "Aucun token OAuth trouvé. Installez Claude Code et cliquez sur Connexion.";
@@ -165,8 +166,8 @@
 "error.banner.reauth.button" = "Ré-autoriser";
 "error.banner.waiting" = "En attente du rafraîchissement par Claude Code";
 "error.banner.apiunavailable" = "API usage throttle par Anthropic";
-"error.banner.apiunavailable.hint" = "C'est une limite de débit côté Anthropic (leur API usage), pas votre token ni votre configuration. Rien à corriger de votre côté - TokenEater réessaie tout seul et se met à jour dès que la limite se lève (bug connu : anthropics/claude-code#31637).";
-"error.banner.apiunavailable.settings" = "C'est côté Anthropic (leur API usage), pas votre token ni votre configuration. TokenEater réessaie automatiquement et repart dès que la limite se lève.";
+"error.banner.apiunavailable.hint" = "C'est une limite de débit côté Anthropic (leur API usage), pas votre token ni votre configuration. Rien à corriger de votre côté - GrokBotEater réessaie tout seul et se met à jour dès que la limite se lève (bug connu : anthropics/claude-code#31637).";
+"error.banner.apiunavailable.settings" = "C'est côté Anthropic (leur API usage), pas votre token ni votre configuration. GrokBotEater réessaie automatiquement et repart dès que la limite se lève.";
 "error.banner.apiunavailable.learnmore" = "En savoir plus";
 "error.banner.lastupdate" = "Dernière mise à jour réussie : %@";
 "error.banner.retry.button" = "Réessayer";
@@ -423,7 +424,7 @@
 "onboarding.mode.detailed" = "Détaillé";
 
 /* Onboarding - Connection (kept: referenced by OnboardingViewModel) */
-"onboarding.connection.failed.notoken" = "Impossible de lire le token. Vérifiez que Claude Code est installé et que vous êtes connecté.";
+"onboarding.connection.failed.notoken" = "Impossible de lire la session Cursor. Utilise Connecter pour te connecter sur cursor.com dans l'app.";
 
 /* Settings - Onboarding reset */
 "settings.onboarding.reset" = "Relancer la configuration";
@@ -436,7 +437,7 @@
 "settings.reset.color" = "Compte à rebours";
 "settings.session.periodcolor" = "Libellé de période (5h / 7d)";
 "settings.theme.menubar" = "Texte de la barre de menu";
-"settings.theme.menubar.hint" = "Personnalisez la couleur du compte à rebours et des libellés de période. Laissez vide pour que TokenEater utilise les couleurs par défaut du système.";
+"settings.theme.menubar.hint" = "Personnalisez la couleur du compte à rebours et des libellés de période. Laissez vide pour que GrokBotEater utilise les couleurs par défaut du système.";
 "settings.theme.menubar.resetColor" = "Rétablir la valeur par défaut";
 "settings.theme.smartreset" = "Couleur intelligente du reset";
 "settings.theme.smartreset.hint" = "Colorise le compte à rebours selon l'urgence (couleurs du gauge) : vert quand tu as de la marge, orange / rouge quand l'usage est élevé vs le temps restant. Override la couleur manuelle ci-dessus quand activé.";
@@ -480,7 +481,7 @@
 "update.check" = "Vérifier les mises à jour";
 "update.uptodate" = "À jour";
 "update.available.title" = "Mise à jour disponible";
-"update.available.subtitle" = "Une nouvelle version de TokenEater est prête";
+"update.available.subtitle" = "Une nouvelle version de GrokBotEater est prête";
 "update.available.badge %@" = "v%@ disponible";
 "update.download" = "Télécharger";
 "update.later" = "Plus tard";
@@ -489,12 +490,12 @@
 "update.ready.title" = "Prêt à installer";
 "update.ready.subtitle" = "macOS demandera votre mot de passe pour installer la mise à jour.";
 "update.install" = "Installer et relancer";
-"update.install.hint" = "TokenEater redémarrera automatiquement";
+"update.install.hint" = "GrokBotEater redémarrera automatiquement";
 "update.installing" = "Installation en cours...";
 "update.installing.hint" = "Entrez votre mot de passe quand macOS le demande";
 "update.version.current" = "Actuel";
 "update.version.new" = "Nouveau";
-"update.error.notInApplications" = "Les mises à jour intégrées nécessitent que TokenEater soit installé dans /Applications. Déplacez-le, ou téléchargez la dernière version depuis les Releases GitHub.";
+"update.error.notInApplications" = "Les mises à jour intégrées nécessitent que GrokBotEater soit installé dans /Applications. Déplacez-le, ou téléchargez la dernière version depuis les Releases GitHub.";
 "update.error.signatureInvalid" = "Échec de la vérification de signature. Installation annulée.";
 "update.error.signatureMissing" = "Signature manquante pour la mise à jour. Installation annulée.";
 "update.error.sizeMismatch" = "Taille de la mise à jour incorrecte. Installation annulée.";
@@ -506,7 +507,7 @@
 
 /* Brew Migration */
 "update.brew.detected" = "Installé via Homebrew";
-"update.brew.hint" = "Les mises à jour sont désormais gérées directement par TokenEater. Lancez cette commande pour nettoyer l'ancienne installation brew :";
+"update.brew.hint" = "Les mises à jour sont désormais gérées directement par GrokBotEater. Lancez cette commande pour nettoyer l'ancienne installation brew :";
 "update.brew.dismiss" = "Ignorer";
 
 /* Session Overlay */
@@ -529,7 +530,7 @@
 "settings.watchers.style.hint" = "Traitement visuel de chaque tuile de session.";
 "settings.watchers.terminalSetup" = "Setup terminal";
 "settings.watchers.terminalSetup.hint" = "Helpers pour tmux, WezTerm et Kitty au même endroit.";
-"settings.watchers.terminalSetup.sheet.hint" = "Colle le snippet correspondant dans ta config terminal pour que TokenEater détecte les sessions correctement.";
+"settings.watchers.terminalSetup.sheet.hint" = "Colle le snippet correspondant dans ta config terminal pour que GrokBotEater détecte les sessions correctement.";
 "settings.watchers.animations" = "Animations";
 "settings.watchers.idle" = "Idle - en attente d'une action";
 "settings.watchers.thinking" = "Thinking - génère une réponse";
@@ -555,13 +556,13 @@
 "settings.watchers.size" = "Taille des cartes";
 "settings.watchers.size.reset" = "Réinitialiser";
 "settings.watchers.tmux.title" = "Configuration tmux";
-"settings.watchers.tmux.hint" = "Si vous utilisez tmux, ajoutez cette ligne à votre ~/.tmux.conf pour que TokenEater puisse basculer vers le bon pane au clic :";
+"settings.watchers.tmux.hint" = "Si vous utilisez tmux, ajoutez cette ligne à votre ~/.tmux.conf pour que GrokBotEater puisse basculer vers le bon pane au clic :";
 "settings.watchers.tmux.copy" = "Copier";
 "settings.watchers.kitty.title" = "Configuration Kitty";
-"settings.watchers.kitty.hint" = "Si vous utilisez Kitty, ajoutez cette ligne à votre kitty.conf pour que TokenEater puisse basculer vers le bon onglet au clic :";
+"settings.watchers.kitty.hint" = "Si vous utilisez Kitty, ajoutez cette ligne à votre kitty.conf pour que GrokBotEater puisse basculer vers le bon onglet au clic :";
 "settings.watchers.kitty.copy" = "Copier";
 "settings.watchers.wezterm.title" = "Configuration WezTerm";
-"settings.watchers.wezterm.hint" = "Si vous utilisez WezTerm, ajoutez cette ligne à votre ~/.wezterm.lua pour que TokenEater puisse basculer vers le bon pane au clic :";
+"settings.watchers.wezterm.hint" = "Si vous utilisez WezTerm, ajoutez cette ligne à votre ~/.wezterm.lua pour que GrokBotEater puisse basculer vers le bon pane au clic :";
 "settings.watchers.wezterm.copy" = "Copier";
 "settings.watchers.style" = "Style de l'overlay";
 "settings.watchers.style.frost" = "Frost";
@@ -576,7 +577,7 @@
 
 /* Performance */
 "sidebar.performance" = "Performance";
-"settings.performance.description" = "Si TokenEater consomme trop de CPU, désactivez les fonctionnalités gourmandes ici.";
+"settings.performance.description" = "Si GrokBotEater consomme trop de CPU, désactivez les fonctionnalités gourmandes ici.";
 "settings.performance.dashboard" = "Dashboard";
 "settings.performance.gradient" = "Dégradé animé";
 "settings.performance.watchers" = "Agent Watchers";
@@ -609,7 +610,7 @@
 "history.hero.cacheHit" = "cache hit";
 "history.empty.dash" = "—";
 "history.empty.title" = "Aucune session pour l'instant";
-"history.empty.subtitle" = "Lance Claude Code pour remplir ton historique. Chaque session écrit un fichier JSONL dans ~/.claude/projects/ que TokenEater agrège ici.";
+"history.empty.subtitle" = "Lance Claude Code pour remplir ton historique. Chaque session écrit un fichier JSONL dans ~/.claude/projects/ que GrokBotEater agrège ici.";
 "history.empty.filter.all" = "Rien sur les %@ derniers";
 "history.empty.filter.model" = "Pas d'usage %@ sur les %@ derniers";
 "history.chip.cacheHit" = "Cache hit";
@@ -671,7 +672,7 @@
 "studio.intro.text" = "Le Studio est là. Popover, barre de menus et thèmes, au même endroit.";
 "studio.intro.cta" = "Voir les nouveautés";
 "whatsnew.title" = "Nouveautés";
-"whatsnew.subtitle" = "Cette mise à jour repense la personnalisation de TokenEater.";
+"whatsnew.subtitle" = "Cette mise à jour repense la personnalisation de GrokBotEater.";
 "whatsnew.studio.title" = "Le Studio";
 "whatsnew.studio.text" = "Un nouvel espace qui regroupe toute la personnalisation visuelle, avec aperçus live.";
 "whatsnew.popover.title" = "Popover composable";
@@ -724,12 +725,13 @@
 "popoverElement.sonnet" = "Sonnet";
 "popoverElement.fable" = "Fable";
 "popoverElement.extraCredits" = "Crédits sup.";
+"popoverElement.grokBot" = "Grok Bot";
 "popoverElement.sessionPacing" = "Pacing session";
 "popoverElement.weeklyPacing" = "Pacing hebdo";
 "popoverElement.fablePacing" = "Pacing Fable";
 "popoverElement.watchers" = "Agent watchers";
 "popoverElement.timestamp" = "Horodatage de mise à jour";
-"popoverElement.openButton" = "Bouton Open TokenEater";
+"popoverElement.openButton" = "Bouton Open GrokBotEater";
 "popoverElement.quitButton" = "Bouton Quitter";
 "popoverElement.planBadge" = "Badge du plan";
 "popoverElement.refreshButton" = "Bouton Actualiser";
@@ -820,7 +822,7 @@
 
 /* Menu bar icon right-click menu */
 "contextmenu.refresh" = "Rafraîchir maintenant";
-"contextmenu.open" = "Ouvrir TokenEater...";
+"contextmenu.open" = "Ouvrir GrokBotEater...";
 "contextmenu.template" = "Template du popover";
 "contextmenu.watchers.enable" = "Activer les Agent Watchers";
 "contextmenu.watchers.disable" = "Désactiver les Agent Watchers";
@@ -835,23 +837,25 @@
 
 "onboarding.hero.label" = "INSTALLATION";
 "onboarding.hero.title" = "Hé, t'es là";
-"onboarding.hero.subtitle" = "Deux permissions et TokenEater tourne";
+"onboarding.hero.subtitle" = "Deux permissions et GrokBotEater tourne";
 "onboarding.progress.label %lld %lld" = "%lld / %lld prêts";
 "onboarding.finish" = "Terminer";
 
 "onboarding.badge.required" = "REQUIS";
 "onboarding.badge.optional" = "OPTIONNEL";
 
-/* Card 1 - Claude Code */
-"onboarding.card.claudecode.title" = "Claude Code";
-"onboarding.card.claudecode.checking" = "détection...";
-"onboarding.card.claudecode.status.checking" = "détection auto";
-"onboarding.card.claudecode.status.detected" = "détecté sur ta machine";
-"onboarding.card.claudecode.status.notfound" = "non trouvé - installe + réessaie";
-"onboarding.card.claudecode.notfound.step1" = "installe via brew install claude";
-"onboarding.card.claudecode.notfound.step2" = "connecte-toi : lance claude";
-"onboarding.card.claudecode.notfound.step3" = "reviens ici, clique Réessayer";
-"onboarding.card.claudecode.retry" = "Réessayer";
+/* Card 1 - Grok Bot / session Cursor */
+"onboarding.card.grokbot.title" = "Grok Bot";
+"onboarding.card.grokbot.checking" = "vérification...";
+"onboarding.card.grokbot.status.checking" = "recherche login Cursor";
+"onboarding.card.grokbot.status.detected" = "session Cursor prête";
+"onboarding.card.grokbot.status.notfound" = "connecte-toi via Connecter, puis réessaie";
+"onboarding.card.grokbot.notfound.step1" = "clique Connecter pour ouvrir cursor.com";
+"onboarding.card.grokbot.notfound.step2" = "connecte-toi dans la fenêtre de l'app";
+"onboarding.card.grokbot.notfound.step3" = "ou rouvre Cursor et réessaie";
+"onboarding.card.grokbot.retry" = "Réessayer";
+"onboarding.card.grokbot.ready.scene" = "Login Cursor trouvé";
+"onboarding.card.grokbot.ready.detail" = "Prêt à lire l'usage Grok Bot";
 
 /* Card 2 - Notifications */
 "onboarding.card.notifications.title" = "Notifications";
@@ -870,16 +874,23 @@
 
 /* Card 4 - Connect */
 "onboarding.card.connect.title" = "Connecter";
-"onboarding.card.connect.status.idle" = "clique pour autoriser";
-"onboarding.card.connect.status.connecting" = "discussion avec le keychain...";
+"onboarding.card.connect.status.idle" = "clique pour tester Grok Bot";
+"onboarding.card.connect.status.connecting" = "connexion à cursor.com...";
 "onboarding.card.connect.status.success" = "connecté";
 "onboarding.card.connect.status.failed" = "accès refusé";
-"onboarding.card.connect.connecting" = "autorisation...";
+"onboarding.card.connect.connecting" = "appel usage Grok Bot...";
 "onboarding.card.connect.success.scene" = "connecté - bouton Terminer débloqué";
 "onboarding.card.connect.failed.scene" = "accès refusé";
-"onboarding.card.connect.authorize" = "Autoriser";
+"onboarding.card.connect.authorize" = "Connecter";
 "onboarding.card.connect.retry" = "Réessayer";
-"onboarding.card.connect.idle.scene" = "macOS demande une fois.\nClique Toujours autoriser quand ça apparaît.";
+"onboarding.card.connect.idle.scene" = "Ouvre cursor.com pour te connecter\net lier l'usage Grok Bot.";
+
+/* Onboarding - Web login sheet */
+"onboarding.weblogin.title" = "Connexion à Cursor";
+"onboarding.weblogin.cancel" = "Annuler";
+"onboarding.weblogin.status.waiting" = "Connecte-toi sur cursor.com — la session est capturée automatiquement.";
+"onboarding.weblogin.status.captured" = "Session enregistrée. Connexion…";
+
 
 /* Vendor Status Banner */
 "status.banner.degraded" = "Claude est dégradé";
@@ -906,3 +917,25 @@
 "notif.body.fable.red.fallback" = "Pool Fable presque vide";
 "notif.body.fable.green" = "Fable rechargé le %@";
 "notif.body.fable.green.fallback" = "Fable rechargé, t'es de retour";
+
+/* Grok Bot widget */
+"widget.grokBot" = "Grok Bot";
+"widget.grokBot.appName" = "GrokBotEater";
+"widget.grokBot.weekly" = "Usage hebdomadaire";
+"widget.grokBot.empty" = "Ouvre GrokBotEater et connecte-toi pour charger l'usage";
+"widget.grokBot.unavailable" = "L'usage Grok Bot n'est pas disponible pour ce plan";
+"widget.title.grokBot" = "Grok Bot";
+"widget.description.grokBot" = "Usage hebdomadaire Grok Bot depuis ta session Cursor";
+
+"history.coming.title" = "Historique";
+"history.coming.subtitle" = "Usage Grok Bot dans le temps";
+"history.coming.badge" = "Bientôt";
+"history.coming.body" = "Cet onglet montrait les jetons Claude Code. L’historique Grok Bot n’est pas encore branché.";
+
+"widget.grokBot.title" = "Usage Grok Bot";
+"widget.grokBot.description" = "Usage hebdomadaire Grok Bot de votre plan Cursor.";
+"widget.grokBot" = "Grok Bot";
+"widget.grokBot.appName" = "GrokBotEater";
+"widget.grokBot.weekly" = "Usage hebdo";
+"widget.grokBot.empty" = "Ouvrez GrokBotEater et Connectez pour synchroniser.";
+"widget.grokBot.unavailable" = "Usage Grok Bot indisponible sur ce plan.";

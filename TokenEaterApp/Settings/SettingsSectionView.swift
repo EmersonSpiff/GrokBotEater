@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsSectionView: View {
     @EnvironmentObject private var usageStore: UsageStore
+    @EnvironmentObject private var grokBotUsageStore: GrokBotUsageStore
     @EnvironmentObject private var settingsStore: SettingsStore
     @EnvironmentObject private var themeStore: ThemeStore
     @EnvironmentObject private var updateStore: UpdateStore
@@ -33,44 +34,48 @@ struct SettingsSectionView: View {
                     cardLabel(String(localized: "settings.tab.connection"))
                     HStack(spacing: 8) {
                         Circle()
-                            .fill(usageStore.hasConfig && !usageStore.isDisconnected ? Color.green : Color.red)
+                            .fill(grokConnected ? Color.green : Color.red)
                             .frame(width: 8, height: 8)
-                        Text(usageStore.hasConfig && !usageStore.isDisconnected
+                        Text(grokConnected
                              ? String(localized: "settings.connected")
                              : String(localized: "settings.disconnected"))
                             .font(.system(size: 13))
-                            .foregroundStyle(.white.opacity(0.8))
+                            .foregroundStyle(DS.Palette.textPrimary)
                         Spacer()
-                        if isImporting {
+                        if isImporting || grokBotUsageStore.isLoading {
                             ProgressView().scaleEffect(0.6)
                         }
                         Button(String(localized: "settings.redetect")) {
-                            connectAutoDetect()
+                            reconnectGrokBot()
                         }
                         .buttonStyle(.plain)
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(.blue)
+                        .disabled(isImporting || grokBotUsageStore.isLoading)
                     }
+                    Text(grokBotUsageStore.statusMessage)
+                        .font(.system(size: 11))
+                        .foregroundStyle(DS.Palette.textSecondary)
                     if let message = importMessage {
                         Text(message)
                             .font(.system(size: 11))
                             .foregroundStyle(importSuccess ? .green : .orange)
                     }
-                    if usageStore.errorState == .rateLimited {
+                    if grokBotUsageStore.errorState == .rateLimited {
                         VStack(alignment: .leading, spacing: 3) {
                             Label {
-                                Text("error.banner.apiunavailable.settings")
+                                Text(String(localized: "error.banner.apiunavailable.settings"))
                                     .font(.system(size: 11))
                             } icon: {
                                 Image(systemName: "icloud.slash")
                                     .font(.system(size: 10))
                             }
                             .foregroundStyle(.orange.opacity(0.8))
-                            if let last = usageStore.lastUpdate {
+                            if let last = grokBotUsageStore.lastUpdate {
                                 Text(String(format: String(localized: "error.banner.lastupdate"),
                                             last.formatted(.relative(presentation: .named))))
                                     .font(.system(size: 10))
-                                    .foregroundStyle(.white.opacity(0.4))
+                                    .foregroundStyle(DS.Palette.textTertiary)
                             }
                         }
                     }
@@ -87,9 +92,9 @@ struct SettingsSectionView: View {
             glassCard {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
-                        Text("TokenEater v\(updateStore.currentVersion)")
+                        Text("GrokBotEater v\(updateStore.currentVersion)")
                             .font(.system(size: 12))
-                            .foregroundStyle(.white.opacity(0.5))
+                            .foregroundStyle(DS.Palette.textSecondary)
                         Spacer()
                         if case .checking = updateStore.updateState {
                             ProgressView()
@@ -129,13 +134,13 @@ struct SettingsSectionView: View {
                     darkToggle(String(localized: "settings.launchAtLogin"), isOn: $settingsStore.launchAtLoginEnabled)
                     Text(String(localized: "settings.launchAtLogin.hint"))
                         .font(.system(size: 11))
-                        .foregroundStyle(.white.opacity(0.4))
+                        .foregroundStyle(DS.Palette.textTertiary)
                         .fixedSize(horizontal: false, vertical: true)
 
                     darkToggle(String(localized: "settings.launchInBackground"), isOn: $settingsStore.display.launchInBackground)
                     Text(String(localized: "settings.launchInBackground.hint"))
                         .font(.system(size: 11))
-                        .foregroundStyle(.white.opacity(0.4))
+                        .foregroundStyle(DS.Palette.textTertiary)
                         .fixedSize(horizontal: false, vertical: true)
 
                     Divider().opacity(0.12)
@@ -144,10 +149,10 @@ struct SettingsSectionView: View {
                         VStack(alignment: .leading, spacing: 3) {
                             Text(String(localized: "settings.general.replayOnboarding"))
                                 .font(.system(size: 13, weight: .medium))
-                                .foregroundStyle(.white.opacity(0.85))
+                                .foregroundStyle(DS.Palette.textPrimary)
                             Text(String(localized: "settings.general.replayOnboarding.hint"))
                                 .font(.system(size: 11))
-                                .foregroundStyle(.white.opacity(0.4))
+                                .foregroundStyle(DS.Palette.textTertiary)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                         Spacer()
@@ -160,7 +165,7 @@ struct SettingsSectionView: View {
                                 Text(String(localized: "settings.general.replayOnboarding.action"))
                                     .font(.system(size: 12, weight: .medium))
                             }
-                            .foregroundStyle(.white.opacity(0.9))
+                            .foregroundStyle(DS.Palette.textPrimary)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 7)
                             .background(
@@ -187,7 +192,7 @@ struct SettingsSectionView: View {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(String(localized: "settings.proxy.host"))
                                     .font(.system(size: 10))
-                                    .foregroundStyle(.white.opacity(0.4))
+                                    .foregroundStyle(DS.Palette.textTertiary)
                                 TextField("127.0.0.1", text: $settingsStore.proxyHost)
                                     .textFieldStyle(.roundedBorder)
                                     .font(.system(size: 12, design: .monospaced))
@@ -195,7 +200,7 @@ struct SettingsSectionView: View {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(String(localized: "settings.proxy.port"))
                                     .font(.system(size: 10))
-                                    .foregroundStyle(.white.opacity(0.4))
+                                    .foregroundStyle(DS.Palette.textTertiary)
                                 TextField("1080", value: $settingsStore.proxyPort, format: .number)
                                     .textFieldStyle(.roundedBorder)
                                     .font(.system(size: 12, design: .monospaced))
@@ -213,11 +218,11 @@ struct SettingsSectionView: View {
                     HStack {
                         Text(String(localized: "settings.refresh.interval"))
                             .font(.system(size: 12))
-                            .foregroundStyle(.white.opacity(0.7))
+                            .foregroundStyle(DS.Palette.textSecondary)
                         Spacer()
                         Text(formatInterval(settingsStore.refreshInterval))
                             .font(.system(size: 12, design: .monospaced))
-                            .foregroundStyle(.white.opacity(0.9))
+                            .foregroundStyle(DS.Palette.textPrimary)
                     }
                     TokenEaterSlider(
                         value: Binding(
@@ -250,17 +255,17 @@ struct SettingsSectionView: View {
                     darkToggle(String(localized: "settings.status.master"), isOn: $settingsStore.outageMonitoringEnabled)
                     Text(String(localized: "sidebar.serviceStatus.subtitle"))
                         .font(.system(size: 11))
-                        .foregroundStyle(.white.opacity(0.4))
+                        .foregroundStyle(DS.Palette.textTertiary)
                         .fixedSize(horizontal: false, vertical: true)
                     if settingsStore.outageMonitoringEnabled {
                         HStack {
                             Text(String(localized: "settings.status.interval.label"))
                                 .font(.system(size: 12))
-                                .foregroundStyle(.white.opacity(0.7))
+                                .foregroundStyle(DS.Palette.textSecondary)
                             Spacer()
                             Text(formatInterval(Int(statusPollIntervalSeconds)))
                                 .font(.system(size: 12, design: .monospaced))
-                                .foregroundStyle(.white.opacity(0.9))
+                                .foregroundStyle(DS.Palette.textPrimary)
                         }
                         TokenEaterSlider(
                             value: $statusPollIntervalSeconds,
@@ -281,19 +286,19 @@ struct SettingsSectionView: View {
                         icon: "chevron.left.forwardslash.chevron.right",
                         title: String(localized: "settings.about.repository"),
                         subtitle: String(localized: "settings.about.repository.hint"),
-                        url: URL(string: "https://github.com/AThevon/TokenEater")!
+                        url: URL(string: "https://github.com/EmersonSpiff/GrokBotEater")!
                     )
                     AboutLinkRow(
                         icon: "exclamationmark.bubble.fill",
                         title: String(localized: "settings.about.issues"),
                         subtitle: String(localized: "settings.about.issues.hint"),
-                        url: URL(string: "https://github.com/AThevon/TokenEater/issues")!
+                        url: URL(string: "https://github.com/EmersonSpiff/GrokBotEater/issues")!
                     )
                     AboutLinkRow(
                         icon: "tag.fill",
                         title: String(localized: "settings.about.releases"),
                         subtitle: String(localized: "settings.about.releases.hint"),
-                        url: URL(string: "https://github.com/AThevon/TokenEater/releases")!
+                        url: URL(string: "https://github.com/EmersonSpiff/GrokBotEater/releases")!
                     )
                 }
             }
@@ -320,11 +325,11 @@ struct SettingsSectionView: View {
                 .foregroundStyle(.orange)
             Text(String(localized: "update.brew.hint"))
                 .font(.system(size: 10))
-                .foregroundStyle(.white.opacity(0.5))
+                .foregroundStyle(DS.Palette.textSecondary)
             HStack(spacing: 8) {
                 Text(updateStore.brewUninstallCommand)
                     .font(.system(size: 10, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.6))
+                    .foregroundStyle(DS.Palette.textSecondary)
                     .lineLimit(1)
                 Button {
                     NSPasteboard.general.clearContents()
@@ -343,7 +348,7 @@ struct SettingsSectionView: View {
                 }
                 .font(.system(size: 10))
                 .buttonStyle(.plain)
-                .foregroundStyle(.white.opacity(0.4))
+                .foregroundStyle(DS.Palette.textTertiary)
             }
         }
         .padding(10)
@@ -356,28 +361,29 @@ struct SettingsSectionView: View {
         return "\(minutes) min"
     }
 
-    private func connectAutoDetect() {
+    /// True when Grok Bot session is usable (cookie + successful usage read).
+    private var grokConnected: Bool {
+        grokBotUsageStore.hasGrokBot
+            || (grokBotUsageStore.lastUpdate != nil && !grokBotUsageStore.errorState.hasError)
+    }
+
+    private func reconnectGrokBot() {
         isImporting = true
         importMessage = nil
-        guard settingsStore.credentialsTokenExists() else {
-            isImporting = false
-            importMessage = String(localized: "connect.noclaudecode")
-            importSuccess = false
-            return
-        }
+        testResult = nil
         Task {
-            let result = await usageStore.connectAutoDetect()
-            isImporting = false
+            let result = await grokBotUsageStore.testConnection()
             if result.success {
+                await grokBotUsageStore.refresh(force: true)
                 importMessage = String(localized: "connect.oauth.success")
                 importSuccess = true
-                usageStore.proxyConfig = settingsStore.proxyConfig
-                usageStore.reloadConfig(thresholds: themeStore.thresholds)
-                themeStore.syncToSharedFile()
             } else {
+                grokBotUsageStore.reloadConfig()
                 importMessage = result.message
                 importSuccess = false
             }
+            testResult = result
+            isImporting = false
         }
     }
 }
@@ -425,10 +431,10 @@ private struct AboutLinkRow: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
                         .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(.white.opacity(isHovering ? 0.95 : 0.85))
+                        .foregroundStyle(DS.Palette.textPrimary.opacity(isHovering  ? 0.95 : 0.85))
                     Text(subtitle)
                         .font(.system(size: 11))
-                        .foregroundStyle(.white.opacity(0.45))
+                        .foregroundStyle(DS.Palette.textTertiary)
                 }
 
                 Spacer(minLength: 0)

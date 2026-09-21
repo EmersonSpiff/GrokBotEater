@@ -30,6 +30,7 @@ final class MockSharedFileService: SharedFileServiceProtocol, @unchecked Sendabl
     var pacingSchedule: PacingSchedule { _pacingSchedule }
     var lastWeekDailyTotals: [Int]? { _lastWeekDailyTotals }
     var lastWeekTotalsRefreshedAt: Date? { _lastWeekTotalsRefreshedAt }
+    var grokBotSnapshot: GrokBotSharedSnapshot? = nil
 
     func updateAfterSync(usage: CachedUsage, syncDate: Date) {
         updateAfterSyncCallCount += 1
@@ -58,6 +59,7 @@ final class MockSharedFileService: SharedFileServiceProtocol, @unchecked Sendabl
         _pacingSchedule = schedule
     }
 
+    func updateGrokBotSnapshot(_ snapshot: GrokBotSharedSnapshot) { grokBotSnapshot = snapshot }
     func updateLastWeekDailyTotals(_ totals: [Int], refreshedAt: Date) {
         updateLastWeekDailyTotalsCallCount += 1
         _lastWeekDailyTotals = totals

@@ -7,7 +7,7 @@ struct ElectronDecryptionServiceTests {
     private enum StubError: Error { case noPassword }
 
     /// A service pointed at a throwaway temp key file (so the real
-    /// `~/Library/Application Support/com.tokeneater.shared/decryption.key` is
+    /// `~/Library/Application Support/com.emersonspiff.grokboteater.shared/decryption.key` is
     /// never read, written, or deleted) with an optional stub password source
     /// (so the real "Claude Safe Storage" Keychain item is never read). Call
     /// `cleanup()` via `defer` to remove the temp directory.

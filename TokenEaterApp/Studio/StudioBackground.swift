@@ -29,14 +29,14 @@ struct StudioBackground: View {
             DS.Palette.bgBase
 
             RadialGradient(
-                colors: [DS.Palette.accentStudio.opacity(0.15), .clear],
+                colors: [DS.Palette.accentStudio.opacity(0.22), .clear],
                 center: UnitPoint(x: 0.14 + 0.56 * a, y: 0.14 + 0.16 * b),
                 startRadius: 0,
                 endRadius: 480
             )
 
             RadialGradient(
-                colors: [DS.Palette.semanticInfo.opacity(0.09), .clear],
+                colors: [DS.Palette.semanticInfo.opacity(0.14), .clear],
                 center: UnitPoint(x: 0.86 - 0.60 * a, y: 0.86 - 0.18 * b),
                 startRadius: 0,
                 endRadius: 520
@@ -44,7 +44,7 @@ struct StudioBackground: View {
 
             // Vignette -> keeps the edges quiet so the work plane pops.
             RadialGradient(
-                colors: [.clear, Color.black.opacity(0.40)],
+                colors: [.clear, Color.black.opacity(0.08)],
                 center: .center,
                 startRadius: 200,
                 endRadius: 760

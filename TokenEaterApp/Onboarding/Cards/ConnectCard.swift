@@ -1,9 +1,8 @@
 import SwiftUI
 
-/// Fourth card - gates the onboarding. Tapping Authorize fires the real
-/// macOS Keychain prompt; the scene shows a clear illustration of the
-/// upcoming permission request before tapping, then a spinner while
-/// authorising, then a checkmark (or X with retry) afterwards.
+/// Required card - tests the Grok Bot usage API. Connect tries a saved /
+/// scraped Cursor session cookie first; if none works, opens the in-app
+/// cursor.com WKWebView login sheet, then retries `fetchUsage`.
 struct ConnectCard: View {
     @ObservedObject var viewModel: OnboardingViewModel
 
@@ -30,10 +29,10 @@ struct ConnectCard: View {
 
         case .connecting:
             VStack(spacing: 8) {
-                ProgressView().tint(.white)
+                ProgressView().tint(DS.Palette.textPrimary)
                 Text("onboarding.card.connect.connecting")
                     .font(.system(size: 10))
-                    .foregroundStyle(.white.opacity(0.55))
+                    .foregroundStyle(DS.Palette.textSecondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
@@ -50,7 +49,7 @@ struct ConnectCard: View {
                 .shadow(color: DS.Palette.brandPrimary.opacity(0.4), radius: 14)
                 Text("onboarding.card.connect.success.scene")
                     .font(.system(size: 10))
-                    .foregroundStyle(.white.opacity(0.7))
+                    .foregroundStyle(DS.Palette.textSecondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
@@ -66,10 +65,10 @@ struct ConnectCard: View {
                 }
                 Text("onboarding.card.connect.failed.scene")
                     .font(.system(size: 10))
-                    .foregroundStyle(.white.opacity(0.7))
+                    .foregroundStyle(DS.Palette.textSecondary)
                 Text(message)
                     .font(.system(size: 9))
-                    .foregroundStyle(.white.opacity(0.4))
+                    .foregroundStyle(DS.Palette.textTertiary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 14)
                     .lineLimit(2)
@@ -78,25 +77,22 @@ struct ConnectCard: View {
         }
     }
 
-    /// Idle scene - no fake macOS dialog. Just a clear icon + a one-line
-    /// brief of what's about to happen, so the user isn't surprised by
-    /// the system prompt.
+    /// Idle scene - Cursor session / Grok Bot usage check, not Keychain.
     private var idleScene: some View {
         VStack(spacing: 12) {
             ZStack {
                 Circle()
                     .fill(accent.opacity(0.12))
                     .frame(width: 56, height: 56)
-                Image(systemName: "key.fill")
+                Image(systemName: "link.circle.fill")
                     .font(.system(size: 24, weight: .medium))
                     .foregroundStyle(accent)
-                    .rotationEffect(.degrees(-15))
             }
             .shadow(color: accent.opacity(0.4), radius: 14)
 
             Text("onboarding.card.connect.idle.scene")
                 .font(.system(size: 11))
-                .foregroundStyle(.white.opacity(0.6))
+                .foregroundStyle(DS.Palette.textSecondary)
                 .multilineTextAlignment(.center)
                 .lineSpacing(2)
                 .padding(.horizontal, 16)
@@ -124,7 +120,7 @@ struct ConnectCard: View {
         Button(action: action) {
             Text(label)
                 .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(DS.Palette.textPrimary)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 5)
                 .background(
@@ -134,7 +130,7 @@ struct ConnectCard: View {
                         endPoint: .bottom
                     ))
                 )
-                .overlay(Capsule().stroke(Color.white.opacity(0.18), lineWidth: 1))
+                .overlay(Capsule().stroke(Color.black.opacity(0.18), lineWidth: 1))
                 .shadow(color: DS.Palette.brandPrimary.opacity(0.4), radius: 7)
         }
         .buttonStyle(.plain)

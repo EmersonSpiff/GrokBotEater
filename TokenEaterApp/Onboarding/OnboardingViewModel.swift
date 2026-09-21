@@ -2,9 +2,9 @@ import SwiftUI
 import UserNotifications
 import os.log
 
-private let logger = Logger(subsystem: "com.tokeneater.app", category: "Onboarding")
+private let logger = Logger(subsystem: "com.emersonspiff.grokboteater.app", category: "Onboarding")
 
-enum ClaudeCodeStatus {
+enum GrokBotSessionStatus {
     case checking
     case detected
     case notFound
@@ -13,7 +13,7 @@ enum ClaudeCodeStatus {
 enum ConnectionStatus {
     case idle
     case connecting
-    case success(UsageResponse)
+    case success(GrokBotUsageResponse)
     case rateLimited
     case failed(String)
 }
@@ -27,51 +27,51 @@ enum NotificationStatus {
 
 @MainActor
 final class OnboardingViewModel: ObservableObject {
-    @Published var claudeCodeStatus: ClaudeCodeStatus = .checking
+    @Published var grokBotStatus: GrokBotSessionStatus = .checking
     @Published var connectionStatus: ConnectionStatus = .idle
     @Published var notificationStatus: NotificationStatus = .unknown
+    /// Presents the in-app cursor.com WKWebView login sheet.
+    @Published var showCursorLogin = false
 
-    /// Bridges `SettingsStore.overlayEnabled` so the Watchers card can
-    /// toggle directly without going through an environment object. Default
-    /// reflects the current store value at init time so re-running the
-    /// onboarding shows the user's existing preference.
+    /// Bridges `SettingsStore.overlayEnabled` for settings continuity.
+    /// Watchers are not part of Grok Bot onboarding; default stays off.
     @Published var watcherEnabled: Bool
 
-    /// Total number of cards the user can interact with. Used by the hero
-    /// progress indicator. Hard-coded at 4 (Claude Code, Notifications,
-    /// Watchers, Connect).
-    let totalSteps: Int = 4
+    /// Cards in the onboarding grid: Grok Bot session, Connect, Notifications.
+    let totalSteps: Int = 3
 
-    private let tokenProvider: TokenProviderProtocol
-    private let repository: UsageRepositoryProtocol
+    private let cookieReader: CursorCookieReaderProtocol
+    private let grokBotAPI: GrokBotAPIClientProtocol
     private let notificationService: NotificationServiceProtocol
     private let settingsStore: SettingsStore
+    private let sessionStore: GrokBotSessionStore
 
     init(
-        tokenProvider: TokenProviderProtocol = TokenProvider(),
-        repository: UsageRepositoryProtocol = UsageRepository(),
+        cookieReader: CursorCookieReaderProtocol = CursorCookieReader(),
+        grokBotAPI: GrokBotAPIClientProtocol = GrokBotAPIClient(),
         notificationService: NotificationServiceProtocol = NotificationService(),
-        settingsStore: SettingsStore? = nil
+        settingsStore: SettingsStore? = nil,
+        sessionStore: GrokBotSessionStore = .shared
     ) {
-        self.tokenProvider = tokenProvider
-        self.repository = repository
+        self.cookieReader = cookieReader
+        self.grokBotAPI = grokBotAPI
         self.notificationService = notificationService
+        self.sessionStore = sessionStore
         let store = settingsStore ?? SettingsStore(
-            notificationService: notificationService,
-            tokenProvider: tokenProvider
+            notificationService: notificationService
         )
         self.settingsStore = store
         self.watcherEnabled = store.overlayEnabled
     }
 
-    /// Whether the user might see a Keychain dialog (first connection attempt)
-    var needsBootstrap: Bool { tokenProvider.currentToken() == nil }
+    /// Whether a Cursor session cookie is already readable (no network call).
+    var needsBootstrap: Bool {
+        false
+    }
 
-    /// Gating rule for the Finish button. Both required cards must succeed:
-    /// Claude Code detected AND Connect connected (rateLimited counts as
-    /// connected because the token works - server is just throttling).
+    /// Finish requires Grok Bot session detected AND Connect success/rateLimited.
     var canFinish: Bool {
-        guard claudeCodeStatus == .detected else { return false }
+        guard grokBotStatus == .detected else { return false }
         switch connectionStatus {
         case .success, .rateLimited:
             return true
@@ -80,14 +80,11 @@ final class OnboardingViewModel: ObservableObject {
         }
     }
 
-    /// Hero progress count - how many of the 4 cards are in their "ready"
-    /// state. Both gates must be green; optional toggles count as ready
-    /// when on (Watchers) or authorized (Notifications).
+    /// How many of the 3 cards are in a "ready" state.
     var readyCount: Int {
         var count = 0
-        if claudeCodeStatus == .detected { count += 1 }
+        if grokBotStatus == .detected { count += 1 }
         if notificationStatus == .authorized { count += 1 }
-        if watcherEnabled { count += 1 }
         switch connectionStatus {
         case .success, .rateLimited:
             count += 1
@@ -97,24 +94,19 @@ final class OnboardingViewModel: ObservableObject {
         return count
     }
 
-    /// Updates `SettingsStore.overlayEnabled` whenever the user flicks the
-    /// Watchers toggle. Called from `WatchersCard`.
     func setWatcherEnabled(_ enabled: Bool) {
         watcherEnabled = enabled
         settingsStore.overlayEnabled = enabled
     }
 
-    func checkClaudeCode() {
-        claudeCodeStatus = .checking
-        // Detect a token source OFF the main thread: hasTokenSource() can shell
-        // out to /usr/bin/security, which may block for up to the reader's
-        // watchdog timeout on macOS 26 (see #217). Running it on the main thread
-        // froze onboarding and left the menu-bar item stuck.
-        let provider = tokenProvider
+    func checkGrokBotSession() {
+        grokBotStatus = .checking
+        let reader = cookieReader
         DispatchQueue.global(qos: .userInitiated).async {
-            let hasSource = provider.hasTokenSource()
+            // Includes Keychain web session first, then disk scrape.
+            let hasCookie = reader.readCookie() != nil
             DispatchQueue.main.async { [weak self] in
-                self?.claudeCodeStatus = hasSource ? .detected : .notFound
+                self?.grokBotStatus = hasCookie ? .detected : .notFound
             }
         }
     }
@@ -146,46 +138,113 @@ final class OnboardingViewModel: ObservableObject {
         notificationService.sendTest()
     }
 
+    /// Connect: try saved/scraped cookie → fetchUsage; otherwise open web login.
     func connect() {
         connectionStatus = .connecting
+        showCursorLogin = false
 
-        let provider = tokenProvider
+        let reader = cookieReader
+        let api = grokBotAPI
         Task {
-            // Resolve the token OFF the main thread - currentToken() may shell
-            // out to /usr/bin/security, which can block on macOS 26 (see #217).
-            // Only silent sources are used, so this never surfaces a Keychain
-            // prompt.
-            let token = await Self.tokenOffMain(provider)
+            let cookie = await Self.cookieOffMain(reader)
 
-            guard let token else {
-                connectionStatus = .failed(String(localized: "onboarding.connection.failed.notoken"))
+            guard let cookie else {
+                // No cookie at all — open in-app cursor.com login.
+                connectionStatus = .idle
+                showCursorLogin = true
                 NSApp.activate(ignoringOtherApps: true)
                 return
             }
 
-            do {
-                let usage = try await repository.testConnection(token: token, proxyConfig: nil)
+            let outcome = await Self.fetchOutcome(api: api, cookie: cookie)
+            switch outcome {
+            case .success(let usage):
                 connectionStatus = .success(usage)
-            } catch let error as APIError {
-                if case .rateLimited = error {
-                    connectionStatus = .rateLimited
-                } else {
-                    connectionStatus = .failed(error.localizedDescription)
-                }
-            } catch {
-                connectionStatus = .failed(error.localizedDescription)
+                grokBotStatus = .detected
+            case .rateLimited:
+                connectionStatus = .rateLimited
+                grokBotStatus = .detected
+            case .cookieRejected:
+                // Stale Keychain / scraped cookie — clear and prompt web login.
+                sessionStore.clear()
+                connectionStatus = .idle
+                showCursorLogin = true
+            case .failed(let message):
+                connectionStatus = .failed(message)
             }
             NSApp.activate(ignoringOtherApps: true)
         }
     }
 
-    /// Reads the current token off the main thread. `currentToken()` can spawn
-    /// `/usr/bin/security`, which may block, so it must never run on the main
-    /// thread during onboarding.
-    private static func tokenOffMain(_ provider: TokenProviderProtocol) async -> String? {
+    /// Called when the web login sheet finishes (success or cancel).
+    func handleWebLoginFinished(success: Bool) {
+        showCursorLogin = false
+        guard success else {
+            connectionStatus = .idle
+            return
+        }
+        // Cookie was saved to Keychain by CursorWebLoginView — retry Connect.
+        grokBotStatus = .detected
+        connectionStatus = .connecting
+
+        let reader = cookieReader
+        let api = grokBotAPI
+        Task {
+            let cookie = await Self.cookieOffMain(reader)
+            guard let cookie else {
+                connectionStatus = .failed(String(localized: "onboarding.connection.failed.notoken"))
+                return
+            }
+            let outcome = await Self.fetchOutcome(api: api, cookie: cookie)
+            switch outcome {
+            case .success(let usage):
+                connectionStatus = .success(usage)
+            case .rateLimited:
+                connectionStatus = .rateLimited
+            case .cookieRejected:
+                sessionStore.clear()
+                connectionStatus = .failed(String(localized: "onboarding.connection.failed.notoken"))
+                grokBotStatus = .notFound
+            case .failed(let message):
+                connectionStatus = .failed(message)
+            }
+            NSApp.activate(ignoringOtherApps: true)
+        }
+    }
+
+    private enum FetchOutcome {
+        case success(GrokBotUsageResponse)
+        case rateLimited
+        case cookieRejected
+        case failed(String)
+    }
+
+    private static func fetchOutcome(
+        api: GrokBotAPIClientProtocol,
+        cookie: String
+    ) async -> FetchOutcome {
+        do {
+            let usage = try await api.fetchUsage(cookie: cookie)
+            return .success(usage)
+        } catch let error as GrokBotAPIError {
+            switch error {
+            case .rateLimited:
+                return .rateLimited
+            case .cookieExpired:
+                return .cookieRejected
+            default:
+                return .failed(error.localizedDescription)
+            }
+        } catch {
+            return .failed(error.localizedDescription)
+        }
+    }
+
+    /// Reads the Cursor session cookie off the main thread (SQLite / Keychain I/O).
+    private static func cookieOffMain(_ reader: CursorCookieReaderProtocol) async -> String? {
         await withCheckedContinuation { continuation in
             DispatchQueue.global(qos: .userInitiated).async {
-                continuation.resume(returning: provider.currentToken())
+                continuation.resume(returning: reader.readCookie())
             }
         }
     }

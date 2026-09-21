@@ -15,7 +15,7 @@ import Foundation
 /// What a menu bar segment shows.
 enum MenuBarSegmentKind: String, Codable, CaseIterable, Identifiable {
     // Usage metrics (percentage)
-    case session, weekly, sonnet, fable, extraCredits
+    case session, weekly, sonnet, fable, extraCredits, grokBot
     // Pacing (delta vs linear pace)
     case sessionPacing, weeklyPacing, fablePacing
     // Status / time
@@ -27,7 +27,7 @@ enum MenuBarSegmentKind: String, Codable, CaseIterable, Identifiable {
 
     var family: Family {
         switch self {
-        case .session, .weekly, .sonnet, .fable, .extraCredits:
+        case .session, .weekly, .sonnet, .fable, .extraCredits, .grokBot:
             return .usage
         case .sessionPacing, .weeklyPacing, .fablePacing:
             return .pacing
@@ -54,7 +54,7 @@ enum MenuBarSegmentKind: String, Codable, CaseIterable, Identifiable {
     /// Presence-gated kinds render nothing (and the editor greys them) when the
     /// account lacks the metric, matching the pre-5.10 menu bar.
     var isPresenceGated: Bool {
-        self == .fable || self == .extraCredits || self == .fablePacing
+        self == .fable || self == .extraCredits || self == .fablePacing || self == .grokBot
     }
 }
 
@@ -208,31 +208,25 @@ enum MenuBarBuiltinTemplate: String, CaseIterable, Identifiable {
         switch self {
         case .classic:
             return MenuBarComposition(segments: [
-                MenuBarSegment(kind: .session, style: .labelValue),
-                MenuBarSegment(kind: .weekly, style: .labelValue),
+                MenuBarSegment(kind: .grokBot, style: .labelValue),
             ])
         case .minimalist:
             return MenuBarComposition(segments: [
-                MenuBarSegment(kind: .session, style: .valueOnly),
+                MenuBarSegment(kind: .grokBot, style: .valueOnly),
             ])
         case .pills:
             return MenuBarComposition(segments: [
-                MenuBarSegment(kind: .session, style: .pill),
-                MenuBarSegment(kind: .weekly, style: .pill),
+                MenuBarSegment(kind: .grokBot, style: .pill),
             ])
         case .pacingFocus:
+            // No Claude pacing; keep a single Grok Bot label+value.
             return MenuBarComposition(segments: [
-                MenuBarSegment(kind: .session, style: .labelValue),
-                MenuBarSegment(kind: .sessionPacing, style: .dotDelta),
+                MenuBarSegment(kind: .grokBot, style: .labelValue),
             ])
         case .complete:
             return MenuBarComposition(segments: [
-                MenuBarSegment(kind: .session, style: .labelValue),
-                MenuBarSegment(kind: .sessionReset, style: .text),
-                MenuBarSegment(kind: .weekly, style: .labelValue),
-                MenuBarSegment(kind: .sessionPacing, style: .dotDelta),
-                MenuBarSegment(kind: .weeklyPacing, style: .dotDelta),
-                MenuBarSegment(kind: .sonnet, style: .labelValue),
+                MenuBarSegment(kind: .grokBot, style: .labelValue),
+                MenuBarSegment(kind: .grokBot, style: .pill),
             ])
         }
     }
@@ -256,6 +250,7 @@ extension MenuBarSegmentKind {
         case .sonnet: return "quote.opening"
         case .fable: return "books.vertical.fill"
         case .extraCredits: return "creditcard.fill"
+        case .grokBot: return "waveform.path.ecg"
         case .sessionPacing, .weeklyPacing, .fablePacing: return "speedometer"
         case .sessionReset: return "clock.arrow.circlepath"
         case .serviceStatus: return "dot.radiowaves.left.and.right"

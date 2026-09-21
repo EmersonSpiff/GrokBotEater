@@ -8,7 +8,7 @@ final class SessionMonitorService: SessionMonitorServiceProtocol, @unchecked Sen
     }
 
     private var timer: DispatchSourceTimer?
-    private let queue = DispatchQueue(label: "com.tokeneater.session-monitor", qos: .utility)
+    private let queue = DispatchQueue(label: "com.emersonspiff.grokboteater.session-monitor", qos: .utility)
     // Mutated only on `queue` (see setScanInterval/setVisibility) so they stay
     // race-free despite the @unchecked Sendable conformance.
     private var scanInterval: TimeInterval

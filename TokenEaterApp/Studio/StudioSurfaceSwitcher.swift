@@ -131,6 +131,7 @@ private struct StudioPopoverThumbnail: View {
 /// through the shared `RenderData.live` path, on a simulated dark menu bar.
 private struct StudioMenuBarThumbnail: View {
     @EnvironmentObject private var usageStore: UsageStore
+    @EnvironmentObject private var grokBotUsageStore: GrokBotUsageStore
     @EnvironmentObject private var themeStore: ThemeStore
     @EnvironmentObject private var settingsStore: SettingsStore
     @EnvironmentObject private var vendorStatusStore: VendorStatusStore
@@ -138,6 +139,7 @@ private struct StudioMenuBarThumbnail: View {
     var body: some View {
         let data = MenuBarRenderer.RenderData.live(
             usage: usageStore,
+            grokBotUsage: grokBotUsageStore,
             theme: themeStore,
             settings: settingsStore,
             vendor: vendorStatusStore
@@ -149,10 +151,10 @@ private struct StudioMenuBarThumbnail: View {
         let image = MenuBarRenderer.render(data)
         return ZStack {
             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(Color(nsColor: NSColor(red: 0.13, green: 0.13, blue: 0.14, alpha: 1)))
+                .fill(Color(nsColor: NSColor(red: 0.92, green: 0.92, blue: 0.94, alpha: 1)))
                 .overlay(
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .stroke(.white.opacity(0.08), lineWidth: 0.5)
+                        .stroke(Color.black.opacity(0.08), lineWidth: 0.5)
                 )
                 .frame(height: 30)
             Image(nsImage: image)
@@ -160,7 +162,7 @@ private struct StudioMenuBarThumbnail: View {
                 .aspectRatio(contentMode: .fit)
                 .frame(maxWidth: 96, maxHeight: 18)
         }
-        .environment(\.colorScheme, .dark)
+        .environment(\.colorScheme, .light)
     }
 }
 
@@ -193,7 +195,7 @@ private struct StudioThemesThumbnail: View {
     private func ring(pct: Int, color: Color) -> some View {
         ZStack {
             Circle()
-                .stroke(Color.white.opacity(0.10), lineWidth: 3)
+                .stroke(Color.black.opacity(0.10), lineWidth: 3)
             Circle()
                 .trim(from: 0, to: CGFloat(min(max(pct, 0), 100)) / 100)
                 .stroke(color, style: StrokeStyle(lineWidth: 3, lineCap: .round))

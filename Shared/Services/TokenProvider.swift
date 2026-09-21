@@ -2,7 +2,7 @@ import Foundation
 import Security
 import os.log
 
-private let logger = Logger(subsystem: "com.tokeneater.app", category: "TokenProvider")
+private let logger = Logger(subsystem: "com.emersonspiff.grokboteater.app", category: "TokenProvider")
 
 final class TokenProvider: TokenProviderProtocol, @unchecked Sendable {
     private let securityCLIReader: SecurityCLIReaderProtocol

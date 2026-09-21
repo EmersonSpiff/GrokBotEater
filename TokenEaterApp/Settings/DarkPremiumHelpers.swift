@@ -18,11 +18,11 @@ func sectionTitle(_ text: String, subtitle: String? = nil) -> some View {
     VStack(alignment: .leading, spacing: 4) {
         Text(text)
             .font(.system(size: 24, weight: .black, design: .rounded))
-            .foregroundStyle(.white)
+            .foregroundStyle(DS.Palette.textPrimary)
         if let subtitle, !subtitle.isEmpty {
             Text(subtitle)
                 .font(.system(size: 12))
-                .foregroundStyle(.white.opacity(0.5))
+                .foregroundStyle(DS.Palette.textSecondary)
         }
     }
     .padding(.top, 8)
@@ -34,7 +34,7 @@ func sectionTitle(_ text: String, subtitle: String? = nil) -> some View {
 func cardLabel(_ text: String) -> some View {
     Text(text)
         .font(.system(size: 12, weight: .semibold))
-        .foregroundStyle(.white.opacity(0.5))
+        .foregroundStyle(DS.Palette.textSecondary)
 }
 
 // MARK: - Dark Toggle
@@ -47,7 +47,7 @@ func darkToggle(_ label: String, isOn: Binding<Bool>) -> some View {
             .labelsHidden()
         Text(label)
             .font(.system(size: 13))
-            .foregroundStyle(.white.opacity(0.8))
+            .foregroundStyle(DS.Palette.textPrimary)
         Spacer()
     }
 }
@@ -58,13 +58,13 @@ func darkButton(_ titleKey: LocalizedStringResource, action: @escaping () -> Voi
     Button(action: action) {
         Text(titleKey)
             .font(.system(size: 13, weight: .medium))
-            .foregroundStyle(.white.opacity(0.7))
+            .foregroundStyle(DS.Palette.textSecondary)
             .padding(.horizontal, 20)
             .padding(.vertical, 10)
             .background(
                 Capsule()
-                    .fill(.white.opacity(0.08))
-                    .overlay(Capsule().stroke(.white.opacity(0.15), lineWidth: 1))
+                    .fill(Color.black.opacity(0.08))
+                    .overlay(Capsule().stroke(Color.black.opacity(0.15), lineWidth: 1))
             )
     }
     .buttonStyle(.plain)
@@ -76,13 +76,13 @@ func darkPrimaryButton(_ titleKey: LocalizedStringResource, action: @escaping ()
     Button(action: action) {
         Text(titleKey)
             .font(.system(size: 15, weight: .semibold))
-            .foregroundStyle(.white)
+            .foregroundStyle(DS.Palette.textPrimary)
             .padding(.horizontal, 28)
             .padding(.vertical, 12)
             .background(
                 Capsule()
-                    .fill(.white.opacity(0.15))
-                    .overlay(Capsule().stroke(.white.opacity(0.3), lineWidth: 1))
+                    .fill(Color.black.opacity(0.15))
+                    .overlay(Capsule().stroke(Color.black.opacity(0.3), lineWidth: 1))
             )
     }
     .buttonStyle(.plain)
@@ -135,7 +135,7 @@ struct StudioResetButton: View {
                 .font(.system(size: 11, weight: .medium))
         }
         .buttonStyle(.plain)
-        .foregroundStyle(.white.opacity(0.55))
+        .foregroundStyle(DS.Palette.textSecondary)
         .frame(maxWidth: .infinity)
     }
 }

@@ -9,41 +9,44 @@ struct AgentWatchersSectionView: View {
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(alignment: .leading, spacing: 18) {
-                HStack(alignment: .center) {
-                    sectionTitle(
-                        String(localized: "sidebar.agentWatchers"),
-                        subtitle: String(localized: "sidebar.agentWatchers.subtitle")
-                    )
-                    Spacer()
-                    ClickChip(
-                        label: String(localized: "settings.overlay.toggle"),
-                        icon: settingsStore.overlayEnabled ? "checkmark" : "eye.slash",
-                        isActive: settingsStore.overlayEnabled,
-                        accent: .blue,
-                        style: .compact
-                    ) {
-                        settingsStore.overlayEnabled.toggle()
-                    }
-                }
+                sectionTitle(
+                    String(localized: "sidebar.agentWatchers"),
+                    subtitle: String(localized: "sidebar.agentWatchers.subtitle")
+                )
 
-                styleGroup
-                behaviorGroup
-                legendGroup
-                terminalSetupRow
-
-                ResetSectionButton(
-                    confirmTitle: String(localized: "settings.watchers.reset.confirm")
-                ) {
-                    resetWatcherDefaults()
-                }
+                grokBotWatchersComingSoon
 
                 Spacer(minLength: 0)
             }
             .padding(24)
         }
-        .sheet(isPresented: $showTerminalSetup) {
-            TerminalSetupSheet(isPresented: $showTerminalSetup)
+    }
+
+    private var grokBotWatchersComingSoon: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
+                Image(systemName: "waveform.path.ecg")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(DS.Palette.brandPrimary)
+                Text(String(localized: "settings.watchers.coming.title"))
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(DS.Palette.textPrimary)
+            }
+            Text(String(localized: "settings.watchers.coming.body"))
+                .font(.system(size: 12))
+                .foregroundStyle(DS.Palette.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(DS.Palette.brandPrimary.opacity(0.08))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(DS.Palette.brandPrimary.opacity(0.25), lineWidth: 1)
+                )
+        )
     }
 
     // MARK: - Style group
@@ -157,7 +160,7 @@ struct AgentWatchersSectionView: View {
                         Spacer()
                         Text("\(Int(settingsStore.overlayScale * 100))%")
                             .font(.system(size: 11, weight: .medium, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.5))
+                            .foregroundStyle(DS.Palette.textSecondary)
                             .monospacedDigit()
                         if abs(settingsStore.overlayScale - 1.1) > 0.01 {
                             Button {
@@ -167,7 +170,7 @@ struct AgentWatchersSectionView: View {
                             } label: {
                                 Image(systemName: "arrow.uturn.backward.circle.fill")
                                     .font(.system(size: 12))
-                                    .foregroundStyle(.white.opacity(0.4))
+                                    .foregroundStyle(DS.Palette.textTertiary)
                             }
                             .buttonStyle(.plain)
                             .help(Text(String(localized: "settings.watchers.size.reset")))
@@ -176,11 +179,11 @@ struct AgentWatchersSectionView: View {
                     HStack(spacing: 8) {
                         Image(systemName: "minus")
                             .font(.system(size: 9))
-                            .foregroundStyle(.white.opacity(0.3))
+                            .foregroundStyle(DS.Palette.textTertiary)
                         TokenEaterSlider(value: $settingsStore.overlay.overlayScale, in: 0.6...1.6, step: 0.05)
                         Image(systemName: "plus")
                             .font(.system(size: 9))
-                            .foregroundStyle(.white.opacity(0.3))
+                            .foregroundStyle(DS.Palette.textTertiary)
                     }
                 }
                 .padding(.top, 6)
@@ -246,29 +249,29 @@ struct AgentWatchersSectionView: View {
             HStack(spacing: 12) {
                 Image(systemName: "terminal.fill")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.7))
+                    .foregroundStyle(DS.Palette.textSecondary)
                     .frame(width: 24)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(String(localized: "settings.watchers.terminalSetup"))
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.85))
+                        .foregroundStyle(DS.Palette.textPrimary)
                     Text(String(localized: "settings.watchers.terminalSetup.hint"))
                         .font(.system(size: 11))
-                        .foregroundStyle(.white.opacity(0.45))
+                        .foregroundStyle(DS.Palette.textTertiary)
                 }
                 Spacer()
                 Image(systemName: "chevron.right")
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.35))
+                    .foregroundStyle(DS.Palette.textTertiary)
             }
             .padding(14)
             .frame(maxWidth: .infinity)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(.white.opacity(0.04))
+                    .fill(Color.black.opacity(0.04))
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
-                            .stroke(.white.opacity(0.08), lineWidth: 1)
+                            .stroke(Color.black.opacity(0.08), lineWidth: 1)
                     )
             )
         }
@@ -284,10 +287,10 @@ struct AgentWatchersSectionView: View {
                 Text(String(localized: title).uppercased())
                     .font(.system(size: 10, weight: .bold))
                     .tracking(1.6)
-                    .foregroundStyle(.white.opacity(0.55))
+                    .foregroundStyle(DS.Palette.textSecondary)
                 Text(String(localized: subtitle))
                     .font(.system(size: 11))
-                    .foregroundStyle(.white.opacity(0.35))
+                    .foregroundStyle(DS.Palette.textTertiary)
             }
             content()
         }
@@ -298,7 +301,7 @@ struct AgentWatchersSectionView: View {
                 .fill(.ultraThinMaterial.opacity(0.18))
                 .overlay(
                     RoundedRectangle(cornerRadius: 14)
-                        .stroke(.white.opacity(0.06), lineWidth: 1)
+                        .stroke(Color.black.opacity(0.06), lineWidth: 1)
                 )
         )
     }
@@ -307,7 +310,7 @@ struct AgentWatchersSectionView: View {
         Text(String(localized: key))
             .font(.system(size: 10, weight: .semibold))
             .tracking(0.6)
-            .foregroundStyle(.white.opacity(0.45))
+            .foregroundStyle(DS.Palette.textTertiary)
     }
 
     private func resetWatcherDefaults() {
@@ -363,10 +366,10 @@ struct AgentWatchersSectionView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(isSelected ? Color.blue.opacity(0.12) : Color.white.opacity(0.03))
+                    .fill(isSelected ? Color.blue.opacity(0.12) : Color.black.opacity(0.03))
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
-                            .stroke(isSelected ? Color.blue.opacity(0.5) : Color.white.opacity(0.07), lineWidth: 1)
+                            .stroke(isSelected ? Color.blue.opacity(0.5) : Color.black.opacity(0.07), lineWidth: 1)
                     )
             )
             .scaleEffect(isSelected ? 1.0 : 0.99)
@@ -402,7 +405,7 @@ struct AgentWatchersSectionView: View {
             statusIndicator(color: color)
             Text(label)
                 .font(.system(size: 13))
-                .foregroundStyle(.white.opacity(0.8))
+                .foregroundStyle(DS.Palette.textPrimary)
         }
     }
 
@@ -465,7 +468,7 @@ private struct TerminalSetupSheet: View {
     """
     private let weztermSnippet = """
     wezterm.on('gui-startup', function()
-      local script = os.getenv('HOME') .. '/Library/Application Support/com.tokeneater.shared/wezterm-watcher.sh'
+      local script = os.getenv('HOME') .. '/Library/Application Support/com.emersonspiff.grokboteater.shared/wezterm-watcher.sh'
       local f = io.open(script, 'r')
       if f then f:close(); io.popen('nohup bash "' .. script .. '" >/dev/null 2>&1 &') end
     end)
@@ -507,10 +510,10 @@ private struct TerminalSetupSheet: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(String(localized: "settings.watchers.terminalSetup"))
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(DS.Palette.textPrimary)
                 Text(String(localized: "settings.watchers.terminalSetup.sheet.hint"))
                     .font(.system(size: 11))
-                    .foregroundStyle(.white.opacity(0.5))
+                    .foregroundStyle(DS.Palette.textSecondary)
             }
             Spacer()
             Button {
@@ -518,7 +521,7 @@ private struct TerminalSetupSheet: View {
             } label: {
                 Image(systemName: "xmark.circle.fill")
                     .font(.system(size: 16))
-                    .foregroundStyle(.white.opacity(0.5))
+                    .foregroundStyle(DS.Palette.textSecondary)
             }
             .buttonStyle(.plain)
         }
@@ -532,13 +535,13 @@ private struct TerminalSetupSheet: View {
         VStack(alignment: .leading, spacing: 12) {
             Text(String(localized: hintKey))
                 .font(.system(size: 12))
-                .foregroundStyle(.white.opacity(0.6))
+                .foregroundStyle(DS.Palette.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
 
             HStack(alignment: .top, spacing: 8) {
                 Text(activeSnippet)
                     .font(.system(size: 11, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.85))
+                    .foregroundStyle(DS.Palette.textPrimary)
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .topLeading)
                     // Pin the snippet container to the height of the longest
@@ -550,7 +553,7 @@ private struct TerminalSetupSheet: View {
                             .fill(.black.opacity(0.45))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 8)
-                                    .stroke(.white.opacity(0.06), lineWidth: 1)
+                                    .stroke(Color.black.opacity(0.06), lineWidth: 1)
                             )
                     )
                     .textSelection(.enabled)
@@ -565,14 +568,14 @@ private struct TerminalSetupSheet: View {
                 } label: {
                     Image(systemName: copied == activeTab ? "checkmark" : "doc.on.doc")
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.75))
+                        .foregroundStyle(DS.Palette.textPrimary)
                         .frame(width: 36, height: 36)
                         .background(
                             RoundedRectangle(cornerRadius: 8)
-                                .fill(.white.opacity(0.08))
+                                .fill(Color.black.opacity(0.08))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 8)
-                                        .stroke(.white.opacity(0.1), lineWidth: 1)
+                                        .stroke(Color.black.opacity(0.1), lineWidth: 1)
                                 )
                         )
                 }

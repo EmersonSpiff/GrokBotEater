@@ -1,9 +1,9 @@
 import Foundation
 
 final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
-    private static let appGroupID = "group.com.tokeneater"
-    private static let legacyDirectoryName = "com.tokeneater.shared"
-    private static let oldDirectoryName = "com.claudeusagewidget.shared"
+    private static let appGroupID = "group.com.emersonspiff.grokboteater"
+    private static let legacyDirectoryName = "com.emersonspiff.grokboteater.shared"
+    private static let oldDirectoryName = "com.tokeneater.shared"
     private static let fileName = "shared.json"
 
     private var realHomeDirectory: String {
@@ -12,7 +12,7 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
     }
 
     /// Root directory for shared data. Always uses the home-relative
-    /// `~/Library/Application Support/com.tokeneater.shared/` path because :
+    /// `~/Library/Application Support/com.emersonspiff.grokboteater.shared/` path because :
     ///
     /// 1. The main app is desandboxed (post v5.0 Apple Dev migration), so
     ///    macOS happily returns a Group Container URL even without the
@@ -60,20 +60,11 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
 
     // MARK: - Migrations
 
-    /// v4.x migration: users who installed very early with the `com.claudeusagewidget.*`
-    /// bundle IDs still have the old directory. Move its content into the new one.
+    /// Intentionally a no-op. This fork must NEVER read, copy, or delete
+    /// `~/Library/Application Support/com.tokeneater.shared` — that belongs to
+    /// the real TokenEater install and deleting it breaks the user's Claude meter.
     private func migrateFromOldProductName() {
-        let fm = FileManager.default
-        guard fm.fileExists(atPath: oldProductFileURL.path) else { return }
-
-        let legacyDir = legacyHomeRelativeFileURL.deletingLastPathComponent()
-        try? fm.createDirectory(at: legacyDir, withIntermediateDirectories: true)
-
-        if !fm.fileExists(atPath: legacyHomeRelativeFileURL.path) {
-            try? fm.copyItem(at: oldProductFileURL, to: legacyHomeRelativeFileURL)
-        }
-
-        try? fm.removeItem(at: oldProductFileURL.deletingLastPathComponent())
+        // Do not touch TokenEater's Application Support directory.
     }
 
     /// Reverse migration: previous v5.0 builds wrote to the App Group container
@@ -146,6 +137,8 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
         var pacingHoursEnabled: Bool?
         var pacingStartHour: Int?
         var pacingEndHour: Int?
+        /// Grok Bot sand-usage snapshot for WidgetKit.
+        var grokBotSnapshot: GrokBotSharedSnapshot?
     }
 
     /// In-memory cache - avoids redundant disk reads within the same process.
@@ -199,7 +192,7 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
         cachedData = nil
     }
 
-    var isConfigured: Bool { cachedUsage != nil }
+    var isConfigured: Bool { cachedUsage != nil || grokBotSnapshot != nil }
 
     var cachedUsage: CachedUsage? {
         load().cachedUsage
@@ -293,6 +286,17 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
         data.lastWeekTotalsRefreshedAt = refreshedAt
         save(data)
     }
+
+    var grokBotSnapshot: GrokBotSharedSnapshot? {
+        load().grokBotSnapshot
+    }
+
+    func updateGrokBotSnapshot(_ snapshot: GrokBotSharedSnapshot) {
+        var data = loadFresh()
+        data.grokBotSnapshot = snapshot
+        save(data)
+    }
+
 
     func clear() {
         let empty = SharedData()

@@ -1,170 +1,147 @@
 <p align="center">
-  <img src="TokenEaterApp/Assets.xcassets/AppIcon.appiconset/icon_256x256.png" width="128" height="128" alt="TokenEater">
+  <img src="TokenEaterApp/Assets.xcassets/AppIcon.appiconset/icon_256x256.png" width="128" height="128" alt="GrokBotEater">
 </p>
 
-<h1 align="center">TokenEater</h1>
+<h1 align="center">GrokBotEater</h1>
 
 <p align="center">
-  <strong>Monitor your Claude AI usage limits directly from your macOS desktop.</strong>
+  <strong>Monitor your Grok Bot (Cursor) weekly usage from the macOS menu bar.</strong>
+  <br />
+  <sub>A separate product forked from <a href="https://github.com/AThevon/TokenEater">TokenEater</a> by Adrien Thevon. For Claude Code usage, keep using upstream TokenEater.</sub>
 </p>
 
 <p align="center">
-  <a href="https://tokeneater.athevon.dev">Website</a> ·
+  <a href="https://github.com/EmersonSpiff/GrokBotEater">Repository</a> ·
   <a href="#install">Install</a> ·
   <a href="#what-you-get">Features</a> ·
-  <a href="#privacy-two-read-only-calls">Privacy</a> ·
-  <a href="https://tokeneater.athevon.dev/en/docs">Docs</a> ·
-  <a href="https://github.com/AThevon/TokenEater/releases">Releases</a>
+  <a href="#privacy">Privacy</a> ·
+  <a href="https://github.com/EmersonSpiff/GrokBotEater/releases">Releases</a>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/macOS-14%2B-111?logo=apple&logoColor=white" alt="macOS 14+">
   <img src="https://img.shields.io/badge/Swift-5.9-F05138?logo=swift&logoColor=white" alt="Swift 5.9">
   <img src="https://img.shields.io/badge/WidgetKit-native-007AFF?logo=apple&logoColor=white" alt="WidgetKit">
-  <img src="https://img.shields.io/badge/Claude-Pro%20%2F%20Max%20%2F%20Team-D97706" alt="Claude Pro / Max / Team">
-  <img src="https://img.shields.io/github/downloads/AThevon/TokenEater/total?color=F97316" alt="Downloads">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
-  <img src="https://img.shields.io/github/v/release/AThevon/TokenEater?color=F97316" alt="Release">
-  <a href="https://buymeacoffee.com/athevon"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-FFDD00?logo=buymeacoffee&logoColor=black" alt="Buy Me a Coffee"></a>
 </p>
 
 ---
 
-> **Requires a Claude Pro, Max, or Team plan.** The free plan does not expose usage data.
-
-<!--
-Screenshots slot. Four shots, ~200px wide each, dropped into docs/assets/readme/:
-  popover.png    (menu bar + popover dashboard)
-  monitoring.png (main window, Monitoring space)
-  watchers.png   (Agent Watchers overlay over a desktop)
-  widgets.png    (desktop widgets)
-Then wire them here as a centered row:
-<p align="center">
-  <img src="docs/assets/readme/popover.png" width="200" alt="...">
-  ...
-</p>
--->
+> **Separate product (TokenEater fork)**  
+> GrokBotEater tracks **Grok Bot** weekly sand-usage via Cursor’s `get-sand-usage-status` API.  
+> Bundle IDs, shared data paths, and Sparkle are isolated so you can run it **alongside** TokenEater.  
+> Full credit to [Adrien Thevon](https://github.com/AThevon) for the original architecture.
 
 ## What you get
 
-A native menu bar app, desktop widgets, and a floating overlay that track your Claude usage in real time.
+A native menu bar app and WidgetKit widget for **Grok Bot** weekly usage on your Cursor plan.
 
-- **Menu bar.** Live percentages with color-coded thresholds, and a popover dashboard you compose element by element (rings, chips, arcs, pacing bars at full, half, or third width), start from built-in templates, and save as your own.
-- **Dashboard.** A three-space window (Monitoring / History / Settings) with flippable tiles, 7-day sparklines, peak day, and a pacing-vs-equilibrium graph.
-- **History.** Tokens over time from Claude Code's local logs: a stacked chart by model, project ranking, session counts, and cache hit rate, filterable by model family across 24h to 90d ranges.
-- **Widgets.** Native WidgetKit gauges, progress bars, and pacing, refreshed reactively.
-- **Agent Watchers.** A floating overlay of your live Claude Code sessions, terminals and VSCode-family extensions alike. Click a session to jump to its terminal or editor (Terminal, iTerm2, tmux, Kitty, WezTerm), right-click for quick actions.
-- **Smart Color.** Blends how much you have used with how fast you are burning, so the color warns you before the number does. Three temperaments set how cautious it is.
-- **Smart pacing.** Are you burning through tokens or cruising? Four zones: chill, on track, warning, hot.
-- **Themes.** Four presets plus full custom colors, a glow or flat look, and configurable warning thresholds.
-- **Notifications.** Per-surface and per-event toggles: escalation, recovery, pacing, scheduled reset reminders, extra credits, token expiry.
+- **Menu bar.** Live Grok Bot weekly % with your Canva face / logo and color-coded thresholds.
+- **Studio popover.** Grok Bot gauge as the default surface (Claude 5h / Weekly / Watchers pruned from the add menu).
+- **Widget.** **Grok Bot Usage** (small + medium) reading a local shared snapshot — no network in the extension.
+- **Connect.** Sign in with your Cursor web session (`WorkosCursorSessionToken`); IDE `state.vscdb` fallback when available.
+- **Settings → Connection.** Re-check uses the Grok Bot / Cursor session, not Claude OAuth.
 
-Everything in detail on the [website](https://tokeneater.athevon.dev).
+**Status (2026-09-21):**
+
+- ✅ Grok Bot API client + session auth (Keychain + IDE fallback)
+- ✅ `GrokBotUsageStore` auto-refresh + shared snapshot for WidgetKit
+- ✅ Menu bar face + Grok-first Studio composition
+- ✅ **Grok Bot Usage** widget (build 515+)
+- ✅ History tab placeholder (“Coming soon” for Grok trends)
+- 🚧 Grok-native notifications / Watchers (Claude-shaped leftovers deferred)
+- 🚧 Signed DMG / Homebrew distribution
+
+**Not this app:** Claude 5h/7d tracking, Claude Code JSONL history, and Agent Watchers belong in [TokenEater](https://github.com/AThevon/TokenEater). Run both if you need both.
 
 ## Install
 
-### Download DMG (recommended)
+### Build from source (required for now)
 
-**[Download TokenEater.dmg](https://github.com/AThevon/TokenEater/releases/latest/download/TokenEater.dmg)**
-
-Open the DMG, drag TokenEater to Applications, and launch it. The DMG is signed with a Developer ID and notarized by Apple, so Gatekeeper lets it run on first launch without any extra steps.
-
-### Homebrew
+No DMG or Homebrew bottle yet.
 
 ```bash
-brew tap AThevon/tokeneater
-brew trust AThevon/tokeneater
-brew install --cask tokeneater
-```
-
-> `brew trust` is required on Homebrew 6.0+, which no longer loads a third-party tap until you trust it.
-
-### First setup
-
-**Prerequisites:** [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed and authenticated (`claude` then `/login`), on a **Pro, Max, or Team plan**.
-
-1. Open TokenEater: a guided setup walks you through connecting your account
-2. Right-click on the desktop > **Edit Widgets** > search "TokenEater"
-
-## Update
-
-TokenEater checks for updates automatically. When a new version is available, a modal lets you download and install it in-app; macOS will ask for your admin password to replace the app in `/Applications`.
-
-If you installed via Homebrew: `brew update && brew upgrade --cask tokeneater`
-
-## Uninstall
-
-Delete `TokenEater.app` from Applications, then optionally clean up shared data:
-
-```bash
-rm -rf /Applications/TokenEater.app
-rm -rf ~/Library/Application\ Support/com.tokeneater.shared
-```
-
-If you installed via Homebrew: `brew uninstall --cask tokeneater`. For a complete wipe, caches and widget state included, use the clean reset in the [troubleshooting guide](docs/TROUBLESHOOTING.md).
-
-## Build it yourself
-
-```bash
-git clone https://github.com/AThevon/TokenEater.git
-cd TokenEater
+git clone https://github.com/EmersonSpiff/GrokBotEater.git
+cd GrokBotEater
 ./build.sh
 ```
 
-The script checks Xcode, installs XcodeGen if needed, and assembles the app. Local builds are not notarized, so Gatekeeper blocks the first launch (right-click > Open, or System Settings > Privacy & Security > Open Anyway). The step-by-step walkthrough is in [`SETUP.md`](SETUP.md).
+**Prerequisites:**
 
-## Privacy: two read-only calls
+- macOS 14+
+- Xcode 15+ (Swift 5.9)
+- XcodeGen (`brew install xcodegen`)
 
-TokenEater reads the **OAuth access token** Claude Code already keeps in your macOS Keychain, the same token Claude Code itself uses. At first launch, macOS asks you to allow that access: click **Always Allow** once. The prompt is standard macOS behavior for any app reading a keychain item it did not create, and since the read goes through Apple's own `security` tool, whose signature never changes, the prompt does not come back on updates.
+The build produces an unsigned `GrokBotEater.app` (right-click → Open on first launch).  
+Step-by-step: [`SETUP.md`](SETUP.md).
 
-Everything the app does with the token:
+### First setup
 
-- `GET api.anthropic.com/api/oauth/usage`, your current usage stats
-- `GET api.anthropic.com/api/oauth/profile`, your plan info
+1. Launch GrokBotEater and use **Connect** if usage doesn’t appear (Cursor web session).
+2. Usage refreshes on an interval (default ~5 minutes).
+3. Add the desktop widget: Notification Center → **GrokBotEater** → **Grok Bot Usage** (not TokenEater’s Overview widgets).
+4. Open the app once after install so the shared snapshot syncs.
 
-Both are read-only. The app cannot send messages, read conversations, or modify your account. The token never leaves your machine except for those two calls, the widget reads a local JSON file with no network or keychain access at all, and the History tab and Agent Watchers read Claude Code's local session logs without anything leaving your Mac.
+## Privacy
 
-Anthropic does not offer a third-party OAuth flow or scoped tokens yet, so reading the existing token is the only way an app like this can exist. If scoped tokens become available, TokenEater will adopt them immediately. The relevant code is short and auditable: keychain access in [`SecurityCLIReader.swift`](Shared/Services/SecurityCLIReader.swift) and [`TokenProvider.swift`](Shared/Services/TokenProvider.swift), the two API calls in [`APIClient.swift`](Shared/Services/APIClient.swift).
+GrokBotEater is **read-only** for Grok Bot:
 
-## If something breaks
+- `POST https://cursor.com/api/dashboard/get-sand-usage-status` with your Cursor session cookie
+- Returns weekly `usagePercent` (and related plan flags used for ring gating)
+- No writes, no account changes
 
-| Symptom | Cause | Fix |
-|---------|-------|-----|
-| "Rate limited" or "API unavailable" | Your OAuth token has hit its per-token request limit | Run `claude /login` for a fresh token; TokenEater detects the change and recovers within seconds |
-| Keychain popup on first run | A new install needs authorization to read your Claude Code token | Click **Always Allow** once; it sticks across updates |
-| Widget stuck or not updating | macOS caches widget extensions aggressively | Remove the widget, run the clean reset, re-add the widget |
+The WidgetKit extension only reads  
+`~/Library/Application Support/com.emersonspiff.grokboteater.shared/shared.json`.
 
-Anything deeper, including the full clean reset that wipes caches, preferences, and widget state, lives in the [troubleshooting guide](docs/TROUBLESHOOTING.md).
+**Session security:** Prefer the in-app Connect flow (cookie stored in this app’s Keychain service). Disk scrapes of Cursor/Chrome cookie DBs are a fallback only. Revoke by logging out at [cursor.com](https://cursor.com) or clearing Connect in Settings.
+
+**Source audit:**  
+[`GrokBotAPIClient.swift`](Shared/Services/GrokBotAPIClient.swift),  
+[`GrokBotSessionStore.swift`](Shared/Services/GrokBotSessionStore.swift),  
+[`CursorCookieReader.swift`](Shared/Services/CursorCookieReader.swift),  
+[`CursorIDETokenReader.swift`](Shared/Services/CursorIDETokenReader.swift)
+
+## Update
+
+Sparkle auto-update is neutralized so this fork doesn’t collide with upstream TokenEater. Rebuild from this repo for new builds.
+
+## Uninstall
+
+```bash
+rm -rf /Applications/GrokBotEater.app
+rm -rf ~/Library/Application\ Support/com.emersonspiff.grokboteater.shared
+```
 
 ## Documentation
 
-- [Setup](SETUP.md), building from source step by step
-- [Troubleshooting](docs/TROUBLESHOOTING.md), common fixes and the clean reset
-- [Contributing](CONTRIBUTING.md), workflow, commit conventions, and testing
-- [AGENTS.md](AGENTS.md), architecture, data flow, and the SwiftUI rules, for contributors and AI agents alike
-- [Design system](docs/design/MASTER.md), how the windows are built and colored
+- [Setup](SETUP.md) — build from source
+- [Troubleshooting](docs/TROUBLESHOOTING.md)
+- [Contributing](CONTRIBUTING.md)
+- [AGENTS.md](AGENTS.md) — architecture notes for contributors / agents
+- [Design system](docs/design/MASTER.md)
 
 ## Contributing
 
-Contributions are welcome: bug reports, feature ideas, and code PRs all help. Start with [`CONTRIBUTING.md`](CONTRIBUTING.md); it covers the workflow and a few SwiftUI rules worth knowing before touching the code.
+Bug reports and Grok Bot integration improvements welcome. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
-## Support
+## Upstream & Credits
 
-If TokenEater saves you from hitting your limits blindly, consider [buying me a coffee](https://buymeacoffee.com/athevon).
+**GrokBotEater** is a fork of **[TokenEater](https://github.com/AThevon/TokenEater)** by [Adrien Thevon](https://athevon.dev).  
+Core menu-bar / widget architecture comes from TokenEater; this product renames the bundle and focuses on Grok Bot.
+
+- **Claude usage** → [TokenEater](https://github.com/AThevon/TokenEater)  
+- **Grok Bot weekly usage** → this repo
 
 ## License
 
-MIT
+MIT (same as upstream TokenEater)
 
 ---
 
 <p align="center">
-  Built by <a href="https://athevon.dev"><strong>Adrien Thevon</strong></a>, software engineer in Toulouse.
+  Maintained by <a href="https://github.com/EmersonSpiff">EmersonSpiff</a>.
   <br />
   <sub>
-    Also mine:
-    <a href="https://github.com/AThevon/genjutsu">genjutsu</a>, creative coding skills for Claude
-    &nbsp;·&nbsp;
-    <a href="https://github.com/AThevon/worktigre">worktigre</a>, a git worktree manager
+    Original TokenEater by <a href="https://athevon.dev"><strong>Adrien Thevon</strong></a>.
   </sub>
 </p>

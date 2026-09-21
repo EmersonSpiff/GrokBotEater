@@ -64,7 +64,7 @@ struct DisplaySectionView: View {
                     menuBarColorRow(
                         label: "settings.reset.color",
                         hex: $settingsStore.display.resetTextColorHex,
-                        fallback: .white,
+                        fallback: DS.Palette.textPrimary,
                         disabled: settingsStore.smartColorEnabled
                     )
                 }
@@ -75,7 +75,7 @@ struct DisplaySectionView: View {
                 menuBarColorRow(
                     label: "settings.session.periodcolor",
                     hex: $settingsStore.display.sessionPeriodColorHex,
-                    fallback: .white.opacity(0.55),
+                    fallback: DS.Palette.textSecondary,
                     disabled: false
                 )
             }
@@ -92,10 +92,10 @@ struct DisplaySectionView: View {
                 Text(String(localized: title).uppercased())
                     .font(.system(size: 10, weight: .bold))
                     .tracking(1.6)
-                    .foregroundStyle(.white.opacity(0.55))
+                    .foregroundStyle(DS.Palette.textSecondary)
                 Text(String(localized: subtitle))
                     .font(.system(size: 11))
-                    .foregroundStyle(.white.opacity(0.35))
+                    .foregroundStyle(DS.Palette.textTertiary)
             }
             content()
         }
@@ -106,7 +106,7 @@ struct DisplaySectionView: View {
                 .fill(.ultraThinMaterial.opacity(0.18))
                 .overlay(
                     RoundedRectangle(cornerRadius: 14)
-                        .stroke(.white.opacity(0.06), lineWidth: 1)
+                        .stroke(Color.black.opacity(0.06), lineWidth: 1)
                 )
         )
     }
@@ -131,7 +131,7 @@ struct DisplaySectionView: View {
         return HStack {
             Text(label)
                 .font(.system(size: 12))
-                .foregroundStyle(.white.opacity(disabled ? 0.35 : 0.7))
+                .foregroundStyle(DS.Palette.textPrimary.opacity(disabled  ? 0.35 : 0.7))
             Spacer()
             if !hex.wrappedValue.isEmpty && !disabled {
                 Button {
@@ -139,7 +139,7 @@ struct DisplaySectionView: View {
                 } label: {
                     Image(systemName: "arrow.uturn.backward.circle.fill")
                         .font(.system(size: 13))
-                        .foregroundStyle(.white.opacity(0.35))
+                        .foregroundStyle(DS.Palette.textTertiary)
                 }
                 .buttonStyle(.plain)
                 .help(Text(String(localized: "settings.theme.menubar.resetColor")))
@@ -190,7 +190,7 @@ struct ClickChip: View {
                 Text(label)
                     .font(.system(size: style == .compact ? 10 : 12, weight: .medium))
             }
-            .foregroundStyle(isActive ? accent : .white.opacity(0.55))
+            .foregroundStyle(isActive ? accent : DS.Palette.textSecondary)
             .padding(.horizontal, style == .compact ? 9 : 12)
             .padding(.vertical, style == .compact ? 5 : 8)
             .frame(maxWidth: style == .tile ? .infinity : nil)
@@ -207,10 +207,10 @@ struct ClickChip: View {
     private var chipBackground: some View {
         let radius: CGFloat = style == .compact ? 7 : 9
         RoundedRectangle(cornerRadius: radius)
-            .fill(isActive ? accent.opacity(0.18) : Color.white.opacity(0.04))
+            .fill(isActive ? accent.opacity(0.18) : Color.black.opacity(0.04))
             .overlay(
                 RoundedRectangle(cornerRadius: radius)
-                    .stroke(isActive ? accent.opacity(0.55) : Color.white.opacity(0.07), lineWidth: 1)
+                    .stroke(isActive ? accent.opacity(0.55) : Color.black.opacity(0.07), lineWidth: 1)
             )
     }
 }
@@ -234,16 +234,16 @@ struct BinaryChoiceChip: View {
                 Text(label)
                     .font(.system(size: 12, weight: .medium))
             }
-            .foregroundStyle(isActive ? .white : .white.opacity(0.5))
+            .foregroundStyle(isActive ? DS.Palette.textPrimary : DS.Palette.textSecondary)
             .padding(.horizontal, 12)
             .padding(.vertical, 9)
             .frame(maxWidth: .infinity)
             .background(
                 RoundedRectangle(cornerRadius: 9)
-                    .fill(isActive ? Color.blue.opacity(0.18) : Color.white.opacity(0.03))
+                    .fill(isActive ? Color.blue.opacity(0.18) : Color.black.opacity(0.03))
                     .overlay(
                         RoundedRectangle(cornerRadius: 9)
-                            .stroke(isActive ? Color.blue.opacity(0.45) : Color.white.opacity(0.07), lineWidth: 1)
+                            .stroke(isActive ? Color.blue.opacity(0.45) : Color.black.opacity(0.07), lineWidth: 1)
                     )
             )
             .scaleEffect(hovering ? 1.01 : 1.0)

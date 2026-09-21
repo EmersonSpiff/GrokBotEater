@@ -12,6 +12,7 @@ protocol SharedFileServiceProtocol: Sendable {
     var pacingSchedule: PacingSchedule { get }
     var lastWeekDailyTotals: [Int]? { get }
     var lastWeekTotalsRefreshedAt: Date? { get }
+    var grokBotSnapshot: GrokBotSharedSnapshot? { get }
 
     func invalidateCache()
     func updateAfterSync(usage: CachedUsage, syncDate: Date)
@@ -20,5 +21,6 @@ protocol SharedFileServiceProtocol: Sendable {
     func updateSmartColorProfile(_ profile: SmartColorProfile)
     func updatePacingSchedule(_ schedule: PacingSchedule)
     func updateLastWeekDailyTotals(_ totals: [Int], refreshedAt: Date)
+    func updateGrokBotSnapshot(_ snapshot: GrokBotSharedSnapshot)
     func clear()
 }
