@@ -148,7 +148,7 @@ struct UpdateModalView: View {
                     .tracking(1.3)
                 Spacer()
                 Button {
-                    if let url = URL(string: "https://github.com/AThevon/TokenEater/releases/tag/v\(version)") {
+                    if let url = URL(string: "https://github.com/EmersonSpiff/GrokBotEater/releases/tag/v\(version)") {
                         NSWorkspace.shared.open(url)
                     }
                 } label: {

@@ -8,7 +8,7 @@ struct TokenEaterWidget: Widget {
         StaticConfiguration(kind: kind, provider: StaticProvider()) { entry in
             UsageWidgetView(entry: entry)
         }
-        .configurationDisplayName("TokenEater")
+        .configurationDisplayName("GrokBotEater")
         .description(String(localized: "widget.description.usage"))
         .supportedFamilies([.systemMedium, .systemLarge])
     }

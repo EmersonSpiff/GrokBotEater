@@ -84,7 +84,7 @@ struct MonitoringView: View {
                     .resizable()
                     .interpolation(.high)
                     .frame(width: 26, height: 26)
-                Text("TokenEater")
+                Text("GrokBotEater")
                     .font(DS.Typography.title1)
                     .foregroundStyle(DS.Palette.textPrimary)
             }

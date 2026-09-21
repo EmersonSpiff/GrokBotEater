@@ -87,7 +87,7 @@ struct SettingsSectionView: View {
             glassCard {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
-                        Text("TokenEater v\(updateStore.currentVersion)")
+                        Text("GrokBotEater v\(updateStore.currentVersion)")
                             .font(.system(size: 12))
                             .foregroundStyle(.white.opacity(0.5))
                         Spacer()
@@ -281,19 +281,19 @@ struct SettingsSectionView: View {
                         icon: "chevron.left.forwardslash.chevron.right",
                         title: String(localized: "settings.about.repository"),
                         subtitle: String(localized: "settings.about.repository.hint"),
-                        url: URL(string: "https://github.com/AThevon/TokenEater")!
+                        url: URL(string: "https://github.com/EmersonSpiff/GrokBotEater")!
                     )
                     AboutLinkRow(
                         icon: "exclamationmark.bubble.fill",
                         title: String(localized: "settings.about.issues"),
                         subtitle: String(localized: "settings.about.issues.hint"),
-                        url: URL(string: "https://github.com/AThevon/TokenEater/issues")!
+                        url: URL(string: "https://github.com/EmersonSpiff/GrokBotEater/issues")!
                     )
                     AboutLinkRow(
                         icon: "tag.fill",
                         title: String(localized: "settings.about.releases"),
                         subtitle: String(localized: "settings.about.releases.hint"),
-                        url: URL(string: "https://github.com/AThevon/TokenEater/releases")!
+                        url: URL(string: "https://github.com/EmersonSpiff/GrokBotEater/releases")!
                     )
                 }
             }
