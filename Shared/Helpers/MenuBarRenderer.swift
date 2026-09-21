@@ -391,6 +391,11 @@ enum MenuBarRenderer {
         let label = usageLabel(kind)
         let color = colorForPct(value, resetDate: usageResetDate(kind, data: data), windowDuration: usageWindow(kind), data: data)
 
+        // Grok Bot: Canva face icon + percent (never "GB" letters).
+        if kind == .grokBot {
+            return grokBotUsageContent(value: value, style: style, color: color, data: data)
+        }
+
         switch style {
         case .labelValue:
             let s = NSMutableAttributedString()
@@ -421,6 +426,99 @@ enum MenuBarRenderer {
                 .font: systemFont(12, .bold, monoDigits: true), .foregroundColor: color,
             ]))
         }
+    }
+
+    /// Menu-bar Grok Bot segment: Canva GBE face + percentage.
+    private static func grokBotUsageContent(
+        value: Int,
+        style: MenuBarSegmentStyle,
+        color: NSColor,
+        data: RenderData
+    ) -> SegmentVisual.Content {
+        let pctText: String = {
+            switch style {
+            case .mono: return "\(value)"
+            default: return "\(value)%"
+            }
+        }()
+
+        if style == .pill {
+            return .pill(text: pctText, tint: color)
+        }
+
+        let s = NSMutableAttributedString()
+        let iconHeight: CGFloat = 20
+        if let icon = menuBarGrokBotIcon(side: iconHeight) {
+            let attachment = NSTextAttachment()
+            attachment.image = icon
+            let aspect = icon.size.width / max(icon.size.height, 1)
+            attachment.bounds = CGRect(
+                x: 0,
+                y: (12 - iconHeight) / 2 + 0.5,
+                width: iconHeight * aspect,
+                height: iconHeight
+            )
+            s.append(NSAttributedString(attachment: attachment))
+            s.append(NSAttributedString(string: " ", attributes: [
+                .font: systemFont(9, .medium), .foregroundColor: periodColor(data),
+            ]))
+        }
+        s.append(NSAttributedString(string: pctText, attributes: [
+            .font: style == .mono
+                ? monoFont(11, .bold)
+                : systemFont(12, .bold, monoDigits: true),
+            .foregroundColor: color,
+        ]))
+        return .run(s)
+    }
+
+    private static func menuBarGrokBotIcon(side: CGFloat) -> NSImage? {
+        guard let source = NSImage(named: "Logo") else { return nil }
+        return scaledMenuBarIcon(from: source, side: side)
+    }
+
+    /// Scale Logo with an explicit alpha bitmap so redraw never paints a black square.
+    private static func scaledMenuBarIcon(from source: NSImage, side: CGFloat) -> NSImage {
+        let pixel = max(1, Int(ceil(side * 2)))
+        let rep = NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: pixel,
+            pixelsHigh: pixel,
+            bitsPerSample: 8,
+            samplesPerPixel: 4,
+            hasAlpha: true,
+            isPlanar: false,
+            colorSpaceName: .deviceRGB,
+            bytesPerRow: 0,
+            bitsPerPixel: 0
+        )!
+        rep.size = NSSize(width: side, height: side)
+
+        NSGraphicsContext.saveGraphicsState()
+        defer { NSGraphicsContext.restoreGraphicsState() }
+        guard let ctx = NSGraphicsContext(bitmapImageRep: rep) else {
+            let copy = source.copy() as! NSImage
+            copy.size = NSSize(width: side, height: side)
+            copy.isTemplate = false
+            return copy
+        }
+        NSGraphicsContext.current = ctx
+        ctx.imageInterpolation = .high
+        NSColor.clear.setFill()
+        NSRect(x: 0, y: 0, width: side, height: side).fill()
+        source.draw(
+            in: NSRect(x: 0, y: 0, width: side, height: side),
+            from: NSRect(origin: .zero, size: source.size),
+            operation: .sourceOver,
+            fraction: 1.0,
+            respectFlipped: true,
+            hints: [.interpolation: NSImageInterpolation.high]
+        )
+
+        let img = NSImage(size: NSSize(width: side, height: side))
+        img.addRepresentation(rep)
+        img.isTemplate = false
+        return img
     }
 
     private static func pacingContent(kind: MenuBarSegmentKind, style: MenuBarSegmentStyle, shape: PacingShape, data: RenderData) -> SegmentVisual.Content {
@@ -550,7 +648,7 @@ enum MenuBarRenderer {
         case .sonnet: return MetricID.sonnet.shortLabel
         case .fable: return MetricID.fable.shortLabel
         case .extraCredits: return MetricID.extraCredits.shortLabel
-        case .grokBot: return "GB"
+        case .grokBot: return "" // face icon used instead of letters
         default: return ""
         }
     }
@@ -630,39 +728,27 @@ enum MenuBarRenderer {
         }
     }
 
-    /// App logo silhouette for menu bar (template - macOS renders white/black automatically).
+    /// Fallback when usage isn't ready — Canva GBE face, not TokenEater's E / "GB".
     private static func renderLogoTemplate() -> NSImage {
-        let s: CGFloat = 16
-        let height: CGFloat = 22
-        let imgSize = NSSize(width: s + 2, height: height)
-        let scale = s / 300.0
-        let yOff = (height - s) / 2
-
-        let img = NSImage(size: imgSize, flipped: true) { _ in
-            let ctx = NSGraphicsContext.current!.cgContext
-            ctx.translateBy(x: 1, y: yOff)
-            ctx.scaleBy(x: scale, y: scale)
-
-            NSColor.black.setFill()
-
-            let lPath = CGMutablePath()
-            let r: CGFloat = 32
-            lPath.addRoundedRect(in: CGRect(x: 0, y: 0, width: 300, height: 122), cornerWidth: r, cornerHeight: r)
-            lPath.addRoundedRect(in: CGRect(x: 0, y: 0, width: 122, height: 300), cornerWidth: r, cornerHeight: r)
-            ctx.addPath(lPath)
-            ctx.fillPath(using: .winding)
-
-            let bar1 = CGRect(x: 142, y: 142, width: 158, height: 70)
-            let bar2 = CGRect(x: 142, y: 230, width: 158, height: 70)
-            let barR: CGFloat = 24
-            ctx.addPath(CGPath(roundedRect: bar1, cornerWidth: barR, cornerHeight: barR, transform: nil))
-            ctx.fillPath()
-            ctx.addPath(CGPath(roundedRect: bar2, cornerWidth: barR, cornerHeight: barR, transform: nil))
-            ctx.fillPath()
-
-            return true
+        let side: CGFloat = 20
+        if let icon = menuBarGrokBotIcon(side: side) {
+            let height = imageHeight
+            let img = NSImage(size: NSSize(width: side + 2, height: height), flipped: false) { _ in
+                NSColor.clear.setFill()
+                NSRect(x: 0, y: 0, width: side + 2, height: height).fill()
+                icon.draw(
+                    in: NSRect(x: 1, y: (height - side) / 2, width: side, height: side),
+                    from: .zero,
+                    operation: .sourceOver,
+                    fraction: 1.0
+                )
+                return true
+            }
+            img.isTemplate = false
+            return img
         }
-        img.isTemplate = true
-        return img
+        let empty = NSImage(size: NSSize(width: 22, height: imageHeight))
+        empty.isTemplate = false
+        return empty
     }
 }
