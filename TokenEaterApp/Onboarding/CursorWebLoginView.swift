@@ -2,12 +2,13 @@ import SwiftUI
 import WebKit
 
 /// In-app WKWebView sheet that loads cursor.com login and captures
-/// the `CursorAppLogin` cookie into `GrokBotSessionStore`.
+/// the `WorkosCursorSessionToken` cookie into `GrokBotSessionStore`.
 struct CursorWebLoginView: View {
     var onComplete: (Bool) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var statusMessage = String(localized: "onboarding.weblogin.status.waiting")
+    @State private var checkTrigger = 0
 
     var body: some View {
         VStack(spacing: 0) {
@@ -16,6 +17,12 @@ struct CursorWebLoginView: View {
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(DS.Palette.textPrimary)
                 Spacer()
+                Button("onboarding.weblogin.check") {
+                    checkTrigger += 1
+                }
+                .buttonStyle(.plain)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(DS.Palette.brandPrimary)
                 Button("onboarding.weblogin.cancel") {
                     onComplete(false)
                     dismiss()
@@ -31,6 +38,7 @@ struct CursorWebLoginView: View {
 
             CursorLoginWebView(
                 statusMessage: $statusMessage,
+                checkTrigger: checkTrigger,
                 onCookieCaptured: { cookie in
                     GrokBotSessionStore.shared.save(cookie: cookie)
                     statusMessage = String(localized: "onboarding.weblogin.status.captured")
@@ -62,6 +70,7 @@ struct CursorWebLoginView: View {
 
 private struct CursorLoginWebView: NSViewRepresentable {
     @Binding var statusMessage: String
+    var checkTrigger: Int
     var onCookieCaptured: (String) -> Void
 
     func makeCoordinator() -> Coordinator {
@@ -70,8 +79,8 @@ private struct CursorLoginWebView: NSViewRepresentable {
 
     func makeNSView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
-        // Dedicated non-persistent store: we copy CursorAppLogin into Keychain.
-        config.websiteDataStore = .nonPersistent()
+        // Persistent store so authenticator.cursor.sh redirects keep session cookies.
+        config.websiteDataStore = .default()
         config.preferences.javaScriptCanOpenWindowsAutomatically = true
 
         let webView = WKWebView(frame: .zero, configuration: config)
@@ -87,6 +96,10 @@ private struct CursorLoginWebView: NSViewRepresentable {
 
     func updateNSView(_ nsView: WKWebView, context: Context) {
         context.coordinator.onCookieCaptured = onCookieCaptured
+        if checkTrigger != context.coordinator.lastCheckTrigger {
+            context.coordinator.lastCheckTrigger = checkTrigger
+            context.coordinator.inspectCookies()
+        }
     }
 
     static func dismantleNSView(_ nsView: WKWebView, coordinator: Coordinator) {
@@ -99,6 +112,7 @@ private struct CursorLoginWebView: NSViewRepresentable {
         weak var webView: WKWebView?
         private var pollTimer: Timer?
         private var didCapture = false
+        var lastCheckTrigger: Int = 0
 
         init(statusMessage: Binding<String>, onCookieCaptured: @escaping (String) -> Void) {
             self.statusMessage = statusMessage
@@ -137,19 +151,22 @@ private struct CursorLoginWebView: NSViewRepresentable {
             return nil
         }
 
-        private func inspectCookies() {
+        func inspectCookies() {
             guard !didCapture, let store = webView?.configuration.websiteDataStore.httpCookieStore else {
                 return
             }
             store.getAllCookies { [weak self] cookies in
                 guard let self, !self.didCapture else { return }
-                let match = cookies.first { cookie in
-                    cookie.name == "CursorAppLogin"
-                        && (cookie.domain == "cursor.com"
-                            || cookie.domain == ".cursor.com"
-                            || cookie.domain.hasSuffix(".cursor.com"))
-                        && !cookie.value.isEmpty
-                }
+                let preferredNames = ["WorkosCursorSessionToken", "CursorAppLogin"]
+                let match = preferredNames.lazy.compactMap { name in
+                    cookies.first { cookie in
+                        cookie.name == name
+                            && (cookie.domain == "cursor.com"
+                                || cookie.domain == ".cursor.com"
+                                || cookie.domain.hasSuffix("cursor.com"))
+                            && !cookie.value.isEmpty
+                    }
+                }.first
                 guard let match else { return }
                 self.didCapture = true
                 self.stopPolling()

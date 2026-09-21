@@ -886,6 +886,7 @@
 
 /* Onboarding - Web login sheet */
 "onboarding.weblogin.title" = "Sign in to Cursor";
+"onboarding.weblogin.check" = "I've signed in";
 "onboarding.weblogin.cancel" = "Cancel";
 "onboarding.weblogin.status.waiting" = "Sign in at cursor.com — we capture your session automatically.";
 "onboarding.weblogin.status.captured" = "Session saved. Connecting…";

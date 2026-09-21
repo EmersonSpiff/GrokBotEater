@@ -32,6 +32,11 @@ final class CursorCookieReader: CursorCookieReaderProtocol, @unchecked Sendable 
         if let saved = sessionStore.savedCookie() {
             return saved
         }
+        if let ide = CursorIDETokenReader.sessionCookieValue() {
+            // Cache so subsequent reads don't reopen the large vscdb.
+            sessionStore.save(cookie: ide)
+            return ide
+        }
         return scrapeCookieFromDisk()
     }
 
@@ -97,7 +102,7 @@ final class CursorCookieReader: CursorCookieReaderProtocol, @unchecked Sendable 
         let query = """
         SELECT value, encrypted_value, expires_utc
         FROM cookies
-        WHERE name = 'CursorAppLogin'
+        WHERE name IN ('WorkosCursorSessionToken', 'CursorAppLogin')
         AND (host_key = '.cursor.com' OR host_key = 'cursor.com' OR host_key LIKE '%.cursor.com')
         ORDER BY expires_utc DESC
         LIMIT 1
