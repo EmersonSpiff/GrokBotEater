@@ -448,14 +448,16 @@ enum MenuBarRenderer {
         }
 
         let s = NSMutableAttributedString()
-        if let icon = menuBarGrokBotIcon(template: data.menuBarMonochrome) {
+        // Match menu-bar height (~22pt); Claude's sun sits near full height.
+        let iconHeight: CGFloat = 18
+        if let icon = menuBarGrokBotIcon(side: iconHeight) {
             let attachment = NSTextAttachment()
             attachment.image = icon
-            let iconHeight: CGFloat = 12
             let aspect = icon.size.width / max(icon.size.height, 1)
+            // Baseline so the face sits optically centered next to 12pt digits.
             attachment.bounds = CGRect(
                 x: 0,
-                y: (12 - iconHeight) / 2 - 0.5,
+                y: (12 - iconHeight) / 2 + 0.5,
                 width: iconHeight * aspect,
                 height: iconHeight
             )
@@ -473,16 +475,61 @@ enum MenuBarRenderer {
         return .run(s)
     }
 
-    /// 12pt GrokBotEater mark for the status item.
-    private static func menuBarGrokBotIcon(template: Bool) -> NSImage? {
-        let source = NSImage(named: "Logo") ?? NSImage(named: "AppIcon") ?? NSApp.applicationIconImage
-        guard let source else { return nil }
-        let size = NSSize(width: 12, height: 12)
-        let img = NSImage(size: size, flipped: false) { rect in
-            source.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 1.0)
-            return true
+    /// Branded GrokBotEater mark for the status item — keeps Logo alpha
+    /// (no black square) and never templates, so the green "=" stays visible.
+    private static func menuBarGrokBotIcon(side: CGFloat) -> NSImage? {
+        guard let source = NSImage(named: "Logo") else {
+            // AppIcon is a last resort; it can look boxed at tiny sizes.
+            guard let fallback = NSImage(named: "AppIcon") ?? NSApp.applicationIconImage else {
+                return nil
+            }
+            return scaledMenuBarIcon(from: fallback, side: side)
         }
-        img.isTemplate = template
+        return scaledMenuBarIcon(from: source, side: side)
+    }
+
+    private static func scaledMenuBarIcon(from source: NSImage, side: CGFloat) -> NSImage {
+        let pixel = max(1, Int(ceil(side * 2))) // @2x crisp on retina
+        let rep = NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: pixel,
+            pixelsHigh: pixel,
+            bitsPerSample: 8,
+            samplesPerPixel: 4,
+            hasAlpha: true,
+            isPlanar: false,
+            colorSpaceName: .deviceRGB,
+            bytesPerRow: 0,
+            bitsPerPixel: 0
+        )!
+        rep.size = NSSize(width: side, height: side)
+
+        NSGraphicsContext.saveGraphicsState()
+        defer { NSGraphicsContext.restoreGraphicsState() }
+        guard let ctx = NSGraphicsContext(bitmapImageRep: rep) else {
+            let copy = source.copy() as! NSImage
+            copy.size = NSSize(width: side, height: side)
+            copy.isTemplate = false
+            return copy
+        }
+        NSGraphicsContext.current = ctx
+        ctx.imageInterpolation = .high
+        // Explicit clear — NSImage drawing handlers default to opaque black.
+        NSColor.clear.setFill()
+        NSRect(x: 0, y: 0, width: side, height: side).fill()
+        let srcRect = NSRect(origin: .zero, size: source.size)
+        source.draw(
+            in: NSRect(x: 0, y: 0, width: side, height: side),
+            from: srcRect,
+            operation: .sourceOver,
+            fraction: 1.0,
+            respectFlipped: true,
+            hints: [.interpolation: NSImageInterpolation.high]
+        )
+
+        let img = NSImage(size: NSSize(width: side, height: side))
+        img.addRepresentation(rep)
+        img.isTemplate = false
         return img
     }
 
