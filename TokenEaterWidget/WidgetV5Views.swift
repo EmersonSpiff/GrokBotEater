@@ -55,9 +55,10 @@ struct WidgetHeader<Accessory: View>: View {
     var body: some View {
         HStack(spacing: 5) {
             Image("WidgetLogo")
+                .renderingMode(.original)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(width: 12, height: 12)
+                .frame(width: 14, height: 14)
             Text(label)
                 .font(WidgetTokens.header)
                 .tracking(WidgetTokens.headerTracking)
