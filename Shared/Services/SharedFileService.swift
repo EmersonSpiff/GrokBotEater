@@ -192,7 +192,7 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
         cachedData = nil
     }
 
-    var isConfigured: Bool { cachedUsage != nil }
+    var isConfigured: Bool { cachedUsage != nil || grokBotSnapshot != nil }
 
     var cachedUsage: CachedUsage? {
         load().cachedUsage
