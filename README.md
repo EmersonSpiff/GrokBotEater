@@ -36,11 +36,20 @@
 
 A native menu bar app, desktop widgets, and a floating overlay that track your **Grok Bot** usage (and Claude, if configured).
 
-- **Menu bar.** Live Grok Bot weekly usage percentage with color-coded thresholds.
-- **Dashboard.** Monitoring view with Grok Bot usage ring and pacing indicators.
-- **Widgets.** Native WidgetKit gauges showing Grok Bot weekly progress.
+- **Menu bar.** Live Grok Bot weekly usage percentage with color-coded thresholds. Add the Grok Bot segment to your menu bar composition.
+- **Dashboard.** Monitoring view with Grok Bot usage ring and status (UI integration in progress).
+- **Widgets.** Native WidgetKit gauges showing Grok Bot weekly progress (widget integration in progress).
 - **Smart Color.** Adaptive coloring based on usage patterns.
-- **Notifications.** Alerts when approaching weekly limits.
+- **Notifications.** Alerts when approaching weekly limits (Grok Bot notifications in progress).
+
+**Current Status (2026-09-21):**
+- ✅ Grok Bot API client and cookie authentication
+- ✅ Ring-gating logic (respects shouldDrawRing, pooled/zero-limit flags)
+- ✅ GrokBotUsageStore with auto-refresh
+- ✅ Menu bar segment (GB label, shows when plan includes Grok Bot)
+- 🚧 Dashboard UI (rings/tiles for Grok Bot)
+- 🚧 Widget support
+- 🚧 Onboarding flow for cookie detection
 
 Inherited from TokenEater (Claude-focused, still functional):
 - Claude usage tracking (5h/7d/model-specific)
@@ -73,11 +82,22 @@ The build script generates the Xcode project, inserts the required WidgetKit ext
 
 **Prerequisites:**
 - **Grok Bot access** via a Cursor plan that includes Grok Bot weekly usage.
-- Logged in to Cursor at [cursor.com](https://cursor.com) (the app reads your browser's `CursorAppLogin` cookie).
+- Logged in to Cursor at [cursor.com](https://cursor.com) (the app reads your browser's `CursorAppLogin` cookie from `~/Library/Application Support/Cursor/User Data/*/Cookies`).
+
+**Initial configuration:**
 
 1. Build and launch GrokBotEater
-2. The app will guide you through connecting your Cursor session
-3. Right-click on the desktop > **Edit Widgets** > search "GrokBotEater"
+2. The app will auto-refresh Grok Bot usage every 5 minutes alongside Claude
+3. Add Grok Bot to your menu bar:
+   - Right-click menu bar icon > Open
+   - Settings > Display > Menu Bar > Edit Composition
+   - Add "Grok Bot" segment (shows when your plan includes it)
+
+**Cookie authentication:**
+- GrokBotEater reads the `CursorAppLogin` cookie from Cursor's Chromium cookie database
+- If the cookie is not found: log in to Cursor at [cursor.com](https://cursor.com)
+- If usage shows "Cursor session expired": log in again (cookies expire after ~60 days)
+- [Inference] Encrypted v10+ Chromium cookies are not yet decrypted; if plain-value read fails, you'll see "Cursor session not found"
 
 ## Privacy
 
