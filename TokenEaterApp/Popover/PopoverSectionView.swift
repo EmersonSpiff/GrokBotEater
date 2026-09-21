@@ -268,21 +268,10 @@ struct PopoverSectionView: View {
 
     private var addElementMenu: some View {
         AddElementMenuButton(title: String(localized: "popover.editor.addElement")) {
-            Section(String(localized: "popover.editor.family.metrics")) {
-                let metricKinds: [PopoverElementKind] = [.session, .weekly, .sonnet, .fable, .extraCredits]
-                ForEach(metricKinds) { kind in
-                    addButton(for: kind)
-                }
-            }
-            Section(String(localized: "popover.editor.family.pacing")) {
-                addButton(for: .sessionPacing)
-                addButton(for: .weeklyPacing)
-                addButton(for: .fablePacing)
-            }
+            // Claude Code metrics (session/weekly/Extra Credits/etc.) are not
+            // part of GrokBotEater. Popover Grok Bot rings come later; utilities only for now.
             Section(String(localized: "popover.editor.family.utilities")) {
-                addButton(for: .planBadge)
                 addButton(for: .refreshButton)
-                addButton(for: .watchers)
                 addButton(for: .timestamp)
                 addButton(for: .openButton)
                 addButton(for: .quitButton)

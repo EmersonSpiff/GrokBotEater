@@ -229,7 +229,10 @@ final class StatusBarController: NSObject {
             .sink { [weak self] in
                 guard let self else { return }
                 self.usageStore.handleTokenChange()
-                Task { await self.usageStore.refresh(force: true) }
+                Task {
+                    await self.usageStore.refresh(force: true)
+                    await self.grokBotUsageStore.refresh(force: true)
+                }
             }
             .store(in: &cancellables)
 
@@ -242,6 +245,7 @@ final class StatusBarController: NSObject {
             guard let self else { return }
             Task { @MainActor in
                 await self.usageStore.refreshIfStale()
+                await self.grokBotUsageStore.refresh(force: false)
             }
         }
 
@@ -516,7 +520,10 @@ final class StatusBarController: NSObject {
     }
 
     @objc private func contextRefresh() {
-        Task { await usageStore.refresh(force: true) }
+        Task {
+            await usageStore.refresh(force: true)
+            await grokBotUsageStore.refresh(force: true)
+        }
     }
 
     @objc private func contextOpenDashboard() {

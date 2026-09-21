@@ -64,7 +64,7 @@ struct DisplaySectionView: View {
                     menuBarColorRow(
                         label: "settings.reset.color",
                         hex: $settingsStore.display.resetTextColorHex,
-                        fallback: .white,
+                        fallback: DS.Palette.textPrimary,
                         disabled: settingsStore.smartColorEnabled
                     )
                 }
@@ -75,7 +75,7 @@ struct DisplaySectionView: View {
                 menuBarColorRow(
                     label: "settings.session.periodcolor",
                     hex: $settingsStore.display.sessionPeriodColorHex,
-                    fallback: .white.opacity(0.55),
+                    fallback: DS.Palette.textSecondary,
                     disabled: false
                 )
             }
@@ -190,7 +190,7 @@ struct ClickChip: View {
                 Text(label)
                     .font(.system(size: style == .compact ? 10 : 12, weight: .medium))
             }
-            .foregroundStyle(isActive ? accent : .white.opacity(0.55))
+            .foregroundStyle(isActive ? accent : DS.Palette.textSecondary)
             .padding(.horizontal, style == .compact ? 9 : 12)
             .padding(.vertical, style == .compact ? 5 : 8)
             .frame(maxWidth: style == .tile ? .infinity : nil)
@@ -234,7 +234,7 @@ struct BinaryChoiceChip: View {
                 Text(label)
                     .font(.system(size: 12, weight: .medium))
             }
-            .foregroundStyle(isActive ? .white : .white.opacity(0.5))
+            .foregroundStyle(isActive ? DS.Palette.textPrimary : DS.Palette.textSecondary)
             .padding(.horizontal, 12)
             .padding(.vertical, 9)
             .frame(maxWidth: .infinity)

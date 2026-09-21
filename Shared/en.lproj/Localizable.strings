@@ -408,6 +408,7 @@
 "dashboard.org" = "Organization";
 "dashboard.pacing.reset.days" = "Resets in %dd %dh";
 "dashboard.pacing.reset.hours" = "Resets in %dh";
+"dashboard.hero.grokbot.label" = "Grok Bot";
 "dashboard.hero.session.label" = "Session · 5h window";
 "dashboard.hero.resetsIn" = "Resets in";
 "pacing.zone.chill" = "Chill";
@@ -514,7 +515,7 @@
 "settings.overlay.toggle" = "Show session overlay";
 
 /* Agent Watchers */
-"settings.watchers.description" = "A floating overlay showing your active Claude Code sessions. Hover to expand, click to jump to a session.";
+"settings.watchers.description" = "Claude Code session watching is disabled in GrokBotEater. Grok Bot / Cursor agent watch is coming next.";
 "settings.watchers.trigger" = "Hover zone";
 "settings.watchers.trigger.minimal" = "Minimal";
 "settings.watchers.trigger.narrow" = "Narrow";
@@ -539,7 +540,7 @@
 "settings.watchers.compacting" = "Compacting - compressing context";
 "settings.watchers.detailed" = "Detailed status mode";
 "settings.watchers.simple.idle" = "Idle - waiting for input";
-"settings.watchers.simple.working" = "Working - Claude is busy";
+"settings.watchers.simple.working" = "Working - agent is busy";
 "settings.watchers.behavior" = "Behavior";
 
 /* Watcher card context menu (right-click on an overlay card) */
@@ -690,7 +691,7 @@
 /* Section subtitles */
 "sidebar.display.subtitle" = "Choose which metrics appear in the menu bar and how they look.";
 "sidebar.themes.subtitle" = "Colours and visual style.";
-"sidebar.agentWatchers.subtitle" = "Floating overlay for your live Claude Code sessions.";
+"sidebar.agentWatchers.subtitle" = "Grok Bot agent watch coming soon — Claude Code overlay is off.";
 "sidebar.performance.subtitle" = "Fine-tune CPU usage by disabling features you don't need.";
 "sidebar.settings.subtitle" = "Proxy, refresh interval, and other global preferences.";
 "popover.settings.preview" = "Preview";
@@ -917,3 +918,6 @@
 "notif.body.fable.red.fallback" = "Fable pool almost out";
 "notif.body.fable.green" = "Fable refilled at %@";
 "notif.body.fable.green.fallback" = "Fable refilled, you're back";
+
+"settings.watchers.coming.title" = "Grok Bot agent watch";
+"settings.watchers.coming.body" = "The old Claude Code session overlay is turned off here. Next up: watch live Cursor / Grok Bot agents the same way — edge overlay, jump-to-session, status colors.";

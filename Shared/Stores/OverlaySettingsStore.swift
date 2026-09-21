@@ -51,7 +51,7 @@ final class OverlaySettingsStore: ObservableObject {
     init() {
         // Defaults below apply only on first launch (no value yet in
         // UserDefaults) - per the `as? T ?? default` reads.
-        self.overlayEnabled = UserDefaults.standard.object(forKey: "overlayEnabled") as? Bool ?? true
+        self.overlayEnabled = UserDefaults.standard.object(forKey: "overlayEnabled") as? Bool ?? false
         self.overlayDockEffect = UserDefaults.standard.object(forKey: "overlayDockEffect") as? Bool ?? true
         self.overlayScale = UserDefaults.standard.object(forKey: "overlayScale") as? Double ?? 1.1
         self.overlayLeftSide = UserDefaults.standard.bool(forKey: "overlayLeftSide")
