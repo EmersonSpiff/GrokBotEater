@@ -1,9 +1,9 @@
 import SwiftUI
 
-/// Single-page onboarding. Brand header + body split: left = 2x2 grid of
-/// cards (the actions to take), right = hero with description, progress,
-/// and the Finish CTA. Each of the 4 cards owns a state machine that
-/// talks to `OnboardingViewModel`.
+/// Single-page onboarding. Brand header + body split: left = cards (Grok Bot
+/// session, Connect, Notifications), right = hero with description, progress,
+/// and the Finish CTA. Watchers are intentionally omitted — Claude session
+/// overlay does not apply to Grok Bot.
 ///
 /// The chrome (rounded background, modal radius) is provided by the parent
 /// `MainAppView.onboardingContent`; this view stays transparent on top.
@@ -48,12 +48,13 @@ struct OnboardingView: View {
     private var cardsGrid: some View {
         Grid(horizontalSpacing: 12, verticalSpacing: 12) {
             GridRow {
-                ClaudeCodeCard(viewModel: viewModel)
+                GrokBotCard(viewModel: viewModel)
                 ConnectCard(viewModel: viewModel)
             }
             GridRow {
-                WatchersCard(viewModel: viewModel)
                 NotificationsCard(viewModel: viewModel)
+                Color.clear
+                    .gridCellUnsizedAxes([.horizontal, .vertical])
             }
         }
     }

@@ -423,7 +423,7 @@
 "onboarding.mode.detailed" = "Detailed";
 
 /* Onboarding - Connection (kept: referenced by OnboardingViewModel) */
-"onboarding.connection.failed.notoken" = "Couldn't read the token. Make sure Claude Code is installed and you're signed in.";
+"onboarding.connection.failed.notoken" = "Couldn't read your Cursor session. Open Cursor, sign in at cursor.com, then retry.";
 
 /* Settings - Onboarding reset */
 "settings.onboarding.reset" = "Run setup again";
@@ -832,7 +832,7 @@
 "pacing.weekly.label.short" = "Weekly";
 "pacing.fable.label.short" = "Fable";
 
-/* MARK: - Onboarding (rework 2026-04) */
+/* MARK: - Onboarding (Grok Bot session + Connect gates; Watchers omitted) */
 
 "onboarding.hero.label" = "SETUP";
 "onboarding.hero.title" = "Hey, you're here";
@@ -843,16 +843,18 @@
 "onboarding.badge.required" = "REQUIRED";
 "onboarding.badge.optional" = "OPTIONAL";
 
-/* Card 1 - Claude Code */
-"onboarding.card.claudecode.title" = "Claude Code";
-"onboarding.card.claudecode.checking" = "checking...";
-"onboarding.card.claudecode.status.checking" = "auto-detecting";
-"onboarding.card.claudecode.status.detected" = "detected on your machine";
-"onboarding.card.claudecode.status.notfound" = "not found - install + retry";
-"onboarding.card.claudecode.notfound.step1" = "install via brew install claude";
-"onboarding.card.claudecode.notfound.step2" = "sign in once: run claude";
-"onboarding.card.claudecode.notfound.step3" = "come back, hit retry";
-"onboarding.card.claudecode.retry" = "Retry";
+/* Card 1 - Grok Bot / Cursor session */
+"onboarding.card.grokbot.title" = "Grok Bot";
+"onboarding.card.grokbot.checking" = "checking...";
+"onboarding.card.grokbot.status.checking" = "looking for Cursor login";
+"onboarding.card.grokbot.status.detected" = "Cursor session ready";
+"onboarding.card.grokbot.status.notfound" = "sign in to Cursor, then retry";
+"onboarding.card.grokbot.notfound.step1" = "open the Cursor app";
+"onboarding.card.grokbot.notfound.step2" = "sign in at cursor.com";
+"onboarding.card.grokbot.notfound.step3" = "come back, hit retry";
+"onboarding.card.grokbot.retry" = "Retry";
+"onboarding.card.grokbot.ready.scene" = "Cursor login found";
+"onboarding.card.grokbot.ready.detail" = "Ready to read Grok Bot usage";
 
 /* Card 2 - Notifications */
 "onboarding.card.notifications.title" = "Notifications";
@@ -871,16 +873,16 @@
 
 /* Card 4 - Connect */
 "onboarding.card.connect.title" = "Connect";
-"onboarding.card.connect.status.idle" = "tap to authorize";
-"onboarding.card.connect.status.connecting" = "talking to keychain...";
+"onboarding.card.connect.status.idle" = "tap to test Grok Bot";
+"onboarding.card.connect.status.connecting" = "reading Cursor session...";
 "onboarding.card.connect.status.success" = "connected";
 "onboarding.card.connect.status.failed" = "access denied";
-"onboarding.card.connect.connecting" = "authorizing...";
+"onboarding.card.connect.connecting" = "calling Grok Bot usage...";
 "onboarding.card.connect.success.scene" = "connected - finish unlocked";
 "onboarding.card.connect.failed.scene" = "access denied";
-"onboarding.card.connect.authorize" = "Authorize";
+"onboarding.card.connect.authorize" = "Connect";
 "onboarding.card.connect.retry" = "Retry";
-"onboarding.card.connect.idle.scene" = "macOS will ask once.\nTap Always Allow when it does.";
+"onboarding.card.connect.idle.scene" = "Uses your Cursor login\nto fetch Grok Bot usage.";
 
 /* Vendor Status Banner */
 "status.banner.degraded" = "Claude is degraded";
