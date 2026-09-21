@@ -391,6 +391,11 @@ enum MenuBarRenderer {
         let label = usageLabel(kind)
         let color = colorForPct(value, resetDate: usageResetDate(kind, data: data), windowDuration: usageWindow(kind), data: data)
 
+        // Grok Bot: app icon + percent (no "GB" letters).
+        if kind == .grokBot {
+            return grokBotUsageContent(value: value, style: style, color: color, data: data)
+        }
+
         switch style {
         case .labelValue:
             let s = NSMutableAttributedString()
@@ -421,6 +426,64 @@ enum MenuBarRenderer {
                 .font: systemFont(12, .bold, monoDigits: true), .foregroundColor: color,
             ]))
         }
+    }
+
+    /// Menu-bar Grok Bot segment: tiny GBE logo + percentage.
+    private static func grokBotUsageContent(
+        value: Int,
+        style: MenuBarSegmentStyle,
+        color: NSColor,
+        data: RenderData
+    ) -> SegmentVisual.Content {
+        let pctText: String = {
+            switch style {
+            case .mono: return "\(value)"
+            default: return "\(value)%"
+            }
+        }()
+
+        if style == .pill {
+            // Pill stays text-only; still omit "GB".
+            return .pill(text: pctText, tint: color)
+        }
+
+        let s = NSMutableAttributedString()
+        if let icon = menuBarGrokBotIcon(template: data.menuBarMonochrome) {
+            let attachment = NSTextAttachment()
+            attachment.image = icon
+            let iconHeight: CGFloat = 12
+            let aspect = icon.size.width / max(icon.size.height, 1)
+            attachment.bounds = CGRect(
+                x: 0,
+                y: (12 - iconHeight) / 2 - 0.5,
+                width: iconHeight * aspect,
+                height: iconHeight
+            )
+            s.append(NSAttributedString(attachment: attachment))
+            s.append(NSAttributedString(string: " ", attributes: [
+                .font: systemFont(9, .medium), .foregroundColor: periodColor(data),
+            ]))
+        }
+        s.append(NSAttributedString(string: pctText, attributes: [
+            .font: style == .mono
+                ? monoFont(11, .bold)
+                : systemFont(12, .bold, monoDigits: true),
+            .foregroundColor: color,
+        ]))
+        return .run(s)
+    }
+
+    /// 12pt GrokBotEater mark for the status item.
+    private static func menuBarGrokBotIcon(template: Bool) -> NSImage? {
+        let source = NSImage(named: "Logo") ?? NSImage(named: "AppIcon") ?? NSApp.applicationIconImage
+        guard let source else { return nil }
+        let size = NSSize(width: 12, height: 12)
+        let img = NSImage(size: size, flipped: false) { rect in
+            source.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 1.0)
+            return true
+        }
+        img.isTemplate = template
+        return img
     }
 
     private static func pacingContent(kind: MenuBarSegmentKind, style: MenuBarSegmentStyle, shape: PacingShape, data: RenderData) -> SegmentVisual.Content {
@@ -550,7 +613,7 @@ enum MenuBarRenderer {
         case .sonnet: return MetricID.sonnet.shortLabel
         case .fable: return MetricID.fable.shortLabel
         case .extraCredits: return MetricID.extraCredits.shortLabel
-        case .grokBot: return "GB"
+        case .grokBot: return "" // icon used instead of letters
         default: return ""
         }
     }
