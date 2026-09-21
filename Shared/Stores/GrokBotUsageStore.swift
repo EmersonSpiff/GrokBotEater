@@ -26,7 +26,18 @@ final class GrokBotUsageStore: ObservableObject {
     private var refreshTask: Task<Void, Never>?
     private var autoRefreshTask: Task<Void, Never>?
     
-    var refreshIntervalSeconds: TimeInterval = 300 // 5 minutes, match Claude
+
+    /// Parsed `nextResetTimestampUtc` from the last successful response.
+    var nextResetDate: Date? {
+        guard let raw = lastResponse?.nextResetTimestampUtc else { return nil }
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let d = iso.date(from: raw) { return d }
+        iso.formatOptions = [.withInternetDateTime]
+        return iso.date(from: raw)
+    }
+
+    var refreshIntervalSeconds: TimeInterval = 300 // 5 minutes
     
     init(
         apiClient: GrokBotAPIClientProtocol = GrokBotAPIClient(),
@@ -142,6 +153,7 @@ final class GrokBotUsageStore: ObservableObject {
         }
         
         logger.info("Grok Bot refresh succeeded: \(self.usagePercent)% used, shouldDrawRing=\(self.shouldShowRing)")
+        WidgetReloader.scheduleReload()
     }
     
     private func handleError(_ error: GrokBotAPIError) {

@@ -9,41 +9,44 @@ struct AgentWatchersSectionView: View {
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(alignment: .leading, spacing: 18) {
-                HStack(alignment: .center) {
-                    sectionTitle(
-                        String(localized: "sidebar.agentWatchers"),
-                        subtitle: String(localized: "sidebar.agentWatchers.subtitle")
-                    )
-                    Spacer()
-                    ClickChip(
-                        label: String(localized: "settings.overlay.toggle"),
-                        icon: settingsStore.overlayEnabled ? "checkmark" : "eye.slash",
-                        isActive: settingsStore.overlayEnabled,
-                        accent: .blue,
-                        style: .compact
-                    ) {
-                        settingsStore.overlayEnabled.toggle()
-                    }
-                }
+                sectionTitle(
+                    String(localized: "sidebar.agentWatchers"),
+                    subtitle: String(localized: "sidebar.agentWatchers.subtitle")
+                )
 
-                styleGroup
-                behaviorGroup
-                legendGroup
-                terminalSetupRow
-
-                ResetSectionButton(
-                    confirmTitle: String(localized: "settings.watchers.reset.confirm")
-                ) {
-                    resetWatcherDefaults()
-                }
+                grokBotWatchersComingSoon
 
                 Spacer(minLength: 0)
             }
             .padding(24)
         }
-        .sheet(isPresented: $showTerminalSetup) {
-            TerminalSetupSheet(isPresented: $showTerminalSetup)
+    }
+
+    private var grokBotWatchersComingSoon: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
+                Image(systemName: "waveform.path.ecg")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(DS.Palette.brandPrimary)
+                Text(String(localized: "settings.watchers.coming.title"))
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(DS.Palette.textPrimary)
+            }
+            Text(String(localized: "settings.watchers.coming.body"))
+                .font(.system(size: 12))
+                .foregroundStyle(DS.Palette.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(DS.Palette.brandPrimary.opacity(0.08))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(DS.Palette.brandPrimary.opacity(0.25), lineWidth: 1)
+                )
+        )
     }
 
     // MARK: - Style group

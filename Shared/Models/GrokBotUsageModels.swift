@@ -12,6 +12,9 @@ struct GrokBotUsageResponse: Codable, Equatable {
     /// Start of the current billing period (ISO 8601).
     let currentPeriodStart: String?
     
+    /// End of the current weekly Grok Bot window (ISO 8601).
+    let nextResetTimestampUtc: String?
+    
     /// True when the plan uses pooled enterprise allowance (no personal ring).
     let usesPooledEnterpriseAllowance: Bool?
     
@@ -24,6 +27,7 @@ struct GrokBotUsageResponse: Codable, Equatable {
     enum CodingKeys: String, CodingKey {
         case usagePercent = "usagePercent"
         case currentPeriodStart = "currentPeriodStart"
+        case nextResetTimestampUtc = "nextResetTimestampUtc"
         case usesPooledEnterpriseAllowance = "usesPooledEnterpriseAllowance"
         case includedLimitZero = "includedLimitZero"
         case hasNonZeroIncludedLimit = "hasNonZeroIncludedLimit"

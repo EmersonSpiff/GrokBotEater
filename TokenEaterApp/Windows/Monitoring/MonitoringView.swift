@@ -10,6 +10,7 @@ import SwiftUI
 /// (default / neon / pastel / monochrome) stay in control of the data hue.
 struct MonitoringView: View {
     @EnvironmentObject private var usageStore: UsageStore
+    @EnvironmentObject private var grokBotUsageStore: GrokBotUsageStore
     @EnvironmentObject private var themeStore: ThemeStore
     @EnvironmentObject private var settingsStore: SettingsStore
     @EnvironmentObject private var sessionStore: SessionStore
@@ -36,11 +37,6 @@ struct MonitoringView: View {
             VStack(alignment: .leading, spacing: DS.Spacing.md) {
                 header
                 heroTile
-                metricsGrid
-                pacingRow
-                if let extra = usageStore.extraUsage, extra.isEnabled {
-                    extraUsageTile(extra)
-                }
                 footerPills
             }
             .padding(DS.Spacing.md)
@@ -52,7 +48,11 @@ struct MonitoringView: View {
                 refreshLastUpdateText()
             }
         }
-        .onAppear { insightsStore.warmIfStale() }
+        .onAppear {
+            insightsStore.warmIfStale()
+            Task { await grokBotUsageStore.refresh(force: true) }
+        }
+        .onChange(of: grokBotUsageStore.lastUpdate) { _, _ in refreshLastUpdateText() }
         .onChange(of: usageStore.lastUpdate) { _, _ in refreshLastUpdateText() }
     }
 
@@ -125,7 +125,7 @@ struct MonitoringView: View {
             }
 
             Button {
-                Task { await usageStore.refresh(force: true) }
+                Task { await grokBotUsageStore.refresh(force: true) }
             } label: {
                 Image(systemName: "arrow.clockwise")
                     .font(.system(size: 11, weight: .semibold))
@@ -193,15 +193,15 @@ struct MonitoringView: View {
         .help(status.activeIncidents.first?.name ?? label)
     }
 
-    // MARK: - Hero tile (Session 5H)
+    // MARK: - Hero tile (Grok Bot weekly)
 
     private var heroTile: some View {
-        let pct = usageStore.fiveHourPct
-        let resetDate = usageStore.lastUsage?.fiveHour?.resetsAtDate
-        let gaugeColor = gaugeColor(pct: pct, resetDate: resetDate, windowDuration: 5 * 3600)
-        let gaugeGradient = gaugeGradient(pct: pct, resetDate: resetDate, windowDuration: 5 * 3600)
-        let zone = usageStore.fiveHourPacing?.zone
-        let pacing = usageStore.fiveHourPacing
+        let pct = grokBotUsageStore.usagePercent
+        let resetDate = grokBotUsageStore.nextResetDate
+        let gaugeColor = gaugeColor(pct: pct, resetDate: resetDate, windowDuration: 7 * 24 * 3600)
+        let gaugeGradient = gaugeGradient(pct: pct, resetDate: resetDate, windowDuration: 7 * 24 * 3600)
+        let zone: PacingZone? = nil
+        let pacing: PacingResult? = nil
         // Ambient tint follows the gauge color so the wash, the big
         // number, and the ring all read as a single signal.
         let accent = gaugeColor
@@ -272,7 +272,7 @@ struct MonitoringView: View {
                         .fill(gaugeColor)
                         .frame(width: 6, height: 6)
                         .dsGlow(gaugeColor, radius: 4, opacity: 0.6)
-                    Text(String(localized: "dashboard.hero.session.label").uppercased())
+                    Text(String(localized: "dashboard.hero.grokbot.label").uppercased())
                         .font(DS.Typography.micro)
                         .tracking(1.5)
                         .foregroundStyle(DS.Palette.textSecondary)

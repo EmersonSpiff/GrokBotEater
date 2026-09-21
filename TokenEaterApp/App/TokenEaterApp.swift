@@ -46,12 +46,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             sessionStore: sessionStore,
             vendorStatusStore: vendorStatusStore
         )
-        // Apply persisted watcher scan settings before the first tick uses them.
-        sessionStore.setScanInterval(settingsStore.watcherScanInterval.seconds)
-        sessionStore.setVisibility(settingsStore.watcherVisibility.seconds)
-        if settingsStore.overlayEnabled {
-            sessionStore.startMonitoring()
-        }
+        // GrokBotEater does not monitor Claude Code sessions. Keep overlay off
+        // until a Cursor/Grok Bot agent watcher exists.
+        settingsStore.overlayEnabled = false
+        sessionStore.stopMonitoring()
         overlayWindowController = OverlayWindowController(
             sessionStore: sessionStore,
             settingsStore: settingsStore
@@ -59,33 +57,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         updateStore.checkBrewMigration()
         updateStore.checkForUpdates()
-
-        monitorCancellable = settingsStore.overlay.$overlayEnabled
-            .dropFirst()
-            .sink { [weak self] enabled in
-                guard let self else { return }
-                if enabled {
-                    self.sessionStore.startMonitoring()
-                } else {
-                    self.sessionStore.stopMonitoring()
-                }
-            }
-
-        settingsStore.overlay.$watcherScanInterval
-            .dropFirst()
-            .removeDuplicates()
-            .sink { [weak self] interval in
-                self?.sessionStore.setScanInterval(interval.seconds)
-            }
-            .store(in: &cancellables)
-
-        settingsStore.overlay.$watcherVisibility
-            .dropFirst()
-            .removeDuplicates()
-            .sink { [weak self] visibility in
-                self?.sessionStore.setVisibility(visibility.seconds)
-            }
-            .store(in: &cancellables)
     }
 }
 
