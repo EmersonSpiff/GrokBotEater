@@ -30,7 +30,7 @@ struct ClaudeCodeCard: View {
                 ProgressView().tint(.white)
                 Text("onboarding.card.claudecode.checking")
                     .font(.system(size: 10))
-                    .foregroundStyle(.white.opacity(0.55))
+                    .foregroundStyle(DS.Palette.textSecondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
@@ -54,25 +54,25 @@ struct ClaudeCodeCard: View {
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 5)
-            .background(Color.white.opacity(0.025))
+            .background(Color.black.opacity(0.025))
             .overlay(
-                Rectangle().fill(Color.white.opacity(0.04)).frame(height: 1),
+                Rectangle().fill(Color.black.opacity(0.04)).frame(height: 1),
                 alignment: .bottom
             )
 
             VStack(alignment: .leading, spacing: 1) {
                 HStack(spacing: 4) {
                     Text("~/proj").foregroundStyle(accent)
-                    Text("$").foregroundStyle(.white.opacity(0.4))
-                    Text("claude --version").foregroundStyle(.white)
+                    Text("$").foregroundStyle(DS.Palette.textTertiary)
+                    Text("claude --version").foregroundStyle(DS.Palette.textPrimary)
                 }
-                Text("claude code 2.0.4").foregroundStyle(.white.opacity(0.55))
+                Text("claude code 2.0.4").foregroundStyle(DS.Palette.textSecondary)
                 HStack(spacing: 4) {
                     Text("\u{2713} ready").foregroundStyle(accent)
                 }
                 HStack(spacing: 4) {
                     Text("~/proj").foregroundStyle(accent)
-                    Text("$").foregroundStyle(.white.opacity(0.4))
+                    Text("$").foregroundStyle(DS.Palette.textTertiary)
                     BlinkingCursor(color: accent)
                 }
             }
@@ -85,7 +85,7 @@ struct ClaudeCodeCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 7, style: .continuous)
-                .stroke(Color.white.opacity(0.05), lineWidth: 1)
+                .stroke(Color.black.opacity(0.05), lineWidth: 1)
         )
     }
 
@@ -107,7 +107,7 @@ struct ClaudeCodeCard: View {
                 .background(Circle().fill(Color(red: 1.0, green: 0.62, blue: 0.04).opacity(0.18)))
             Text(key)
                 .font(.system(size: 9))
-                .foregroundStyle(.white.opacity(0.7))
+                .foregroundStyle(DS.Palette.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -120,11 +120,11 @@ struct ClaudeCodeCard: View {
             } label: {
                 Text("onboarding.card.claudecode.retry")
                     .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(DS.Palette.textPrimary)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
-                    .background(Capsule().fill(Color.white.opacity(0.08)))
-                    .overlay(Capsule().stroke(Color.white.opacity(0.12), lineWidth: 1))
+                    .background(Capsule().fill(Color.black.opacity(0.08)))
+                    .overlay(Capsule().stroke(Color.black.opacity(0.12), lineWidth: 1))
             }
             .buttonStyle(.plain)
         } else {
@@ -142,7 +142,7 @@ struct ClaudeCodeCard: View {
 
     private var statusColor: Color {
         switch viewModel.claudeCodeStatus {
-        case .checking: return Color.white.opacity(0.3)
+        case .checking: return Color.black.opacity(0.3)
         case .detected: return accent
         case .notFound: return Color(red: 1.0, green: 0.62, blue: 0.04)
         }

@@ -33,7 +33,7 @@ struct ConnectCard: View {
                 ProgressView().tint(.white)
                 Text("onboarding.card.connect.connecting")
                     .font(.system(size: 10))
-                    .foregroundStyle(.white.opacity(0.55))
+                    .foregroundStyle(DS.Palette.textSecondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
@@ -50,7 +50,7 @@ struct ConnectCard: View {
                 .shadow(color: DS.Palette.brandPrimary.opacity(0.4), radius: 14)
                 Text("onboarding.card.connect.success.scene")
                     .font(.system(size: 10))
-                    .foregroundStyle(.white.opacity(0.7))
+                    .foregroundStyle(DS.Palette.textSecondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
@@ -66,10 +66,10 @@ struct ConnectCard: View {
                 }
                 Text("onboarding.card.connect.failed.scene")
                     .font(.system(size: 10))
-                    .foregroundStyle(.white.opacity(0.7))
+                    .foregroundStyle(DS.Palette.textSecondary)
                 Text(message)
                     .font(.system(size: 9))
-                    .foregroundStyle(.white.opacity(0.4))
+                    .foregroundStyle(DS.Palette.textTertiary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 14)
                     .lineLimit(2)
@@ -96,7 +96,7 @@ struct ConnectCard: View {
 
             Text("onboarding.card.connect.idle.scene")
                 .font(.system(size: 11))
-                .foregroundStyle(.white.opacity(0.6))
+                .foregroundStyle(DS.Palette.textSecondary)
                 .multilineTextAlignment(.center)
                 .lineSpacing(2)
                 .padding(.horizontal, 16)
@@ -124,7 +124,7 @@ struct ConnectCard: View {
         Button(action: action) {
             Text(label)
                 .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(DS.Palette.textPrimary)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 5)
                 .background(
@@ -134,7 +134,7 @@ struct ConnectCard: View {
                         endPoint: .bottom
                     ))
                 )
-                .overlay(Capsule().stroke(Color.white.opacity(0.18), lineWidth: 1))
+                .overlay(Capsule().stroke(Color.black.opacity(0.18), lineWidth: 1))
                 .shadow(color: DS.Palette.brandPrimary.opacity(0.4), radius: 7)
         }
         .buttonStyle(.plain)

@@ -29,7 +29,7 @@ struct OnboardingView: View {
 
             Text("GrokBotEater")
                 .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.6))
+                .foregroundStyle(DS.Palette.textSecondary)
 
             Spacer()
         }

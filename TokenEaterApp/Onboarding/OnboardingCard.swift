@@ -27,7 +27,7 @@ struct OnboardingCard<Scene: View, Control: View>: View {
         }
         .background(
             ZStack {
-                Color.white.opacity(0.022)
+                Color.black.opacity(0.022)
                 RadialGradient(
                     colors: [accent.opacity(0.10), .clear],
                     center: .topTrailing,
@@ -38,7 +38,7 @@ struct OnboardingCard<Scene: View, Control: View>: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                .stroke(Color.black.opacity(0.06), lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .rotationEffect(tiltAngle)
@@ -56,7 +56,7 @@ struct OnboardingCard<Scene: View, Control: View>: View {
             HStack {
                 Text(title)
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(DS.Palette.textPrimary)
                 Spacer()
                 kindBadge
             }
@@ -68,7 +68,7 @@ struct OnboardingCard<Scene: View, Control: View>: View {
                         .shadow(color: statusColor.opacity(0.7), radius: 3)
                     Text(statusText)
                         .font(.system(size: 10))
-                        .foregroundStyle(.white.opacity(0.6))
+                        .foregroundStyle(DS.Palette.textSecondary)
                 }
                 Spacer()
                 control()
@@ -79,14 +79,14 @@ struct OnboardingCard<Scene: View, Control: View>: View {
         .padding(.bottom, 10)
         .background(
             LinearGradient(
-                colors: [Color.white.opacity(0.02), Color.black.opacity(0.18)],
+                colors: [Color.black.opacity(0.02), Color.black.opacity(0.18)],
                 startPoint: .top,
                 endPoint: .bottom
             )
         )
         .overlay(
             Rectangle()
-                .fill(Color.white.opacity(0.06))
+                .fill(Color.black.opacity(0.06))
                 .frame(height: 1),
             alignment: .top
         )
@@ -112,11 +112,11 @@ struct OnboardingCard<Scene: View, Control: View>: View {
             Text("onboarding.badge.optional")
                 .font(.system(size: 8, weight: .heavy))
                 .tracking(0.7)
-                .foregroundStyle(.white.opacity(0.45))
+                .foregroundStyle(DS.Palette.textTertiary)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
-                .background(Capsule().fill(Color.white.opacity(0.04)))
-                .overlay(Capsule().stroke(Color.white.opacity(0.08), lineWidth: 1))
+                .background(Capsule().fill(Color.black.opacity(0.04)))
+                .overlay(Capsule().stroke(Color.black.opacity(0.08), lineWidth: 1))
         }
     }
 }

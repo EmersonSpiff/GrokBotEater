@@ -159,7 +159,7 @@ struct ThemesSectionView: View {
                 Circle()
                     .fill(swatch)
                     .frame(width: 34, height: 34)
-                    .overlay(Circle().stroke(Color.white.opacity(0.2), lineWidth: 1))
+                    .overlay(Circle().stroke(Color.black.opacity(0.2), lineWidth: 1))
                     .dsGlow(color: isSelected ? DS.Palette.accentStudio : .clear, token: DS.Glow.subtle)
                 Text(label)
                     .font(.system(size: 9, weight: .semibold))
@@ -191,7 +191,7 @@ struct ThemesSectionView: View {
                     cardLabel(String(localized: "settings.glow.title"))
                     Text(String(localized: "settings.glow.hint"))
                         .font(.system(size: 11))
-                        .foregroundStyle(.white.opacity(0.5))
+                        .foregroundStyle(DS.Palette.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer()
@@ -237,7 +237,7 @@ struct ThemesSectionView: View {
             Text(String(localized: "theme.preview.gauges"))
                 .font(.system(size: 10, weight: .semibold))
                 .tracking(0.8)
-                .foregroundStyle(.white.opacity(0.4))
+                .foregroundStyle(DS.Palette.textTertiary)
             HStack(spacing: 14) {
                 miniGauge(pct: 32, color: theme.gaugeColor(for: 32, thresholds: thresholds))
                 miniGauge(pct: 71, color: theme.gaugeColor(for: 71, thresholds: thresholds))
@@ -247,7 +247,7 @@ struct ThemesSectionView: View {
             Text(String(localized: "theme.preview.pacing"))
                 .font(.system(size: 10, weight: .semibold))
                 .tracking(0.8)
-                .foregroundStyle(.white.opacity(0.4))
+                .foregroundStyle(DS.Palette.textTertiary)
             VStack(spacing: 8) {
                 pacingRow(color: theme.pacingColor(for: .chill), fraction: 0.35)
                 pacingRow(color: theme.pacingColor(for: .onTrack), fraction: 0.55)
@@ -271,7 +271,7 @@ struct ThemesSectionView: View {
     private func miniGauge(pct: Int, color: Color) -> some View {
         ZStack {
             Circle()
-                .stroke(Color.white.opacity(0.08), lineWidth: 6)
+                .stroke(Color.black.opacity(0.08), lineWidth: 6)
             Circle()
                 .trim(from: 0, to: CGFloat(min(max(pct, 0), 100)) / 100)
                 .stroke(color, style: StrokeStyle(lineWidth: 6, lineCap: .round))
@@ -288,7 +288,7 @@ struct ThemesSectionView: View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
                 Capsule()
-                    .fill(Color.white.opacity(0.06))
+                    .fill(Color.black.opacity(0.06))
                     .frame(height: 6)
                 Capsule()
                     .fill(color)
@@ -305,7 +305,7 @@ struct ThemesSectionView: View {
     private func editorSectionLabel(_ key: String.LocalizationValue) -> some View {
         Text(String(localized: key))
             .font(.system(size: 11, weight: .semibold))
-            .foregroundStyle(.white.opacity(0.5))
+            .foregroundStyle(DS.Palette.textSecondary)
             .textCase(.uppercase)
             .tracking(0.8)
     }
@@ -324,7 +324,7 @@ struct ThemesSectionView: View {
         return HStack {
             Text(labelKey)
                 .font(.system(size: 12))
-                .foregroundStyle(.white.opacity(0.7))
+                .foregroundStyle(DS.Palette.textSecondary)
             Spacer()
             ColorPicker("", selection: colorBinding, supportsOpacity: false)
                 .labelsHidden()

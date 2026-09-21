@@ -125,7 +125,7 @@ struct NotificationsSectionView: View {
         default:
             Label(String(localized: "settings.notifications.unknown"), systemImage: "questionmark.circle")
                 .font(.system(size: 12))
-                .foregroundStyle(.white.opacity(0.5))
+                .foregroundStyle(DS.Palette.textSecondary)
         }
     }
 
@@ -137,7 +137,7 @@ struct NotificationsSectionView: View {
                 cardLabel(String(localized: "settings.notifications.group.usage"))
                 Text(String(localized: "settings.notifications.group.usage.hint"))
                     .font(.system(size: 11))
-                    .foregroundStyle(.white.opacity(0.4))
+                    .foregroundStyle(DS.Palette.textTertiary)
                     .fixedSize(horizontal: false, vertical: true)
                 darkToggle(String(localized: "settings.notifications.track.fivehour"), isOn: $settingsStore.notification.trackFiveHour)
                 darkToggle(String(localized: "settings.notifications.track.weekly"), isOn: $settingsStore.notification.trackWeekly)
@@ -147,7 +147,7 @@ struct NotificationsSectionView: View {
                 darkToggle(String(localized: "settings.notifications.recovery"), isOn: $settingsStore.notification.sendRecovery)
                 Text(String(localized: "settings.notifications.recovery.hint"))
                     .font(.system(size: 11))
-                    .foregroundStyle(.white.opacity(0.4))
+                    .foregroundStyle(DS.Palette.textTertiary)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -161,7 +161,7 @@ struct NotificationsSectionView: View {
                 cardLabel(String(localized: "settings.notifications.group.pacing"))
                 Text(String(localized: "settings.notifications.group.pacing.hint"))
                     .font(.system(size: 11))
-                    .foregroundStyle(.white.opacity(0.4))
+                    .foregroundStyle(DS.Palette.textTertiary)
                     .fixedSize(horizontal: false, vertical: true)
                 darkToggle(String(localized: "settings.notifications.pacing.hot"), isOn: $settingsStore.notification.pacingHot)
                 darkToggle(String(localized: "settings.notifications.pacing.warning"), isOn: $settingsStore.notification.pacingWarning)
@@ -177,7 +177,7 @@ struct NotificationsSectionView: View {
                 cardLabel(String(localized: "settings.notifications.group.reset"))
                 Text(String(localized: "settings.notifications.group.reset.hint"))
                     .font(.system(size: 11))
-                    .foregroundStyle(.white.opacity(0.4))
+                    .foregroundStyle(DS.Palette.textTertiary)
                     .fixedSize(horizontal: false, vertical: true)
                 darkToggle(String(localized: "settings.notifications.reset.session"), isOn: $settingsStore.notification.resetReminderSession)
                 reminderOffsetPicker(
@@ -200,7 +200,7 @@ struct NotificationsSectionView: View {
         HStack(spacing: 6) {
             Text(String(localized: "settings.notifications.reset.offset.label"))
                 .font(.system(size: 11))
-                .foregroundStyle(.white.opacity(enabled ? 0.6 : 0.25))
+                .foregroundStyle(DS.Palette.textPrimary.opacity(enabled  ? 0.6 : 0.25))
             Spacer()
             DSMenu(
                 selection: selection,
@@ -228,7 +228,7 @@ struct NotificationsSectionView: View {
                 cardLabel(String(localized: "settings.notifications.group.extra"))
                 Text(String(localized: "settings.notifications.group.extra.hint"))
                     .font(.system(size: 11))
-                    .foregroundStyle(.white.opacity(0.4))
+                    .foregroundStyle(DS.Palette.textTertiary)
                     .fixedSize(horizontal: false, vertical: true)
                 darkToggle(String(localized: "settings.notifications.extra"), isOn: $settingsStore.notification.extraCredits)
             }
@@ -243,7 +243,7 @@ struct NotificationsSectionView: View {
                 cardLabel(String(localized: "settings.notifications.group.health"))
                 Text(String(localized: "settings.notifications.group.health.hint"))
                     .font(.system(size: 11))
-                    .foregroundStyle(.white.opacity(0.4))
+                    .foregroundStyle(DS.Palette.textTertiary)
                     .fixedSize(horizontal: false, vertical: true)
                 darkToggle(String(localized: "settings.notifications.token"), isOn: $settingsStore.notification.tokenExpired)
                 darkToggle(String(localized: "settings.notifications.status.degraded"), isOn: $settingsStore.notification.vendorDegraded)
