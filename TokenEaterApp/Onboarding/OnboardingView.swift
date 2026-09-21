@@ -18,6 +18,11 @@ struct OnboardingView: View {
         .padding(.horizontal, 24)
         .padding(.top, 22)
         .padding(.bottom, 18)
+        .sheet(isPresented: $viewModel.showCursorLogin) {
+            CursorWebLoginView { success in
+                viewModel.handleWebLoginFinished(success: success)
+            }
+        }
     }
 
     private var brandBar: some View {
