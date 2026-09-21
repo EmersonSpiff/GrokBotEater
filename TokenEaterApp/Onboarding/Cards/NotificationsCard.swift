@@ -71,15 +71,15 @@ struct NotificationsCard: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text(title)
                     .font(.system(size: 8.5, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(DS.Palette.textPrimary)
                 Text(body)
                     .font(.system(size: 8))
-                    .foregroundStyle(.white.opacity(0.7))
+                    .foregroundStyle(DS.Palette.textSecondary)
             }
             Spacer()
             Text(time)
                 .font(.system(size: 7.5))
-                .foregroundStyle(.white.opacity(0.5))
+                .foregroundStyle(DS.Palette.textSecondary)
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
@@ -89,7 +89,7 @@ struct NotificationsCard: View {
                 .fill(Color(red: 0.235, green: 0.235, blue: 0.255).opacity(0.88))
                 .overlay(
                     RoundedRectangle(cornerRadius: 9, style: .continuous)
-                        .stroke(Color.white.opacity(0.10), lineWidth: 1)
+                        .stroke(Color.black.opacity(0.10), lineWidth: 1)
                 )
         )
         .shadow(color: .black.opacity(0.5), radius: 8, x: 0, y: 4)
@@ -105,7 +105,7 @@ struct NotificationsCard: View {
             }
             Text("onboarding.card.notifications.authorized.scene")
                 .font(.system(size: 9))
-                .foregroundStyle(.white.opacity(0.7))
+                .foregroundStyle(DS.Palette.textSecondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -120,7 +120,7 @@ struct NotificationsCard: View {
             }
             Text("onboarding.card.notifications.denied.scene")
                 .font(.system(size: 9))
-                .foregroundStyle(.white.opacity(0.55))
+                .foregroundStyle(DS.Palette.textSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 12)
         }
@@ -148,11 +148,11 @@ struct NotificationsCard: View {
             } label: {
                 Text("onboarding.card.notifications.test")
                     .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(DS.Palette.textPrimary)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
-                    .background(Capsule().fill(Color.white.opacity(0.08)))
-                    .overlay(Capsule().stroke(Color.white.opacity(0.12), lineWidth: 1))
+                    .background(Capsule().fill(Color.black.opacity(0.08)))
+                    .overlay(Capsule().stroke(Color.black.opacity(0.12), lineWidth: 1))
             }
             .buttonStyle(.plain)
 
@@ -164,7 +164,7 @@ struct NotificationsCard: View {
             } label: {
                 Text("onboarding.card.notifications.opensettings")
                     .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(DS.Palette.textPrimary)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
                     .background(Capsule().fill(accent.opacity(0.18)))
@@ -184,7 +184,7 @@ struct NotificationsCard: View {
 
     private var statusColor: Color {
         switch viewModel.notificationStatus {
-        case .unknown, .notYetAsked: return Color.white.opacity(0.3)
+        case .unknown, .notYetAsked: return Color.black.opacity(0.3)
         case .authorized:            return Color(red: 0.30, green: 0.81, blue: 0.50)
         case .denied:                return Color(red: 0.94, green: 0.27, blue: 0.27)
         }

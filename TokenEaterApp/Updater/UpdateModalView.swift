@@ -44,7 +44,7 @@ struct UpdateModalView: View {
                     RoundedRectangle(cornerRadius: 20)
                         .fill(.ultraThinMaterial.opacity(0.2))
                     RoundedRectangle(cornerRadius: 20)
-                        .stroke(.white.opacity(0.08), lineWidth: 1)
+                        .stroke(Color.black.opacity(0.08), lineWidth: 1)
                 }
             )
             .clipShape(RoundedRectangle(cornerRadius: 20))
@@ -89,11 +89,11 @@ struct UpdateModalView: View {
             VStack(spacing: 8) {
                 Text(String(localized: "update.available.title"))
                     .font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(DS.Palette.textPrimary)
 
                 Text(String(localized: "update.available.subtitle"))
                     .font(.system(size: 12))
-                    .foregroundStyle(.white.opacity(0.4))
+                    .foregroundStyle(DS.Palette.textTertiary)
             }
 
             // Version badges
@@ -124,7 +124,7 @@ struct UpdateModalView: View {
                 }
                 .buttonStyle(.plain)
                 .font(.system(size: 12))
-                .foregroundStyle(.white.opacity(0.35))
+                .foregroundStyle(DS.Palette.textTertiary)
             }
         }
     }
@@ -144,7 +144,7 @@ struct UpdateModalView: View {
                     .foregroundStyle(accentColor.opacity(0.7))
                 Text(String(localized: "update.notes.title").uppercased())
                     .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.5))
+                    .foregroundStyle(DS.Palette.textSecondary)
                     .tracking(1.3)
                 Spacer()
                 Button {
@@ -158,7 +158,7 @@ struct UpdateModalView: View {
                             .font(.system(size: 8, weight: .semibold))
                     }
                     .font(.system(size: 9, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.4))
+                    .foregroundStyle(DS.Palette.textTertiary)
                 }
                 .buttonStyle(.plain)
             }
@@ -167,10 +167,10 @@ struct UpdateModalView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(
                     RoundedRectangle(cornerRadius: 10)
-                        .fill(Color.white.opacity(0.025))
+                        .fill(Color.black.opacity(0.025))
                         .overlay(
                             RoundedRectangle(cornerRadius: 10)
-                                .stroke(.white.opacity(0.05), lineWidth: 0.5)
+                                .stroke(Color.black.opacity(0.05), lineWidth: 0.5)
                         )
                 )
         }
@@ -183,7 +183,7 @@ struct UpdateModalView: View {
                 ProgressView().scaleEffect(0.5).frame(width: 12, height: 12)
                 Text(String(localized: "update.notes.loading"))
                     .font(.system(size: 11))
-                    .foregroundStyle(.white.opacity(0.5))
+                    .foregroundStyle(DS.Palette.textSecondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(14)
@@ -201,7 +201,7 @@ struct UpdateModalView: View {
         } else {
             Text(String(localized: "update.notes.unavailable"))
                 .font(.system(size: 11))
-                .foregroundStyle(.white.opacity(0.35))
+                .foregroundStyle(DS.Palette.textTertiary)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(14)
         }
@@ -247,17 +247,17 @@ struct UpdateModalView: View {
         case .h1(let text):
             Text(attributedInline(text))
                 .font(.system(size: 14, weight: .bold))
-                .foregroundStyle(.white.opacity(0.95))
+                .foregroundStyle(DS.Palette.textPrimary)
                 .padding(.top, 6)
         case .h2(let text):
             Text(attributedInline(text))
                 .font(.system(size: 13, weight: .bold))
-                .foregroundStyle(.white.opacity(0.9))
+                .foregroundStyle(DS.Palette.textPrimary)
                 .padding(.top, 4)
         case .h3(let text):
             Text(attributedInline(text))
                 .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.85))
+                .foregroundStyle(DS.Palette.textPrimary)
                 .tracking(0.3)
                 .padding(.top, 2)
         case .bullet(let text):
@@ -267,14 +267,14 @@ struct UpdateModalView: View {
                     .foregroundStyle(accentColor.opacity(0.7))
                 Text(attributedInline(text))
                     .font(.system(size: 11))
-                    .foregroundStyle(.white.opacity(0.75))
+                    .foregroundStyle(DS.Palette.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
             }
             .padding(.leading, 2)
         case .paragraph(let text):
             Text(attributedInline(text))
                 .font(.system(size: 11))
-                .foregroundStyle(.white.opacity(0.75))
+                .foregroundStyle(DS.Palette.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
         case .blank:
             Spacer().frame(height: 4)
@@ -317,11 +317,11 @@ struct UpdateModalView: View {
                 VStack(spacing: 2) {
                     Text("\(Int(progress * 100))")
                         .font(.system(size: 32, weight: .black, design: .rounded))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(DS.Palette.textPrimary)
                         .shadow(color: accentColor.opacity(0.5), radius: 4)
                     Text("%")
                         .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.4))
+                        .foregroundStyle(DS.Palette.textTertiary)
                 }
                 .contentTransition(.numericText(countsDown: false))
                 .animation(.spring(response: 0.3), value: Int(progress * 100))
@@ -330,11 +330,11 @@ struct UpdateModalView: View {
             VStack(spacing: 6) {
                 Text(String(localized: "update.downloading"))
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.8))
+                    .foregroundStyle(DS.Palette.textPrimary)
 
                 Text(String(localized: "update.downloading.hint"))
                     .font(.system(size: 11))
-                    .foregroundStyle(.white.opacity(0.3))
+                    .foregroundStyle(DS.Palette.textTertiary)
             }
         }
     }
@@ -373,11 +373,11 @@ struct UpdateModalView: View {
             VStack(spacing: 8) {
                 Text(String(localized: "update.ready.title"))
                     .font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(DS.Palette.textPrimary)
 
                 Text(String(localized: "update.ready.subtitle"))
                     .font(.system(size: 12))
-                    .foregroundStyle(.white.opacity(0.4))
+                    .foregroundStyle(DS.Palette.textTertiary)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: 280)
             }
@@ -389,7 +389,7 @@ struct UpdateModalView: View {
 
                 Text(String(localized: "update.install.hint"))
                     .font(.system(size: 10))
-                    .foregroundStyle(.white.opacity(0.25))
+                    .foregroundStyle(DS.Palette.textTertiary)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: 260)
             }
@@ -434,11 +434,11 @@ struct UpdateModalView: View {
             VStack(spacing: 8) {
                 Text(String(localized: "update.installing"))
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.8))
+                    .foregroundStyle(DS.Palette.textPrimary)
 
                 Text(String(localized: "update.installing.hint"))
                     .font(.system(size: 11))
-                    .foregroundStyle(.white.opacity(0.3))
+                    .foregroundStyle(DS.Palette.textTertiary)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: 280)
             }
@@ -471,11 +471,11 @@ struct UpdateModalView: View {
             VStack(spacing: 8) {
                 Text("Install failed")
                     .font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(DS.Palette.textPrimary)
 
                 Text(message)
                     .font(.system(size: 11, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.4))
+                    .foregroundStyle(DS.Palette.textTertiary)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: 300)
                     .lineLimit(5)
@@ -486,7 +486,7 @@ struct UpdateModalView: View {
             }
             .buttonStyle(.plain)
             .font(.system(size: 12))
-            .foregroundStyle(.white.opacity(0.35))
+            .foregroundStyle(DS.Palette.textTertiary)
         }
     }
 
@@ -496,7 +496,7 @@ struct UpdateModalView: View {
         VStack(spacing: 4) {
             Text(isCurrent ? String(localized: "update.version.current") : String(localized: "update.version.new"))
                 .font(.system(size: 9, weight: .medium))
-                .foregroundStyle(.white.opacity(0.3))
+                .foregroundStyle(DS.Palette.textTertiary)
                 .textCase(.uppercase)
                 .tracking(0.5)
             Text("v\(version)")
@@ -519,7 +519,7 @@ struct UpdateModalView: View {
         Button(action: action) {
             Text(title)
                 .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(DS.Palette.textPrimary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
                 .background(

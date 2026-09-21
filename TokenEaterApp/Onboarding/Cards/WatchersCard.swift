@@ -63,7 +63,7 @@ struct WatchersCard: View {
     }
 
     private var statusColor: Color {
-        settingsStore.overlayEnabled ? DS.Palette.brandPrimary : Color.white.opacity(0.3)
+        settingsStore.overlayEnabled ? DS.Palette.brandPrimary : Color.black.opacity(0.3)
     }
 
     /// Computed (not static) so each render gets fresh `lastUpdate` /

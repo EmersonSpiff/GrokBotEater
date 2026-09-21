@@ -39,7 +39,7 @@ struct PacingSectionView: View {
                                 } label: {
                                     Image(systemName: "info.circle")
                                         .font(.system(size: 13))
-                                        .foregroundStyle(.white.opacity(0.55))
+                                        .foregroundStyle(DS.Palette.textSecondary)
                                 }
                                 .buttonStyle(.plain)
                                 .popover(isPresented: $showSmartColorPopover, arrowEdge: .bottom) {
@@ -50,7 +50,7 @@ struct PacingSectionView: View {
                             }
                             Text(String(localized: "settings.smartcolor.hint"))
                                 .font(.system(size: 11))
-                                .foregroundStyle(.white.opacity(0.5))
+                                .foregroundStyle(DS.Palette.textSecondary)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                         Spacer()
@@ -77,7 +77,7 @@ struct PacingSectionView: View {
 
                         Text(String(localized: "settings.theme.thresholds.hint"))
                             .font(.system(size: 11))
-                            .foregroundStyle(.white.opacity(0.4))
+                            .foregroundStyle(DS.Palette.textTertiary)
                             .fixedSize(horizontal: false, vertical: true)
                             .padding(.top, 4)
 
@@ -101,7 +101,7 @@ struct PacingSectionView: View {
                     pacingZonesPreview
                     Text(String(localized: "settings.pacing.margin.hint"))
                         .font(.system(size: 11))
-                        .foregroundStyle(.white.opacity(0.4))
+                        .foregroundStyle(DS.Palette.textTertiary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -150,7 +150,7 @@ struct PacingSectionView: View {
                         } label: {
                             Image(systemName: "info.circle")
                                 .font(.system(size: 13))
-                                .foregroundStyle(.white.opacity(0.55))
+                                .foregroundStyle(DS.Palette.textSecondary)
                         }
                         .buttonStyle(.plain)
                         .popover(isPresented: $showWorkweekPopover, arrowEdge: .bottom) {
@@ -174,7 +174,7 @@ struct PacingSectionView: View {
                     HStack(spacing: 8) {
                         Text(String(localized: "settings.pacing.workweek.hours"))
                             .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.65))
+                            .foregroundStyle(DS.Palette.textSecondary)
                         Spacer()
                         Toggle("", isOn: $settingsStore.pacing.hoursEnabled)
                             .labelsHidden()
@@ -202,7 +202,7 @@ struct PacingSectionView: View {
                 }
                 Text(String(localized: "settings.pacing.workweek.hint"))
                     .font(.system(size: 11))
-                    .foregroundStyle(.white.opacity(0.4))
+                    .foregroundStyle(DS.Palette.textTertiary)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -289,12 +289,12 @@ struct PacingSectionView: View {
                 .font(.system(size: 12, weight: .semibold, design: .rounded))
                 .frame(width: 30, height: 30)
                 .background(
-                    Circle().fill(selected ? DS.Palette.brandPrimary.opacity(0.22) : Color.white.opacity(0.06))
+                    Circle().fill(selected ? DS.Palette.brandPrimary.opacity(0.22) : Color.black.opacity(0.06))
                 )
                 .overlay(
-                    Circle().stroke(selected ? DS.Palette.brandPrimary.opacity(0.6) : Color.white.opacity(0.12), lineWidth: 1)
+                    Circle().stroke(selected ? DS.Palette.brandPrimary.opacity(0.6) : Color.black.opacity(0.12), lineWidth: 1)
                 )
-                .foregroundStyle(selected ? DS.Palette.brandPrimary : Color.white.opacity(0.5))
+                .foregroundStyle(selected ? DS.Palette.brandPrimary : Color.black.opacity(0.5))
         }
         .buttonStyle(.plain)
     }
@@ -362,10 +362,10 @@ struct PacingSectionView: View {
             .frame(maxWidth: .infinity, minHeight: 56, alignment: .topLeading)
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(isActive ? accent.opacity(0.14) : Color.white.opacity(0.03))
+                    .fill(isActive ? accent.opacity(0.14) : Color.black.opacity(0.03))
                     .overlay(
                         RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .stroke(isActive ? accent.opacity(0.45) : Color.white.opacity(0.07), lineWidth: 1)
+                            .stroke(isActive ? accent.opacity(0.45) : Color.black.opacity(0.07), lineWidth: 1)
                     )
             )
             .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
@@ -578,12 +578,12 @@ struct PacingSectionView: View {
         HStack {
             Text(label)
                 .font(.system(size: 12))
-                .foregroundStyle(.white.opacity(0.7))
+                .foregroundStyle(DS.Palette.textSecondary)
                 .frame(width: 60, alignment: .leading)
             TokenEaterSlider(value: value, in: range, step: 5, showsTicks: true)
             Text("\(Int(value.wrappedValue))%")
                 .font(.system(size: 12, design: .monospaced))
-                .foregroundStyle(.white.opacity(0.5))
+                .foregroundStyle(DS.Palette.textSecondary)
                 .frame(width: 40, alignment: .trailing)
         }
     }
@@ -613,7 +613,7 @@ struct PacingSectionView: View {
                 .foregroundStyle(color)
             Text(range)
                 .font(.system(size: 9, design: .monospaced))
-                .foregroundStyle(.white.opacity(0.6))
+                .foregroundStyle(DS.Palette.textSecondary)
                 .monospacedDigit()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -649,7 +649,7 @@ struct PacingSectionView: View {
             }
             Text(label)
                 .font(.system(size: 9))
-                .foregroundStyle(.white.opacity(0.4))
+                .foregroundStyle(DS.Palette.textTertiary)
         }
     }
 }

@@ -16,14 +16,14 @@ struct OnboardingHero: View {
             Text("onboarding.hero.label")
                 .font(.system(size: 10))
                 .tracking(2.0)
-                .foregroundStyle(.white.opacity(0.35))
+                .foregroundStyle(DS.Palette.textTertiary)
                 .padding(.bottom, 4)
 
             heroTitle
 
             Text("onboarding.hero.subtitle")
                 .font(.system(size: 12))
-                .foregroundStyle(.white.opacity(0.5))
+                .foregroundStyle(DS.Palette.textSecondary)
                 .lineSpacing(2)
                 .padding(.top, 6)
 
@@ -62,7 +62,7 @@ struct OnboardingHero: View {
             HStack(spacing: 7) {
                 ForEach(0..<viewModel.totalSteps, id: \.self) { i in
                     Circle()
-                        .fill(i < viewModel.readyCount ? Color(red: 0.30, green: 0.81, blue: 0.50) : Color.white.opacity(0.12))
+                        .fill(i < viewModel.readyCount ? Color(red: 0.30, green: 0.81, blue: 0.50) : Color.black.opacity(0.12))
                         .frame(width: 6, height: 6)
                         .shadow(color: i < viewModel.readyCount
                                 ? Color(red: 0.30, green: 0.81, blue: 0.50).opacity(0.7)
@@ -73,7 +73,7 @@ struct OnboardingHero: View {
             }
             Text("onboarding.progress.label \(viewModel.readyCount) \(viewModel.totalSteps)")
                 .font(.system(size: 10))
-                .foregroundStyle(.white.opacity(0.5))
+                .foregroundStyle(DS.Palette.textSecondary)
                 .monospacedDigit()
         }
     }
@@ -88,7 +88,7 @@ struct OnboardingHero: View {
         } label: {
             Text("onboarding.finish")
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(DS.Palette.textPrimary)
                 .padding(.horizontal, 22)
                 .padding(.vertical, 10)
                 .background(finishBackground)
@@ -116,7 +116,7 @@ struct OnboardingHero: View {
                 startPoint: .top, endPoint: .bottom
             )
         } else {
-            Color.white.opacity(0.06)
+            Color.black.opacity(0.06)
         }
     }
 }

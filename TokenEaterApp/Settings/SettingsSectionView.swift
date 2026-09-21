@@ -39,7 +39,7 @@ struct SettingsSectionView: View {
                              ? String(localized: "settings.connected")
                              : String(localized: "settings.disconnected"))
                             .font(.system(size: 13))
-                            .foregroundStyle(.white.opacity(0.8))
+                            .foregroundStyle(DS.Palette.textPrimary)
                         Spacer()
                         if isImporting {
                             ProgressView().scaleEffect(0.6)
@@ -70,7 +70,7 @@ struct SettingsSectionView: View {
                                 Text(String(format: String(localized: "error.banner.lastupdate"),
                                             last.formatted(.relative(presentation: .named))))
                                     .font(.system(size: 10))
-                                    .foregroundStyle(.white.opacity(0.4))
+                                    .foregroundStyle(DS.Palette.textTertiary)
                             }
                         }
                     }
@@ -89,7 +89,7 @@ struct SettingsSectionView: View {
                     HStack {
                         Text("GrokBotEater v\(updateStore.currentVersion)")
                             .font(.system(size: 12))
-                            .foregroundStyle(.white.opacity(0.5))
+                            .foregroundStyle(DS.Palette.textSecondary)
                         Spacer()
                         if case .checking = updateStore.updateState {
                             ProgressView()
@@ -129,13 +129,13 @@ struct SettingsSectionView: View {
                     darkToggle(String(localized: "settings.launchAtLogin"), isOn: $settingsStore.launchAtLoginEnabled)
                     Text(String(localized: "settings.launchAtLogin.hint"))
                         .font(.system(size: 11))
-                        .foregroundStyle(.white.opacity(0.4))
+                        .foregroundStyle(DS.Palette.textTertiary)
                         .fixedSize(horizontal: false, vertical: true)
 
                     darkToggle(String(localized: "settings.launchInBackground"), isOn: $settingsStore.display.launchInBackground)
                     Text(String(localized: "settings.launchInBackground.hint"))
                         .font(.system(size: 11))
-                        .foregroundStyle(.white.opacity(0.4))
+                        .foregroundStyle(DS.Palette.textTertiary)
                         .fixedSize(horizontal: false, vertical: true)
 
                     Divider().opacity(0.12)
@@ -144,10 +144,10 @@ struct SettingsSectionView: View {
                         VStack(alignment: .leading, spacing: 3) {
                             Text(String(localized: "settings.general.replayOnboarding"))
                                 .font(.system(size: 13, weight: .medium))
-                                .foregroundStyle(.white.opacity(0.85))
+                                .foregroundStyle(DS.Palette.textPrimary)
                             Text(String(localized: "settings.general.replayOnboarding.hint"))
                                 .font(.system(size: 11))
-                                .foregroundStyle(.white.opacity(0.4))
+                                .foregroundStyle(DS.Palette.textTertiary)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                         Spacer()
@@ -160,7 +160,7 @@ struct SettingsSectionView: View {
                                 Text(String(localized: "settings.general.replayOnboarding.action"))
                                     .font(.system(size: 12, weight: .medium))
                             }
-                            .foregroundStyle(.white.opacity(0.9))
+                            .foregroundStyle(DS.Palette.textPrimary)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 7)
                             .background(
@@ -187,7 +187,7 @@ struct SettingsSectionView: View {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(String(localized: "settings.proxy.host"))
                                     .font(.system(size: 10))
-                                    .foregroundStyle(.white.opacity(0.4))
+                                    .foregroundStyle(DS.Palette.textTertiary)
                                 TextField("127.0.0.1", text: $settingsStore.proxyHost)
                                     .textFieldStyle(.roundedBorder)
                                     .font(.system(size: 12, design: .monospaced))
@@ -195,7 +195,7 @@ struct SettingsSectionView: View {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(String(localized: "settings.proxy.port"))
                                     .font(.system(size: 10))
-                                    .foregroundStyle(.white.opacity(0.4))
+                                    .foregroundStyle(DS.Palette.textTertiary)
                                 TextField("1080", value: $settingsStore.proxyPort, format: .number)
                                     .textFieldStyle(.roundedBorder)
                                     .font(.system(size: 12, design: .monospaced))
@@ -213,11 +213,11 @@ struct SettingsSectionView: View {
                     HStack {
                         Text(String(localized: "settings.refresh.interval"))
                             .font(.system(size: 12))
-                            .foregroundStyle(.white.opacity(0.7))
+                            .foregroundStyle(DS.Palette.textSecondary)
                         Spacer()
                         Text(formatInterval(settingsStore.refreshInterval))
                             .font(.system(size: 12, design: .monospaced))
-                            .foregroundStyle(.white.opacity(0.9))
+                            .foregroundStyle(DS.Palette.textPrimary)
                     }
                     TokenEaterSlider(
                         value: Binding(
@@ -250,17 +250,17 @@ struct SettingsSectionView: View {
                     darkToggle(String(localized: "settings.status.master"), isOn: $settingsStore.outageMonitoringEnabled)
                     Text(String(localized: "sidebar.serviceStatus.subtitle"))
                         .font(.system(size: 11))
-                        .foregroundStyle(.white.opacity(0.4))
+                        .foregroundStyle(DS.Palette.textTertiary)
                         .fixedSize(horizontal: false, vertical: true)
                     if settingsStore.outageMonitoringEnabled {
                         HStack {
                             Text(String(localized: "settings.status.interval.label"))
                                 .font(.system(size: 12))
-                                .foregroundStyle(.white.opacity(0.7))
+                                .foregroundStyle(DS.Palette.textSecondary)
                             Spacer()
                             Text(formatInterval(Int(statusPollIntervalSeconds)))
                                 .font(.system(size: 12, design: .monospaced))
-                                .foregroundStyle(.white.opacity(0.9))
+                                .foregroundStyle(DS.Palette.textPrimary)
                         }
                         TokenEaterSlider(
                             value: $statusPollIntervalSeconds,
@@ -320,11 +320,11 @@ struct SettingsSectionView: View {
                 .foregroundStyle(.orange)
             Text(String(localized: "update.brew.hint"))
                 .font(.system(size: 10))
-                .foregroundStyle(.white.opacity(0.5))
+                .foregroundStyle(DS.Palette.textSecondary)
             HStack(spacing: 8) {
                 Text(updateStore.brewUninstallCommand)
                     .font(.system(size: 10, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.6))
+                    .foregroundStyle(DS.Palette.textSecondary)
                     .lineLimit(1)
                 Button {
                     NSPasteboard.general.clearContents()
@@ -343,7 +343,7 @@ struct SettingsSectionView: View {
                 }
                 .font(.system(size: 10))
                 .buttonStyle(.plain)
-                .foregroundStyle(.white.opacity(0.4))
+                .foregroundStyle(DS.Palette.textTertiary)
             }
         }
         .padding(10)
@@ -425,10 +425,10 @@ private struct AboutLinkRow: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
                         .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(.white.opacity(isHovering ? 0.95 : 0.85))
+                        .foregroundStyle(DS.Palette.textPrimary.opacity(isHovering  ? 0.95 : 0.85))
                     Text(subtitle)
                         .font(.system(size: 11))
-                        .foregroundStyle(.white.opacity(0.45))
+                        .foregroundStyle(DS.Palette.textTertiary)
                 }
 
                 Spacer(minLength: 0)
