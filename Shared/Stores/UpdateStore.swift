@@ -161,8 +161,8 @@ final class UpdateStore: ObservableObject {
             return String(cString: pw.pointee.pw_dir)
         }()
 
-        let sharedDir = "\(realHome)/Library/Application Support/com.tokeneater.shared"
-        let dmgSharedPath = "\(sharedDir)/TokenEater.dmg"
+        let sharedDir = "\(realHome)/Library/Application Support/com.emersonspiff.grokboteater.shared"
+        let dmgSharedPath = "\(sharedDir)/GrokBotEater.dmg"
 
         // Copy DMG from sandbox container to shared dir (root can't access containers)
         do {
@@ -175,7 +175,7 @@ final class UpdateStore: ObservableObject {
 
         // Launch pre-built installer .app from our Resources (no quarantine)
         guard let installerURL = Bundle.main.url(
-            forResource: "TokenEaterInstaller",
+            forResource: "GrokBotEaterInstaller",
             withExtension: "app"
         ) else {
             updateState = .error("Installer not found in bundle")

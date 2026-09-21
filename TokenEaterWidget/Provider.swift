@@ -2,7 +2,7 @@ import WidgetKit
 import Foundation
 import os.log
 
-private let logger = Logger(subsystem: "com.tokeneater.app.widget", category: "Provider")
+private let logger = Logger(subsystem: "com.emersonspiff.grokboteater.app.widget", category: "Provider")
 
 struct StaticProvider: TimelineProvider {
     private let sharedFile = SharedFileService()

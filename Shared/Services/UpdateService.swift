@@ -7,7 +7,7 @@ final class UpdateService: NSObject, UpdateServiceProtocol, URLSessionDownloadDe
     private var downloadContinuation: CheckedContinuation<URL, Error>?
 
     init(
-        feedURL: URL = URL(string: "https://raw.githubusercontent.com/AThevon/TokenEater/main/docs/appcast.xml")!,
+        feedURL: URL = URL(string: "https://raw.githubusercontent.com/EmersonSpiff/GrokBotEater/main/docs/appcast.xml")!,
         currentVersion: String? = nil
     ) {
         self.feedURL = feedURL
@@ -42,7 +42,7 @@ final class UpdateService: NSObject, UpdateServiceProtocol, URLSessionDownloadDe
     /// graceful fallback instead of an error.
     func fetchReleaseNotes(version: String) async -> String? {
         let tag = version.hasPrefix("v") ? version : "v\(version)"
-        guard let url = URL(string: "https://api.github.com/repos/AThevon/TokenEater/releases/tags/\(tag)") else {
+        guard let url = URL(string: "https://api.github.com/repos/EmersonSpiff/GrokBotEater/releases/tags/\(tag)") else {
             return nil
         }
         var request = URLRequest(url: url)
@@ -68,7 +68,7 @@ final class UpdateService: NSObject, UpdateServiceProtocol, URLSessionDownloadDe
         downloadTask: URLSessionDownloadTask,
         didFinishDownloadingTo location: URL
     ) {
-        let dest = FileManager.default.temporaryDirectory.appendingPathComponent("TokenEater.dmg")
+        let dest = FileManager.default.temporaryDirectory.appendingPathComponent("GrokBotEater.dmg")
         try? FileManager.default.removeItem(at: dest)
         do {
             try FileManager.default.moveItem(at: location, to: dest)

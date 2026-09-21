@@ -1,7 +1,7 @@
 import Foundation
 import os.log
 
-private let logger = Logger(subsystem: "com.tokeneater.app", category: "LegacyHelperCleanup")
+private let logger = Logger(subsystem: "com.emersonspiff.grokboteater.app", category: "LegacyHelperCleanup")
 
 /// One-shot cleanup for users upgrading from v4.x to v5.0+.
 ///
@@ -75,7 +75,7 @@ final class LegacyHelperCleanupService: @unchecked Sendable {
         if UserDefaults.standard.bool(forKey: Self.cleanupDoneKey) { return }
 
         let plistPath = "\(home)/Library/LaunchAgents/\(label).plist"
-        let sharedDir = "\(home)/Library/Application Support/com.tokeneater.shared"
+        let sharedDir = "\(home)/Library/Application Support/com.emersonspiff.grokboteater.shared"
         let statusFile = "\(sharedDir)/keychain-token.json"
 
         // If no legacy artifact is present, nothing to do - flag the migration

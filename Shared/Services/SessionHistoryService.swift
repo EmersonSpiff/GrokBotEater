@@ -24,7 +24,7 @@ final class SessionHistoryService: SessionHistoryServiceProtocol {
             ?? URL(fileURLWithPath: NSHomeDirectory(), isDirectory: true)
                 .appendingPathComponent("Library/Application Support", isDirectory: true)
         return support
-            .appendingPathComponent("com.tokeneater.shared", isDirectory: true)
+            .appendingPathComponent("com.emersonspiff.grokboteater.shared", isDirectory: true)
             .appendingPathComponent("history-cache.json")
     }
 

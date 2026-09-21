@@ -139,7 +139,7 @@ enum ProcessResolver {
         } else {
             home = NSHomeDirectory()
         }
-        return "\(home)/Library/Application Support/com.tokeneater.shared"
+        return "\(home)/Library/Application Support/com.emersonspiff.grokboteater.shared"
     }()
 
     private static func switchTmuxPane(parentPid: Int32) {
@@ -167,14 +167,14 @@ enum ProcessResolver {
         \(version)
         # TokenEater tmux pane switcher - started by tmux via run-shell.
         # Polls for a trigger file written by the app and switches to the target pane.
-        PIDFILE="$HOME/Library/Application Support/com.tokeneater.shared/tmux-watcher.pid"
+        PIDFILE="$HOME/Library/Application Support/com.emersonspiff.grokboteater.shared/tmux-watcher.pid"
         if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE" 2>/dev/null)" 2>/dev/null; then
             exit 0
         fi
         echo $$ > "$PIDFILE"
         trap 'rm -f "$PIDFILE"' EXIT
         export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
-        TRIGGER="$HOME/Library/Application Support/com.tokeneater.shared/switch-pane.trigger"
+        TRIGGER="$HOME/Library/Application Support/com.emersonspiff.grokboteater.shared/switch-pane.trigger"
         while true; do
             if [ -f "$TRIGGER" ]; then
                 TARGET_PID=$(cat "$TRIGGER" 2>/dev/null)
@@ -586,14 +586,14 @@ enum ProcessResolver {
         \(version)
         # TokenEater WezTerm pane switcher - started by WezTerm via wezterm.lua.
         # Polls for a trigger file written by the app and switches to the target pane.
-        PIDFILE="$HOME/Library/Application Support/com.tokeneater.shared/wezterm-watcher.pid"
+        PIDFILE="$HOME/Library/Application Support/com.emersonspiff.grokboteater.shared/wezterm-watcher.pid"
         if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE" 2>/dev/null)" 2>/dev/null; then
             exit 0
         fi
         echo $$ > "$PIDFILE"
         trap 'rm -f "$PIDFILE"' EXIT
         export PATH="/opt/homebrew/bin:/usr/local/bin:/Applications/WezTerm.app/Contents/MacOS:$PATH"
-        TRIGGER="$HOME/Library/Application Support/com.tokeneater.shared/wezterm-switch.trigger"
+        TRIGGER="$HOME/Library/Application Support/com.emersonspiff.grokboteater.shared/wezterm-switch.trigger"
         WEZTERM_BIN=$(command -v wezterm 2>/dev/null)
         [ -z "$WEZTERM_BIN" ] && exit 1
 
