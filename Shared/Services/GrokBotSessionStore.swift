@@ -16,7 +16,19 @@ final class GrokBotSessionStore: @unchecked Sendable {
     private let lock = NSLock()
 
     func savedCookie() -> String? {
-        if let value = readAccount(account) { return value }
+        lock.lock()
+        if let cached = memoryCookie, !cached.isEmpty {
+            lock.unlock()
+            return cached
+        }
+        lock.unlock()
+
+        if let value = readAccount(account) {
+            lock.lock()
+            memoryCookie = value
+            lock.unlock()
+            return value
+        }
         // Migrate legacy Keychain item from CursorAppLogin era.
         if let legacy = readAccount("CursorAppLogin") {
             save(cookie: legacy)
@@ -57,8 +69,12 @@ final class GrokBotSessionStore: @unchecked Sendable {
         let trimmed = cookie.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, let data = trimmed.data(using: .utf8) else { return }
 
-        // Replace any existing item.
-        clear()
+        lock.lock()
+        memoryCookie = trimmed
+        lock.unlock()
+
+        // Replace any existing Keychain item without wiping the in-memory cache.
+        deleteAccount(account)
 
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
@@ -75,11 +91,9 @@ final class GrokBotSessionStore: @unchecked Sendable {
     }
 
     func clear() {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
-        ]
-        SecItemDelete(query as CFDictionary)
+        lock.lock()
+        memoryCookie = nil
+        lock.unlock()
+        deleteAccount(account)
     }
 }
