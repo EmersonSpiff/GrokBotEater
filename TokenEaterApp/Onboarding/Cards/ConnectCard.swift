@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// Required card - tests the Grok Bot usage API with the Cursor session
-/// cookie. Idle scene explains reading the Cursor login; Authorize fires
-/// `GrokBotAPIClient.fetchUsage`.
+/// Required card - tests the Grok Bot usage API. Connect tries a saved /
+/// scraped Cursor session cookie first; if none works, opens the in-app
+/// cursor.com WKWebView login sheet, then retries `fetchUsage`.
 struct ConnectCard: View {
     @ObservedObject var viewModel: OnboardingViewModel
 

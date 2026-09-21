@@ -423,7 +423,7 @@
 "onboarding.mode.detailed" = "Detailed";
 
 /* Onboarding - Connection (kept: referenced by OnboardingViewModel) */
-"onboarding.connection.failed.notoken" = "Couldn't read your Cursor session. Open Cursor, sign in at cursor.com, then retry.";
+"onboarding.connection.failed.notoken" = "Couldn't read your Cursor session. Use Connect to sign in at cursor.com in the app.";
 
 /* Settings - Onboarding reset */
 "settings.onboarding.reset" = "Run setup again";
@@ -848,10 +848,10 @@
 "onboarding.card.grokbot.checking" = "checking...";
 "onboarding.card.grokbot.status.checking" = "looking for Cursor login";
 "onboarding.card.grokbot.status.detected" = "Cursor session ready";
-"onboarding.card.grokbot.status.notfound" = "sign in to Cursor, then retry";
-"onboarding.card.grokbot.notfound.step1" = "open the Cursor app";
-"onboarding.card.grokbot.notfound.step2" = "sign in at cursor.com";
-"onboarding.card.grokbot.notfound.step3" = "come back, hit retry";
+"onboarding.card.grokbot.status.notfound" = "sign in via Connect, then retry";
+"onboarding.card.grokbot.notfound.step1" = "tap Connect to open cursor.com";
+"onboarding.card.grokbot.notfound.step2" = "sign in inside the app window";
+"onboarding.card.grokbot.notfound.step3" = "or reopen Cursor and retry";
 "onboarding.card.grokbot.retry" = "Retry";
 "onboarding.card.grokbot.ready.scene" = "Cursor login found";
 "onboarding.card.grokbot.ready.detail" = "Ready to read Grok Bot usage";
@@ -874,7 +874,7 @@
 /* Card 4 - Connect */
 "onboarding.card.connect.title" = "Connect";
 "onboarding.card.connect.status.idle" = "tap to test Grok Bot";
-"onboarding.card.connect.status.connecting" = "reading Cursor session...";
+"onboarding.card.connect.status.connecting" = "connecting to cursor.com...";
 "onboarding.card.connect.status.success" = "connected";
 "onboarding.card.connect.status.failed" = "access denied";
 "onboarding.card.connect.connecting" = "calling Grok Bot usage...";
@@ -882,7 +882,14 @@
 "onboarding.card.connect.failed.scene" = "access denied";
 "onboarding.card.connect.authorize" = "Connect";
 "onboarding.card.connect.retry" = "Retry";
-"onboarding.card.connect.idle.scene" = "Uses your Cursor login\nto fetch Grok Bot usage.";
+"onboarding.card.connect.idle.scene" = "Opens cursor.com to sign in\nand connect Grok Bot usage.";
+
+/* Onboarding - Web login sheet */
+"onboarding.weblogin.title" = "Sign in to Cursor";
+"onboarding.weblogin.cancel" = "Cancel";
+"onboarding.weblogin.status.waiting" = "Sign in at cursor.com — we capture your session automatically.";
+"onboarding.weblogin.status.captured" = "Session saved. Connecting…";
+
 
 /* Vendor Status Banner */
 "status.banner.degraded" = "Claude is degraded";

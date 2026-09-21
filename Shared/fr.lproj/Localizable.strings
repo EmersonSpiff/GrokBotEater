@@ -423,7 +423,7 @@
 "onboarding.mode.detailed" = "Détaillé";
 
 /* Onboarding - Connection (kept: referenced by OnboardingViewModel) */
-"onboarding.connection.failed.notoken" = "Impossible de lire la session Cursor. Ouvre Cursor, connecte-toi sur cursor.com, puis réessaie.";
+"onboarding.connection.failed.notoken" = "Impossible de lire la session Cursor. Utilise Connecter pour te connecter sur cursor.com dans l'app.";
 
 /* Settings - Onboarding reset */
 "settings.onboarding.reset" = "Relancer la configuration";
@@ -847,10 +847,10 @@
 "onboarding.card.grokbot.checking" = "vérification...";
 "onboarding.card.grokbot.status.checking" = "recherche login Cursor";
 "onboarding.card.grokbot.status.detected" = "session Cursor prête";
-"onboarding.card.grokbot.status.notfound" = "connecte-toi à Cursor, puis réessaie";
-"onboarding.card.grokbot.notfound.step1" = "ouvre l'app Cursor";
-"onboarding.card.grokbot.notfound.step2" = "connecte-toi sur cursor.com";
-"onboarding.card.grokbot.notfound.step3" = "reviens ici, clique Réessayer";
+"onboarding.card.grokbot.status.notfound" = "connecte-toi via Connecter, puis réessaie";
+"onboarding.card.grokbot.notfound.step1" = "clique Connecter pour ouvrir cursor.com";
+"onboarding.card.grokbot.notfound.step2" = "connecte-toi dans la fenêtre de l'app";
+"onboarding.card.grokbot.notfound.step3" = "ou rouvre Cursor et réessaie";
 "onboarding.card.grokbot.retry" = "Réessayer";
 "onboarding.card.grokbot.ready.scene" = "Login Cursor trouvé";
 "onboarding.card.grokbot.ready.detail" = "Prêt à lire l'usage Grok Bot";
@@ -873,7 +873,7 @@
 /* Card 4 - Connect */
 "onboarding.card.connect.title" = "Connecter";
 "onboarding.card.connect.status.idle" = "clique pour tester Grok Bot";
-"onboarding.card.connect.status.connecting" = "lecture session Cursor...";
+"onboarding.card.connect.status.connecting" = "connexion à cursor.com...";
 "onboarding.card.connect.status.success" = "connecté";
 "onboarding.card.connect.status.failed" = "accès refusé";
 "onboarding.card.connect.connecting" = "appel usage Grok Bot...";
@@ -881,7 +881,14 @@
 "onboarding.card.connect.failed.scene" = "accès refusé";
 "onboarding.card.connect.authorize" = "Connecter";
 "onboarding.card.connect.retry" = "Réessayer";
-"onboarding.card.connect.idle.scene" = "Utilise ton login Cursor\npour lire l'usage Grok Bot.";
+"onboarding.card.connect.idle.scene" = "Ouvre cursor.com pour te connecter\net lier l'usage Grok Bot.";
+
+/* Onboarding - Web login sheet */
+"onboarding.weblogin.title" = "Connexion à Cursor";
+"onboarding.weblogin.cancel" = "Annuler";
+"onboarding.weblogin.status.waiting" = "Connecte-toi sur cursor.com — la session est capturée automatiquement.";
+"onboarding.weblogin.status.captured" = "Session enregistrée. Connexion…";
+
 
 /* Vendor Status Banner */
 "status.banner.degraded" = "Claude est dégradé";
