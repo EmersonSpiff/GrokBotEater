@@ -931,3 +931,11 @@
 "history.coming.subtitle" = "Usage Grok Bot dans le temps";
 "history.coming.badge" = "Bientôt";
 "history.coming.body" = "Cet onglet montrait les jetons Claude Code. L’historique Grok Bot n’est pas encore branché.";
+
+"widget.grokBot.title" = "Usage Grok Bot";
+"widget.grokBot.description" = "Usage hebdomadaire Grok Bot de votre plan Cursor.";
+"widget.grokBot" = "Grok Bot";
+"widget.grokBot.appName" = "GrokBotEater";
+"widget.grokBot.weekly" = "Usage hebdo";
+"widget.grokBot.empty" = "Ouvrez GrokBotEater et Connectez pour synchroniser.";
+"widget.grokBot.unavailable" = "Usage Grok Bot indisponible sur ce plan.";

@@ -60,3 +60,37 @@ struct CachedGrokBotUsage: Codable {
     let usage: GrokBotUsageResponse
     let fetchDate: Date
 }
+
+
+// MARK: - Shared snapshot for widgets
+
+/// Denormalized Grok Bot fields the widget reads from shared.json (no network).
+struct GrokBotSharedSnapshot: Codable, Equatable {
+    var usagePercent: Int
+    var hasGrokBot: Bool
+    var shouldDrawRing: Bool
+    var currentPeriodStart: String?
+    var lastSync: Date
+
+    init(
+        usagePercent: Int,
+        hasGrokBot: Bool,
+        shouldDrawRing: Bool,
+        currentPeriodStart: String? = nil,
+        lastSync: Date = Date()
+    ) {
+        self.usagePercent = usagePercent
+        self.hasGrokBot = hasGrokBot
+        self.shouldDrawRing = shouldDrawRing
+        self.currentPeriodStart = currentPeriodStart
+        self.lastSync = lastSync
+    }
+
+    init(response: GrokBotUsageResponse, syncDate: Date = Date()) {
+        self.usagePercent = response.usagePercentInt
+        self.hasGrokBot = true
+        self.shouldDrawRing = response.shouldDrawRing
+        self.currentPeriodStart = response.currentPeriodStart
+        self.lastSync = syncDate
+    }
+}
