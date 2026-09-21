@@ -137,6 +137,8 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
         var pacingHoursEnabled: Bool?
         var pacingStartHour: Int?
         var pacingEndHour: Int?
+        /// Grok Bot sand-usage snapshot for WidgetKit.
+        var grokBotSnapshot: GrokBotSharedSnapshot?
     }
 
     /// In-memory cache - avoids redundant disk reads within the same process.
@@ -284,6 +286,17 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
         data.lastWeekTotalsRefreshedAt = refreshedAt
         save(data)
     }
+
+    var grokBotSnapshot: GrokBotSharedSnapshot? {
+        load().grokBotSnapshot
+    }
+
+    func updateGrokBotSnapshot(_ snapshot: GrokBotSharedSnapshot) {
+        var data = loadFresh()
+        data.grokBotSnapshot = snapshot
+        save(data)
+    }
+
 
     func clear() {
         let empty = SharedData()

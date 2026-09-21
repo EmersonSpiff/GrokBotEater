@@ -150,6 +150,14 @@ final class GrokBotUsageStore: ObservableObject {
         }
         
 
+        let snapshot = GrokBotSharedSnapshot(
+            usagePercent: usagePercent,
+            hasGrokBot: true,
+            shouldDrawRing: shouldShowRing,
+            currentPeriodStart: currentPeriodStart,
+            lastSync: lastUpdate ?? Date()
+        )
+        sharedFileService.updateGrokBotSnapshot(snapshot)
         WidgetReloader.scheduleReload()
         logger.info("Grok Bot refresh succeeded: \(self.usagePercent)% used, shouldDrawRing=\(self.shouldShowRing)")
     }
