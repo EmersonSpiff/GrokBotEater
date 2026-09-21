@@ -19,6 +19,7 @@ final class StatusBarController: NSObject {
     private var countdownCancellable: AnyCancellable?
 
     private let usageStore: UsageStore
+    private let grokBotUsageStore: GrokBotUsageStore
     private let themeStore: ThemeStore
     private let settingsStore: SettingsStore
     private let updateStore: UpdateStore
@@ -28,6 +29,7 @@ final class StatusBarController: NSObject {
 
     init(
         usageStore: UsageStore,
+        grokBotUsageStore: GrokBotUsageStore,
         themeStore: ThemeStore,
         settingsStore: SettingsStore,
         updateStore: UpdateStore,
@@ -36,6 +38,7 @@ final class StatusBarController: NSObject {
         tokenFileMonitor: TokenFileMonitorProtocol = TokenFileMonitor()
     ) {
         self.usageStore = usageStore
+        self.grokBotUsageStore = grokBotUsageStore
         self.themeStore = themeStore
         self.settingsStore = settingsStore
         self.updateStore = updateStore
@@ -110,6 +113,7 @@ final class StatusBarController: NSObject {
     private func installPopoverContent() {
         let popoverView = MenuBarPopoverView()
             .environmentObject(usageStore)
+            .environmentObject(grokBotUsageStore)
             .environmentObject(themeStore)
             .environmentObject(settingsStore)
             .environmentObject(updateStore)
@@ -120,6 +124,7 @@ final class StatusBarController: NSObject {
     private func observeStoreChanges() {
         Publishers.MergeMany(
             usageStore.objectWillChange.map { _ in () }.eraseToAnyPublisher(),
+            grokBotUsageStore.objectWillChange.map { _ in () }.eraseToAnyPublisher(),
             themeStore.objectWillChange.map { _ in () }.eraseToAnyPublisher(),
             settingsStore.objectWillChange.map { _ in () }.eraseToAnyPublisher(),
             vendorStatusStore.objectWillChange.map { _ in () }.eraseToAnyPublisher()
@@ -211,6 +216,11 @@ final class StatusBarController: NSObject {
         usageStore.reloadConfig(thresholds: themeStore.thresholds)
         usageStore.startAutoRefresh(thresholds: themeStore.thresholds)
         themeStore.syncToSharedFile()
+        
+        // Grok Bot refresh
+        grokBotUsageStore.refreshIntervalSeconds = TimeInterval(settingsStore.refreshInterval)
+        grokBotUsageStore.reloadConfig()
+        grokBotUsageStore.startAutoRefresh(interval: TimeInterval(settingsStore.refreshInterval))
 
         // Monitor token files (credentials + config.json) for changes
         tokenFileMonitor.startMonitoring()
@@ -322,7 +332,7 @@ final class StatusBarController: NSObject {
 
     private func updateMenuBarIcon() {
         let image = MenuBarRenderer.render(
-            .live(usage: usageStore, theme: themeStore, settings: settingsStore, vendor: vendorStatusStore)
+            .live(usage: usageStore, grokBotUsage: grokBotUsageStore, theme: themeStore, settings: settingsStore, vendor: vendorStatusStore)
         )
         statusItem.button?.image = image
     }
