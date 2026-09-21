@@ -465,7 +465,7 @@ private struct TerminalSetupSheet: View {
     """
     private let weztermSnippet = """
     wezterm.on('gui-startup', function()
-      local script = os.getenv('HOME') .. '/Library/Application Support/com.tokeneater.shared/wezterm-watcher.sh'
+      local script = os.getenv('HOME') .. '/Library/Application Support/com.emersonspiff.grokboteater.shared/wezterm-watcher.sh'
       local f = io.open(script, 'r')
       if f then f:close(); io.popen('nohup bash "' .. script .. '" >/dev/null 2>&1 &') end
     end)

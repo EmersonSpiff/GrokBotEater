@@ -1,9 +1,9 @@
 import Foundation
 
 final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
-    private static let appGroupID = "group.com.tokeneater"
-    private static let legacyDirectoryName = "com.tokeneater.shared"
-    private static let oldDirectoryName = "com.claudeusagewidget.shared"
+    private static let appGroupID = "group.com.emersonspiff.grokboteater"
+    private static let legacyDirectoryName = "com.emersonspiff.grokboteater.shared"
+    private static let oldDirectoryName = "com.tokeneater.shared"
     private static let fileName = "shared.json"
 
     private var realHomeDirectory: String {
@@ -12,7 +12,7 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
     }
 
     /// Root directory for shared data. Always uses the home-relative
-    /// `~/Library/Application Support/com.tokeneater.shared/` path because :
+    /// `~/Library/Application Support/com.emersonspiff.grokboteater.shared/` path because :
     ///
     /// 1. The main app is desandboxed (post v5.0 Apple Dev migration), so
     ///    macOS happily returns a Group Container URL even without the
@@ -60,7 +60,7 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
 
     // MARK: - Migrations
 
-    /// v4.x migration: users who installed very early with the `com.claudeusagewidget.*`
+    /// v4.x migration: users who installed early TokenEater with the `com.tokeneater.*`
     /// bundle IDs still have the old directory. Move its content into the new one.
     private func migrateFromOldProductName() {
         let fm = FileManager.default

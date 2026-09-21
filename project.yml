@@ -1,6 +1,6 @@
-name: TokenEater
+name: GrokBotEater
 options:
-  bundleIdPrefix: com.tokeneater
+  bundleIdPrefix: com.emersonspiff.grokboteater
   deploymentTarget:
     macOS: "14.0"
   xcodeVersion: "15.0"
@@ -18,7 +18,7 @@ settings:
     ARCHS: "arm64 x86_64"
 
 targets:
-  TokenEaterApp:
+  GrokBotEaterApp:
     type: application
     platform: macOS
     sources:
@@ -26,8 +26,8 @@ targets:
       - path: Shared
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.tokeneater.app
-        PRODUCT_NAME: TokenEater
+        PRODUCT_BUNDLE_IDENTIFIER: com.emersonspiff.grokboteater.app
+        PRODUCT_NAME: GrokBotEater
         CODE_SIGN_ENTITLEMENTS: TokenEaterApp/TokenEaterApp.entitlements
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     info:
@@ -36,22 +36,22 @@ targets:
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         LSApplicationCategoryType: public.app-category.utilities
-        CFBundleDisplayName: TokenEater
+        CFBundleDisplayName: GrokBotEater
         LSUIElement: true
         CFBundleURLTypes:
-          - CFBundleURLName: com.tokeneater.app
+          - CFBundleURLName: com.emersonspiff.grokboteater.app
             CFBundleURLSchemes:
-              - tokeneater
+              - grokboteater
     preBuildScripts:
       - script: |
-          osacompile -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.app/Contents/Resources/TokenEaterInstaller.app" "$SRCROOT/TokenEaterApp/Resources/installer.applescript"
-          cp "$SRCROOT/TokenEaterApp/Resources/te-update.sh" "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.app/Contents/Resources/TokenEaterInstaller.app/Contents/Resources/te-update.sh"
+          osacompile -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.app/Contents/Resources/GrokBotEaterInstaller.app" "$SRCROOT/TokenEaterApp/Resources/installer.applescript"
+          cp "$SRCROOT/TokenEaterApp/Resources/te-update.sh" "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.app/Contents/Resources/GrokBotEaterInstaller.app/Contents/Resources/te-update.sh"
         name: Compile installer applets
     dependencies:
-      - target: TokenEaterWidgetExtension
+      - target: GrokBotEaterWidgetExtension
         embed: true
 
-  TokenEaterTests:
+  GrokBotEaterTests:
     type: bundle.unit-test
     platform: macOS
     sources:
@@ -60,11 +60,11 @@ targets:
       - path: TokenEaterApp/Onboarding/OnboardingViewModel.swift
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.tokeneater.tests
+        PRODUCT_BUNDLE_IDENTIFIER: com.emersonspiff.grokboteater.tests
         CODE_SIGN_IDENTITY: ""
         CODE_SIGNING_REQUIRED: "NO"
 
-  TokenEaterWidgetExtension:
+  GrokBotEaterWidgetExtension:
     type: app-extension
     platform: macOS
     sources:
@@ -74,8 +74,8 @@ targets:
       - path: Shared
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.tokeneater.app.widget
-        PRODUCT_NAME: TokenEaterWidgetExtension
+        PRODUCT_BUNDLE_IDENTIFIER: com.emersonspiff.grokboteater.app.widget
+        PRODUCT_NAME: GrokBotEaterWidgetExtension
         CODE_SIGN_ENTITLEMENTS: TokenEaterWidget/TokenEaterWidget.entitlements
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks"
     info:
@@ -85,20 +85,20 @@ targets:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
 
 schemes:
-  TokenEaterTests:
+  GrokBotEaterTests:
     build:
       targets:
-        TokenEaterTests: [test]
+        GrokBotEaterTests: [test]
     test:
       config: Debug
       targets:
-        - TokenEaterTests
+        - GrokBotEaterTests
 
-  TokenEaterApp:
+  GrokBotEaterApp:
     build:
       targets:
-        TokenEaterApp: all
-        TokenEaterWidgetExtension: all
+        GrokBotEaterApp: all
+        GrokBotEaterWidgetExtension: all
     run:
       config: Debug
     archive:
