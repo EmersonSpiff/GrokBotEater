@@ -206,19 +206,35 @@ final class StatusBarController: NSObject {
     }
 
     private func bootstrapRefresh() {
-        // GrokBotEater: do NOT refresh Claude UsageStore / TokenProvider.
-        // That path shells out to `/usr/bin/security` and trips Keychain
-        // password prompts on every poll — useless for Grok Bot sand-usage.
+        pruneClaudeMenuBarSegments()
+        usageStore.proxyConfig = settingsStore.proxyConfig
+        usageStore.pacingMargin = settingsStore.pacingMargin
+        usageStore.pacingSchedule = settingsStore.pacingSchedule
+        usageStore.refreshIntervalSeconds = TimeInterval(settingsStore.refreshInterval)
+        usageStore.notifTogglesProvider = { [weak self] in self?.makeNotificationToggles() }
         vendorStatusStore.notifTogglesProvider = { [weak self] in self?.makeNotificationToggles() }
         vendorStatusStore.healthyPollInterval = TimeInterval(settingsStore.statusPollInterval)
+        usageStore.reloadConfig(thresholds: themeStore.thresholds)
+        usageStore.startAutoRefresh(thresholds: themeStore.thresholds)
         themeStore.syncToSharedFile()
-
+        
+        // Grok Bot refresh
         grokBotUsageStore.refreshIntervalSeconds = TimeInterval(settingsStore.refreshInterval)
         grokBotUsageStore.reloadConfig()
         grokBotUsageStore.startAutoRefresh(interval: TimeInterval(settingsStore.refreshInterval))
 
-        // Do not monitor Claude credential files — avoids Keychain ACL prompts.
-        // Refresh Grok Bot after wake only.
+        // Monitor token files (credentials + config.json) for changes
+        tokenFileMonitor.startMonitoring()
+        tokenFileMonitor.tokenChanged
+            .receive(on: RunLoop.main)
+            .sink { [weak self] in
+                guard let self else { return }
+                self.usageStore.handleTokenChange()
+                Task { await self.usageStore.refresh(force: true) }
+            }
+            .store(in: &cancellables)
+
+        // Refresh after wake from sleep
         NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.screensDidWakeNotification,
             object: nil,
@@ -226,7 +242,7 @@ final class StatusBarController: NSObject {
         ) { [weak self] _ in
             guard let self else { return }
             Task { @MainActor in
-                await self.grokBotUsageStore.refresh(force: false)
+                await self.usageStore.refreshIfStale()
             }
         }
 
@@ -320,6 +336,21 @@ final class StatusBarController: NSObject {
             .live(usage: usageStore, grokBotUsage: grokBotUsageStore, theme: themeStore, settings: settingsStore, vendor: vendorStatusStore)
         )
         statusItem.button?.image = image
+    }
+
+    /// Grok Bot-focused menu bar: drop leftover Claude-only segments and
+    /// restore the classic Grok template when nothing remains.
+    private func pruneClaudeMenuBarSegments() {
+        let claude: Set<MenuBarSegmentKind> = [
+            .session, .weekly, .sonnet, .fable, .extraCredits,
+            .sessionPacing, .weeklyPacing, .fablePacing,
+            .sessionReset, .serviceStatus
+        ]
+        settingsStore.menuBarComposition.segments.removeAll { claude.contains($0.kind) }
+        let hasGrok = settingsStore.menuBarComposition.segments.contains { $0.kind == .grokBot }
+        if settingsStore.menuBarComposition.segments.isEmpty || !hasGrok {
+            settingsStore.menuBarComposition = MenuBarBuiltinTemplate.classic.composition
+        }
     }
 
     /// Run a 1-second redraw ONLY while an outage badge is visible, so the
@@ -501,9 +532,7 @@ final class StatusBarController: NSObject {
     }
 
     @objc private func contextRefresh() {
-        Task {
-            await grokBotUsageStore.refresh(force: true)
-        }
+        Task { await grokBotUsageStore.refresh(force: true) }
     }
 
     @objc private func contextOpenDashboard() {

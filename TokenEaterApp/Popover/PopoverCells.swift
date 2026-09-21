@@ -9,25 +9,26 @@ import SwiftUI
 
 struct PopoverElementCellView: View {
     @EnvironmentObject private var usageStore: UsageStore
+    @EnvironmentObject private var grokBotUsageStore: GrokBotUsageStore
 
     let element: PopoverElement
 
     var body: some View {
         switch element.style {
         case .gaugeRing:
-            if let snapshot = PopoverMetricResolver.usageSnapshot(for: element.kind, usage: usageStore) {
+            if let snapshot = PopoverMetricResolver.usageSnapshot(for: element.kind, usage: usageStore, grokBot: grokBotUsageStore) {
                 GaugeRingCell(snapshot: snapshot, width: element.effectiveWidth, showReset: element.options.showReset)
             }
         case .chip:
-            if let snapshot = PopoverMetricResolver.usageSnapshot(for: element.kind, usage: usageStore) {
+            if let snapshot = PopoverMetricResolver.usageSnapshot(for: element.kind, usage: usageStore, grokBot: grokBotUsageStore) {
                 ChipCell(snapshot: snapshot, width: element.effectiveWidth, showReset: element.options.showReset)
             }
         case .arc:
-            if let snapshot = PopoverMetricResolver.usageSnapshot(for: element.kind, usage: usageStore) {
+            if let snapshot = PopoverMetricResolver.usageSnapshot(for: element.kind, usage: usageStore, grokBot: grokBotUsageStore) {
                 ArcCell(snapshot: snapshot, content: element.options.content)
             }
         case .bigText:
-            if let snapshot = PopoverMetricResolver.usageSnapshot(for: element.kind, usage: usageStore) {
+            if let snapshot = PopoverMetricResolver.usageSnapshot(for: element.kind, usage: usageStore, grokBot: grokBotUsageStore) {
                 BigTextCell(snapshot: snapshot, width: element.effectiveWidth, content: element.options.content)
             }
         case .paceBar:
@@ -558,16 +559,16 @@ private struct PlanBadgeCell: View {
 // of its cell.
 
 private struct PopoverRefreshButtonCell: View {
-    @EnvironmentObject private var usageStore: UsageStore
+    @EnvironmentObject private var grokBotUsageStore: GrokBotUsageStore
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var refreshHovering = false
 
     var body: some View {
         Button {
-            Task { await usageStore.refresh(force: true) }
+            Task { await grokBotUsageStore.refresh(force: true) }
         } label: {
             Group {
-                if usageStore.isLoading {
+                if grokBotUsageStore.isLoading {
                     ProgressView()
                         .scaleEffect(0.5)
                 } else {
@@ -590,7 +591,7 @@ private struct PopoverRefreshButtonCell: View {
             .scaleEffect(refreshHovering && !reduceMotion ? 1.05 : 1.0)
         }
         .buttonStyle(.plain)
-        .disabled(usageStore.isLoading)
+        .disabled(grokBotUsageStore.isLoading)
         .help(String(localized: "contextmenu.refresh"))
         .onHover { hovering in
             withAnimation(.easeInOut(duration: 0.15)) { refreshHovering = hovering }

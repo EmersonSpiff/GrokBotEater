@@ -16,6 +16,7 @@
 "dashboard.extra.monthly" = "ce mois-ci";
 "dashboard.extra.noLimit" = "Limite mensuelle non définie";
 "metric.extraCredits" = "Crédits sup.";
+"metric.grokBot" = "Grok Bot";
 "metric.sessionReset" = "Compte à rebours de session";
 "settings.pacing.style" = "Style du pacing";
 "settings.group.session" = "Session (5h)";
@@ -724,6 +725,7 @@
 "popoverElement.sonnet" = "Sonnet";
 "popoverElement.fable" = "Fable";
 "popoverElement.extraCredits" = "Crédits sup.";
+"popoverElement.grokBot" = "Grok Bot";
 "popoverElement.sessionPacing" = "Pacing session";
 "popoverElement.weeklyPacing" = "Pacing hebdo";
 "popoverElement.fablePacing" = "Pacing Fable";
@@ -885,7 +887,6 @@
 
 /* Onboarding - Web login sheet */
 "onboarding.weblogin.title" = "Connexion à Cursor";
-"onboarding.weblogin.check" = "Je suis connecté";
 "onboarding.weblogin.cancel" = "Annuler";
 "onboarding.weblogin.status.waiting" = "Connecte-toi sur cursor.com — la session est capturée automatiquement.";
 "onboarding.weblogin.status.captured" = "Session enregistrée. Connexion…";
@@ -916,3 +917,12 @@
 "notif.body.fable.red.fallback" = "Pool Fable presque vide";
 "notif.body.fable.green" = "Fable rechargé le %@";
 "notif.body.fable.green.fallback" = "Fable rechargé, t'es de retour";
+
+/* Grok Bot widget */
+"widget.grokBot" = "Grok Bot";
+"widget.grokBot.appName" = "GrokBotEater";
+"widget.grokBot.weekly" = "Usage hebdomadaire";
+"widget.grokBot.empty" = "Ouvre GrokBotEater et connecte-toi pour charger l'usage";
+"widget.grokBot.unavailable" = "L'usage Grok Bot n'est pas disponible pour ce plan";
+"widget.title.grokBot" = "Grok Bot";
+"widget.description.grokBot" = "Usage hebdomadaire Grok Bot depuis ta session Cursor";

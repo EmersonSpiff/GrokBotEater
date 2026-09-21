@@ -292,6 +292,7 @@ struct PopoverWatchersToggle: View {
 
 struct PopoverTimestamp: View {
     @EnvironmentObject private var usageStore: UsageStore
+    @EnvironmentObject private var grokBotUsageStore: GrokBotUsageStore
 
     @State private var lastUpdateText = ""
     private let timer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
@@ -305,6 +306,7 @@ struct PopoverTimestamp: View {
             .frame(maxWidth: .infinity)
             .onAppear { refreshText() }
             .onReceive(timer) { _ in refreshText() }
+            .onChange(of: grokBotUsageStore.lastUpdate) { _, _ in refreshText() }
             .onChange(of: usageStore.lastUpdate) { _, _ in refreshText() }
     }
 
@@ -316,7 +318,9 @@ struct PopoverTimestamp: View {
     }
 
     private func refreshText() {
-        if let date = usageStore.lastUpdate {
+        // Prefer Grok Bot refresh time (Claude UsageStore refresh is disabled).
+        let date = grokBotUsageStore.lastUpdate ?? usageStore.lastUpdate
+        if let date {
             lastUpdateText = date.formatted(.relative(presentation: .named))
         }
     }

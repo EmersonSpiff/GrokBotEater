@@ -16,6 +16,7 @@
 "dashboard.extra.monthly" = "this month";
 "dashboard.extra.noLimit" = "Monthly limit not set";
 "metric.extraCredits" = "Extra Credits";
+"metric.grokBot" = "Grok Bot";
 "metric.sessionReset" = "Session reset countdown";
 "settings.pacing.style" = "Pacing style";
 "settings.group.session" = "Session (5h)";
@@ -408,7 +409,6 @@
 "dashboard.org" = "Organization";
 "dashboard.pacing.reset.days" = "Resets in %dd %dh";
 "dashboard.pacing.reset.hours" = "Resets in %dh";
-"dashboard.hero.grokbot.label" = "Grok Bot";
 "dashboard.hero.session.label" = "Session · 5h window";
 "dashboard.hero.resetsIn" = "Resets in";
 "pacing.zone.chill" = "Chill";
@@ -515,7 +515,7 @@
 "settings.overlay.toggle" = "Show session overlay";
 
 /* Agent Watchers */
-"settings.watchers.description" = "Claude Code session watching is disabled in GrokBotEater. Grok Bot / Cursor agent watch is coming next.";
+"settings.watchers.description" = "A floating overlay showing your active Claude Code sessions. Hover to expand, click to jump to a session.";
 "settings.watchers.trigger" = "Hover zone";
 "settings.watchers.trigger.minimal" = "Minimal";
 "settings.watchers.trigger.narrow" = "Narrow";
@@ -540,7 +540,7 @@
 "settings.watchers.compacting" = "Compacting - compressing context";
 "settings.watchers.detailed" = "Detailed status mode";
 "settings.watchers.simple.idle" = "Idle - waiting for input";
-"settings.watchers.simple.working" = "Working - agent is busy";
+"settings.watchers.simple.working" = "Working - Claude is busy";
 "settings.watchers.behavior" = "Behavior";
 
 /* Watcher card context menu (right-click on an overlay card) */
@@ -691,7 +691,7 @@
 /* Section subtitles */
 "sidebar.display.subtitle" = "Choose which metrics appear in the menu bar and how they look.";
 "sidebar.themes.subtitle" = "Colours and visual style.";
-"sidebar.agentWatchers.subtitle" = "Grok Bot agent watch coming soon — Claude Code overlay is off.";
+"sidebar.agentWatchers.subtitle" = "Floating overlay for your live Claude Code sessions.";
 "sidebar.performance.subtitle" = "Fine-tune CPU usage by disabling features you don't need.";
 "sidebar.settings.subtitle" = "Proxy, refresh interval, and other global preferences.";
 "popover.settings.preview" = "Preview";
@@ -725,6 +725,7 @@
 "popoverElement.sonnet" = "Sonnet";
 "popoverElement.fable" = "Fable";
 "popoverElement.extraCredits" = "Extra Credits";
+"popoverElement.grokBot" = "Grok Bot";
 "popoverElement.sessionPacing" = "Session pacing";
 "popoverElement.weeklyPacing" = "Weekly pacing";
 "popoverElement.fablePacing" = "Fable pacing";
@@ -887,7 +888,6 @@
 
 /* Onboarding - Web login sheet */
 "onboarding.weblogin.title" = "Sign in to Cursor";
-"onboarding.weblogin.check" = "I've signed in";
 "onboarding.weblogin.cancel" = "Cancel";
 "onboarding.weblogin.status.waiting" = "Sign in at cursor.com — we capture your session automatically.";
 "onboarding.weblogin.status.captured" = "Session saved. Connecting…";
@@ -919,5 +919,11 @@
 "notif.body.fable.green" = "Fable refilled at %@";
 "notif.body.fable.green.fallback" = "Fable refilled, you're back";
 
-"settings.watchers.coming.title" = "Grok Bot agent watch";
-"settings.watchers.coming.body" = "The old Claude Code session overlay is turned off here. Next up: watch live Cursor / Grok Bot agents the same way — edge overlay, jump-to-session, status colors.";
+/* Grok Bot widget */
+"widget.grokBot" = "Grok Bot";
+"widget.grokBot.appName" = "GrokBotEater";
+"widget.grokBot.weekly" = "Weekly usage";
+"widget.grokBot.empty" = "Open GrokBotEater and connect to load usage";
+"widget.grokBot.unavailable" = "Grok Bot usage is not available for this plan";
+"widget.title.grokBot" = "Grok Bot";
+"widget.description.grokBot" = "Weekly Grok Bot usage from your Cursor session";

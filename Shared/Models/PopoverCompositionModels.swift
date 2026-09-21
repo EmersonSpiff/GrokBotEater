@@ -11,7 +11,7 @@ import Foundation
 /// What an element shows.
 enum PopoverElementKind: String, Codable, CaseIterable, Identifiable {
     // Usage metrics (percentage + reset window)
-    case session, weekly, sonnet, fable, extraCredits
+    case session, weekly, sonnet, fable, extraCredits, grokBot
     // Pacing metrics (delta vs linear pace)
     case sessionPacing, weeklyPacing, fablePacing
     // Utility rows
@@ -25,7 +25,7 @@ enum PopoverElementKind: String, Codable, CaseIterable, Identifiable {
 
     var family: Family {
         switch self {
-        case .session, .weekly, .sonnet, .fable, .extraCredits:
+        case .session, .weekly, .sonnet, .fable, .extraCredits, .grokBot:
             return .usage
         case .sessionPacing, .weeklyPacing, .fablePacing:
             return .pacing
@@ -326,12 +326,10 @@ enum PopoverBuiltinTemplate: String, CaseIterable, Identifiable {
         NSLocalizedString("popoverTemplate.\(rawValue)", comment: "")
     }
 
-    /// The ex-header chrome pair every template starts with -> plan badge on
-    /// the left, refresh button on the right (one half+half row).
+    /// Refresh chrome every template starts with (Grok-centric: no Claude plan badge).
     private static var chromeRow: [PopoverElement] {
         [
-            PopoverElement(kind: .planBadge, style: .badge, width: .half),
-            PopoverElement(kind: .refreshButton, style: .actionButton, width: .half),
+            PopoverElement(kind: .refreshButton, style: .actionButton, width: .full),
         ]
     }
 
@@ -340,62 +338,43 @@ enum PopoverBuiltinTemplate: String, CaseIterable, Identifiable {
     var composition: PopoverComposition {
         switch self {
         case .classic:
+            // Grok Bot hero ring + utilities/actions. No Claude metrics.
             return PopoverComposition(elements: Self.chromeRow + [
-                PopoverElement(kind: .session, style: .gaugeRing, width: .half, options: .init(showReset: true)),
-                PopoverElement(kind: .weekly, style: .gaugeRing, width: .half, options: .init(showReset: true)),
-                PopoverElement(kind: .sessionPacing, style: .paceBar, width: .full),
-                PopoverElement(kind: .weeklyPacing, style: .paceBar, width: .full),
-                PopoverElement(kind: .watchers, style: .utilityRow, width: .full),
+                PopoverElement(kind: .grokBot, style: .gaugeRing, width: .full, options: .init(showReset: true)),
                 PopoverElement(kind: .timestamp, style: .utilityRow, width: .full),
                 PopoverElement(kind: .openButton, style: .actionButton, width: .full),
                 PopoverElement(kind: .quitButton, style: .actionButton, width: .full),
             ])
         case .compact:
             return PopoverComposition(elements: Self.chromeRow + [
-                PopoverElement(kind: .session, style: .chip, width: .half, options: .init(showReset: true)),
-                PopoverElement(kind: .weekly, style: .chip, width: .half, options: .init(showReset: true)),
-                PopoverElement(kind: .sessionPacing, style: .paceTile, width: .half),
-                PopoverElement(kind: .weeklyPacing, style: .paceTile, width: .half),
-                PopoverElement(kind: .watchers, style: .utilityRow, width: .full),
+                PopoverElement(kind: .grokBot, style: .chip, width: .full, options: .init(showReset: true)),
                 PopoverElement(kind: .timestamp, style: .utilityRow, width: .full),
-                PopoverElement(kind: .openButton, style: .actionButton, width: .full),
-                PopoverElement(kind: .quitButton, style: .actionButton, width: .full),
+                PopoverElement(kind: .openButton, style: .actionButton, width: .half),
+                PopoverElement(kind: .quitButton, style: .actionButton, width: .half),
             ])
         case .focus:
             return PopoverComposition(elements: Self.chromeRow + [
-                PopoverElement(kind: .session, style: .arc, width: .full, options: .init(content: .resetCountdown)),
-                PopoverElement(kind: .session, style: .bigText, width: .half, options: .init(content: .percent)),
-                PopoverElement(kind: .weekly, style: .bigText, width: .half, options: .init(content: .percent)),
-                PopoverElement(kind: .sessionPacing, style: .paceText, width: .full),
-                PopoverElement(kind: .weeklyPacing, style: .paceText, width: .full),
-                PopoverElement(kind: .watchers, style: .utilityRow, width: .full),
+                PopoverElement(kind: .grokBot, style: .arc, width: .full, options: .init(content: .resetCountdown)),
+                PopoverElement(kind: .grokBot, style: .bigText, width: .full, options: .init(content: .percent)),
                 PopoverElement(kind: .timestamp, style: .utilityRow, width: .full),
                 PopoverElement(kind: .openButton, style: .actionButton, width: .full),
                 PopoverElement(kind: .quitButton, style: .actionButton, width: .full),
             ])
         case .minimalist:
             return PopoverComposition(elements: Self.chromeRow + [
-                PopoverElement(kind: .session, style: .gaugeRing, width: .half, options: .init(showReset: true)),
-                PopoverElement(kind: .weekly, style: .gaugeRing, width: .half, options: .init(showReset: true)),
+                PopoverElement(kind: .grokBot, style: .gaugeRing, width: .full, options: .init(showReset: true)),
                 PopoverElement(kind: .timestamp, style: .utilityRow, width: .full),
             ])
         case .fableFirst:
+            // Renamed conceptually: Grok-first arc (kept case name for persistence).
             return PopoverComposition(elements: Self.chromeRow + [
-                PopoverElement(kind: .fable, style: .arc, width: .full, options: .init(content: .percent)),
-                PopoverElement(kind: .session, style: .bigText, width: .half, options: .init(content: .percent)),
-                PopoverElement(kind: .weekly, style: .bigText, width: .half, options: .init(content: .percent)),
+                PopoverElement(kind: .grokBot, style: .arc, width: .full, options: .init(content: .percent)),
                 PopoverElement(kind: .timestamp, style: .utilityRow, width: .full),
+                PopoverElement(kind: .openButton, style: .actionButton, width: .full),
             ])
         case .complete:
             return PopoverComposition(elements: Self.chromeRow + [
-                PopoverElement(kind: .session, style: .gaugeRing, width: .full, options: .init(showReset: true)),
-                PopoverElement(kind: .weekly, style: .gaugeRing, width: .third),
-                PopoverElement(kind: .sonnet, style: .gaugeRing, width: .third),
-                PopoverElement(kind: .fable, style: .gaugeRing, width: .third),
-                PopoverElement(kind: .extraCredits, style: .gaugeRing, width: .third),
-                PopoverElement(kind: .sessionPacing, style: .paceBar, width: .full),
-                PopoverElement(kind: .weeklyPacing, style: .paceBar, width: .full),
-                PopoverElement(kind: .watchers, style: .utilityRow, width: .full),
+                PopoverElement(kind: .grokBot, style: .gaugeRing, width: .full, options: .init(showReset: true)),
                 PopoverElement(kind: .timestamp, style: .utilityRow, width: .full),
                 PopoverElement(kind: .openButton, style: .actionButton, width: .half),
                 PopoverElement(kind: .quitButton, style: .actionButton, width: .half),
@@ -427,6 +406,7 @@ extension PopoverElementKind {
         case .sonnet: return "quote.opening"
         case .fable: return "books.vertical.fill"
         case .extraCredits: return "creditcard.fill"
+        case .grokBot: return "waveform.path.ecg"
         case .sessionPacing, .weeklyPacing, .fablePacing: return "speedometer"
         case .watchers: return "eye.fill"
         case .timestamp: return "clock"

@@ -10,10 +10,18 @@ final class GrokBotUsageStore: ObservableObject {
     @Published var isLoading = false
     @Published var errorState: GrokBotErrorState = .none
     @Published var hasGrokBot = false
-    
+    /// ISO start of the current Grok Bot billing period (from last response / cache).
+    @Published var currentPeriodStart: String?
+
     /// True when the plan includes Grok Bot and we should draw a ring.
     /// Respects shouldDrawRing from the API response.
     @Published var shouldShowRing = false
+
+    /// End of the current weekly window (period start + 7 days), if known.
+    var nextResetDate: Date? {
+        guard let start = Self.parsePeriodStart(currentPeriodStart) else { return nil }
+        return Calendar.current.date(byAdding: .day, value: 7, to: start)
+    }
     
     /// Human-readable status for onboarding/settings
     @Published var statusMessage: String = "Not connected"
@@ -26,18 +34,7 @@ final class GrokBotUsageStore: ObservableObject {
     private var refreshTask: Task<Void, Never>?
     private var autoRefreshTask: Task<Void, Never>?
     
-
-    /// Parsed `nextResetTimestampUtc` from the last successful response.
-    var nextResetDate: Date? {
-        guard let raw = lastResponse?.nextResetTimestampUtc else { return nil }
-        let iso = ISO8601DateFormatter()
-        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        if let d = iso.date(from: raw) { return d }
-        iso.formatOptions = [.withInternetDateTime]
-        return iso.date(from: raw)
-    }
-
-    var refreshIntervalSeconds: TimeInterval = 300 // 5 minutes
+    var refreshIntervalSeconds: TimeInterval = 300 // 5 minutes, match Claude
     
     init(
         apiClient: GrokBotAPIClientProtocol = GrokBotAPIClient(),
@@ -52,8 +49,7 @@ final class GrokBotUsageStore: ObservableObject {
     }
     
     private func loadCached() {
-        // For now, no Grok Bot caching to shared file yet
-        // Will add in a follow-up when SharedFileService extends to multi-provider
+        // Widget shared snapshot lands with WidgetKit; not required for Studio/menu bar.
     }
     
     func refresh(force: Bool = false) async {
@@ -136,7 +132,8 @@ final class GrokBotUsageStore: ObservableObject {
         lastResponse = response
         usagePercent = response.usagePercentInt
         shouldShowRing = response.shouldDrawRing
-        hasGrokBot = response.shouldDrawRing // Only show as "has" if we can draw a ring
+        hasGrokBot = true // Connected — show menu-bar / popover even if ring flag is off
+        currentPeriodStart = response.currentPeriodStart
         lastUpdate = Date()
         errorState = .none
         
@@ -152,8 +149,19 @@ final class GrokBotUsageStore: ObservableObject {
             statusMessage = "Grok Bot: Usage data unavailable"
         }
         
-        logger.info("Grok Bot refresh succeeded: \(self.usagePercent)% used, shouldDrawRing=\(self.shouldShowRing)")
+
         WidgetReloader.scheduleReload()
+        logger.info("Grok Bot refresh succeeded: \(self.usagePercent)% used, shouldDrawRing=\(self.shouldShowRing)")
+    }
+
+    private static func parsePeriodStart(_ raw: String?) -> Date? {
+        guard let raw, !raw.isEmpty else { return nil }
+        let fractional = ISO8601DateFormatter()
+        fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let d = fractional.date(from: raw) { return d }
+        let plain = ISO8601DateFormatter()
+        plain.formatOptions = [.withInternetDateTime]
+        return plain.date(from: raw)
     }
     
     private func handleError(_ error: GrokBotAPIError) {

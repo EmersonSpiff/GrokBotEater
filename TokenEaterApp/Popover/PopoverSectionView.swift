@@ -8,6 +8,7 @@ import SwiftUI
 struct PopoverSectionView: View {
     @EnvironmentObject private var settingsStore: SettingsStore
     @EnvironmentObject private var usageStore: UsageStore
+    @EnvironmentObject private var grokBotUsageStore: GrokBotUsageStore
 
     @State private var selectedElementID: UUID?
     @State private var showSaveDialog = false
@@ -32,6 +33,21 @@ struct PopoverSectionView: View {
             Button(String(localized: "popover.editor.cancel"), role: .cancel) { templateName = "" }
         } message: {
             Text(String(localized: "popover.editor.saveTemplate.message"))
+        }
+        .onAppear { pruneClaudePopoverElements() }
+    }
+
+    /// Drop leftover Claude-only elements and ensure a Grok Bot gauge is present.
+    private func pruneClaudePopoverElements() {
+        let claude: Set<PopoverElementKind> = [
+            .session, .weekly, .sonnet, .fable, .extraCredits,
+            .sessionPacing, .weeklyPacing, .fablePacing,
+            .watchers, .planBadge
+        ]
+        settingsStore.popoverComposition.elements.removeAll { claude.contains($0.kind) }
+        let hasGrok = settingsStore.popoverComposition.elements.contains { $0.kind == .grokBot }
+        if settingsStore.popoverComposition.elements.isEmpty || !hasGrok {
+            settingsStore.popoverComposition = PopoverBuiltinTemplate.classic.composition
         }
     }
 
@@ -268,8 +284,12 @@ struct PopoverSectionView: View {
 
     private var addElementMenu: some View {
         AddElementMenuButton(title: String(localized: "popover.editor.addElement")) {
-            // Claude Code metrics (session/weekly/Extra Credits/etc.) are not
-            // part of GrokBotEater. Popover Grok Bot rings come later; utilities only for now.
+            Section(String(localized: "popover.editor.family.metrics")) {
+                let metricKinds: [PopoverElementKind] = [.grokBot]
+                ForEach(metricKinds) { kind in
+                    addButton(for: kind)
+                }
+            }
             Section(String(localized: "popover.editor.family.utilities")) {
                 addButton(for: .refreshButton)
                 addButton(for: .timestamp)
@@ -303,9 +323,13 @@ struct PopoverSectionView: View {
     /// presence gating stays live and separate.
     private func accountHasKind(_ kind: PopoverElementKind) -> Bool {
         switch kind {
-        case .fable, .fablePacing: return usageStore.hasFable
-        case .extraCredits: return usageStore.hasExtraCredits
-        case .planBadge: return usageStore.planType != .unknown
+        case .grokBot:
+            return grokBotUsageStore.hasGrokBot
+                || grokBotUsageStore.lastUpdate != nil
+                || grokBotUsageStore.usagePercent > 0
+        case .fable, .fablePacing: return false
+        case .extraCredits: return false
+        case .planBadge: return false
         default: return true
         }
     }
@@ -316,7 +340,7 @@ struct PopoverSectionView: View {
             kind: kind,
             style: style,
             width: style.defaultWidth,
-            options: PopoverElementOptions(showReset: kind == .session || kind == .weekly)
+            options: PopoverElementOptions(showReset: kind == .grokBot || kind == .session || kind == .weekly)
         )
         // Insert at the top: the new element lands where the user is looking
         // (right under the add button), not below the fold of a long list.
@@ -329,7 +353,7 @@ struct PopoverSectionView: View {
     private func editorSectionLabel(_ key: String.LocalizationValue) -> some View {
         Text(String(localized: key))
             .font(.system(size: 11, weight: .semibold))
-            .foregroundStyle(.white.opacity(0.5))
+            .foregroundStyle(DS.Palette.textSecondary)
             .textCase(.uppercase)
             .tracking(0.8)
     }
@@ -349,13 +373,13 @@ private struct TemplateCard: View {
     private var fill: Color {
         if isActive { return DS.Palette.accentStudio.opacity(0.16) }
         if hovering { return Color.blue.opacity(0.12) }
-        return Color.white.opacity(0.03)
+        return DS.Palette.glassFill
     }
 
     private var stroke: Color {
         if isActive { return DS.Palette.accentStudio.opacity(0.6) }
         if hovering { return Color.blue.opacity(0.5) }
-        return Color.white.opacity(0.07)
+        return DS.Palette.glassBorder
     }
 
     var body: some View {
@@ -366,11 +390,11 @@ private struct TemplateCard: View {
                     if isUserTemplate {
                         Image(systemName: "person.fill")
                             .font(.system(size: 7))
-                            .foregroundStyle(.white.opacity(0.4))
+                            .foregroundStyle(DS.Palette.textTertiary)
                     }
                     Text(name)
                         .font(.system(size: 9, weight: .semibold))
-                        .foregroundStyle(isActive || hovering ? .white : .white.opacity(0.65))
+                        .foregroundStyle(isActive || hovering ? DS.Palette.textPrimary : DS.Palette.textSecondary)
                         .lineLimit(1)
                 }
             }
@@ -423,7 +447,7 @@ private struct CustomStateCard: View {
                     .tracking(0.5)
                 Text(String(localized: "editor.custom.save"))
                     .font(.system(size: 9, weight: .semibold))
-                    .foregroundStyle(.white.opacity(hovering ? 0.9 : 0.6))
+                    .foregroundStyle(hovering ? DS.Palette.textPrimary : DS.Palette.textSecondary)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
             }
@@ -463,7 +487,7 @@ private struct TemplateSchematic: View {
                 HStack(spacing: 3) {
                     ForEach(Array(row.enumerated()), id: \.offset) { _, element in
                         RoundedRectangle(cornerRadius: 2)
-                            .fill(highlighted ? Color.blue.opacity(0.55) : Color.white.opacity(0.22))
+                            .fill(highlighted ? Color.blue.opacity(0.55) : DS.Palette.textTertiary.opacity(0.35))
                             .frame(maxWidth: .infinity)
                             .frame(height: schematicHeight(for: element.style))
                     }
@@ -493,7 +517,7 @@ private struct LivePopoverPreview: View {
         VStack(spacing: 8) {
             Text(String(localized: "popover.settings.preview"))
                 .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.4))
+                .foregroundStyle(DS.Palette.textTertiary)
                 .tracking(1)
                 .frame(maxWidth: .infinity)
 
@@ -516,7 +540,7 @@ private struct LivePopoverPreview: View {
 
             Text(String(localized: "popover.editor.preview.hint"))
                 .font(.system(size: 9))
-                .foregroundStyle(.white.opacity(0.3))
+                .foregroundStyle(DS.Palette.textTertiary)
                 .frame(maxWidth: .infinity)
         }
         .padding(.horizontal, 20)
@@ -528,6 +552,7 @@ private struct LivePopoverPreview: View {
 private struct ElementListEditor: View {
     @EnvironmentObject private var settingsStore: SettingsStore
     @EnvironmentObject private var usageStore: UsageStore
+    @EnvironmentObject private var grokBotUsageStore: GrokBotUsageStore
 
     @Binding var selectedElementID: UUID?
     @State private var draggingID: UUID?
@@ -596,12 +621,7 @@ private struct ElementListEditor: View {
     // count it toward the "keep one element visible" guard, and must keep it
     // freely removable.
     private func isAvailable(_ kind: PopoverElementKind) -> Bool {
-        switch kind {
-        case .fable, .fablePacing: return usageStore.hasFable
-        case .extraCredits: return usageStore.hasExtraCredits
-        case .planBadge: return usageStore.planType != .unknown
-        default: return true
-        }
+        PopoverMetricResolver.isAvailable(kind, usage: usageStore, grokBot: grokBotUsageStore)
     }
 
     /// Whether hiding or deleting this element is allowed. The guard counts
@@ -683,18 +703,18 @@ private struct ElementRow: View {
             HStack(spacing: 10) {
                 Image(systemName: "line.3.horizontal")
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.35))
+                    .foregroundStyle(DS.Palette.textTertiary)
                     .frame(width: 14)
 
                 Image(systemName: element.kind.symbolName)
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(element.isHidden ? .white.opacity(0.3) : .white.opacity(0.7))
+                    .foregroundStyle(element.isHidden ? DS.Palette.textTertiary : DS.Palette.textSecondary)
                     .frame(width: 16)
 
                 VStack(alignment: .leading, spacing: 1) {
                     Text(element.kind.localizedLabel)
                         .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(element.isHidden ? .white.opacity(0.35) : .white.opacity(0.9))
+                        .foregroundStyle(element.isHidden ? DS.Palette.textTertiary : DS.Palette.textPrimary)
                         .lineLimit(1)
                     if !isAvailable {
                         Text(String(localized: "popover.editor.unavailable"))
@@ -708,7 +728,7 @@ private struct ElementRow: View {
                 Button(action: onToggleHidden) {
                     Image(systemName: element.isHidden ? "eye.slash.fill" : "eye.fill")
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(element.isHidden ? .white.opacity(0.35) : .blue)
+                        .foregroundStyle(element.isHidden ? DS.Palette.textTertiary : .blue)
                         .frame(width: 20, height: 20)
                         .contentShape(Rectangle())
                 }
@@ -719,7 +739,7 @@ private struct ElementRow: View {
                 Button(action: onDelete) {
                     Image(systemName: "trash")
                         .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.4))
+                        .foregroundStyle(DS.Palette.textTertiary)
                         .frame(width: 20, height: 20)
                         .contentShape(Rectangle())
                 }
@@ -771,12 +791,12 @@ private struct ElementRow: View {
     private var rowFill: Color {
         if isDragging { return Color.blue.opacity(0.12) }
         if isSelected { return Color.blue.opacity(0.08) }
-        return element.isHidden ? Color.white.opacity(0.015) : Color.white.opacity(0.04)
+        return element.isHidden ? DS.Palette.bgElevated.opacity(0.5) : DS.Palette.bgElevated
     }
 
     private var rowStroke: Color {
         if isDragging || isSelected { return Color.blue.opacity(0.6) }
-        return element.isHidden ? Color.white.opacity(0.04) : Color.white.opacity(0.08)
+        return element.isHidden ? DS.Palette.glassBorderLo : DS.Palette.glassBorder
     }
 
     private var styleMenu: some View {
@@ -813,7 +833,7 @@ private struct ElementRow: View {
                 } label: {
                     Image(systemName: width.symbolName)
                         .font(.system(size: 10))
-                        .foregroundStyle(active ? .white : .white.opacity(allowed ? 0.45 : 0.15))
+                        .foregroundStyle(active ? DS.Palette.textPrimary : (allowed ? DS.Palette.textSecondary : DS.Palette.textDisabled))
                         .frame(width: 24, height: 20)
                         .background(
                             RoundedRectangle(cornerRadius: 5)
@@ -829,7 +849,7 @@ private struct ElementRow: View {
         .padding(2)
         .background(
             RoundedRectangle(cornerRadius: 7)
-                .fill(Color.white.opacity(0.05))
+                .fill(DS.Palette.glassFill)
         )
     }
 
@@ -841,7 +861,7 @@ private struct ElementRow: View {
         .padding(2)
         .background(
             RoundedRectangle(cornerRadius: 7)
-                .fill(Color.white.opacity(0.05))
+                .fill(DS.Palette.glassFill)
         )
     }
 
@@ -852,7 +872,7 @@ private struct ElementRow: View {
         } label: {
             Image(systemName: symbol)
                 .font(.system(size: 9, weight: .semibold))
-                .foregroundStyle(active ? .white : .white.opacity(0.45))
+                .foregroundStyle(active ? DS.Palette.textPrimary : DS.Palette.textSecondary)
                 .frame(width: 24, height: 20)
                 .background(
                     RoundedRectangle(cornerRadius: 5)
@@ -870,11 +890,11 @@ private struct ElementRow: View {
         Button(action: onToggleReset) {
             Image(systemName: "timer")
                 .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(element.options.showReset ? .white : .white.opacity(0.4))
+                .foregroundStyle(element.options.showReset ? DS.Palette.textPrimary : DS.Palette.textTertiary)
                 .frame(width: 24, height: 20)
                 .background(
                     RoundedRectangle(cornerRadius: 5)
-                        .fill(element.options.showReset ? Color.blue.opacity(0.35) : Color.white.opacity(0.05))
+                        .fill(element.options.showReset ? Color.blue.opacity(0.35) : DS.Palette.glassFill)
                 )
                 .contentShape(Rectangle())
         }
