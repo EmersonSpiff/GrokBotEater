@@ -148,7 +148,7 @@
 "guide.widget.detail" = "Right-click desktop > **Edit Widgets** > **GrokBotEater**";
 
 /* Errors - API */
-"error.notoken" = "No OAuth token found. Install Claude Code and click Connect.";
+"error.notoken" = "Cursor session not found. Open GrokBotEater and Connect.";
 "error.tokenexpired" = "OAuth token expired - relaunch Claude Code to refresh it";
 "error.invalidurl" = "Invalid URL";
 "error.invalidresponse" = "Invalid server response";

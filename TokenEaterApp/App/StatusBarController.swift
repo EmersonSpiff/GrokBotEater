@@ -207,34 +207,16 @@ final class StatusBarController: NSObject {
 
     private func bootstrapRefresh() {
         pruneClaudeMenuBarSegments()
-        usageStore.proxyConfig = settingsStore.proxyConfig
-        usageStore.pacingMargin = settingsStore.pacingMargin
-        usageStore.pacingSchedule = settingsStore.pacingSchedule
-        usageStore.refreshIntervalSeconds = TimeInterval(settingsStore.refreshInterval)
-        usageStore.notifTogglesProvider = { [weak self] in self?.makeNotificationToggles() }
+        // Never start Claude UsageStore / TokenFileMonitor — those watch
+        // ~/.claude and shell out to /usr/bin/security (Keychain/TCC prompts).
         vendorStatusStore.notifTogglesProvider = { [weak self] in self?.makeNotificationToggles() }
         vendorStatusStore.healthyPollInterval = TimeInterval(settingsStore.statusPollInterval)
-        usageStore.reloadConfig(thresholds: themeStore.thresholds)
-        usageStore.startAutoRefresh(thresholds: themeStore.thresholds)
         themeStore.syncToSharedFile()
-        
-        // Grok Bot refresh
+
         grokBotUsageStore.refreshIntervalSeconds = TimeInterval(settingsStore.refreshInterval)
         grokBotUsageStore.reloadConfig()
         grokBotUsageStore.startAutoRefresh(interval: TimeInterval(settingsStore.refreshInterval))
 
-        // Monitor token files (credentials + config.json) for changes
-        tokenFileMonitor.startMonitoring()
-        tokenFileMonitor.tokenChanged
-            .receive(on: RunLoop.main)
-            .sink { [weak self] in
-                guard let self else { return }
-                self.usageStore.handleTokenChange()
-                Task { await self.usageStore.refresh(force: true) }
-            }
-            .store(in: &cancellables)
-
-        // Refresh after wake from sleep
         NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.screensDidWakeNotification,
             object: nil,
@@ -242,7 +224,7 @@ final class StatusBarController: NSObject {
         ) { [weak self] _ in
             guard let self else { return }
             Task { @MainActor in
-                await self.usageStore.refreshIfStale()
+                await self.grokBotUsageStore.refresh(force: false)
             }
         }
 
