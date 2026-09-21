@@ -131,6 +131,7 @@ private struct StudioPopoverThumbnail: View {
 /// through the shared `RenderData.live` path, on a simulated dark menu bar.
 private struct StudioMenuBarThumbnail: View {
     @EnvironmentObject private var usageStore: UsageStore
+    @EnvironmentObject private var grokBotUsageStore: GrokBotUsageStore
     @EnvironmentObject private var themeStore: ThemeStore
     @EnvironmentObject private var settingsStore: SettingsStore
     @EnvironmentObject private var vendorStatusStore: VendorStatusStore
@@ -138,6 +139,7 @@ private struct StudioMenuBarThumbnail: View {
     var body: some View {
         let data = MenuBarRenderer.RenderData.live(
             usage: usageStore,
+            grokBotUsage: grokBotUsageStore,
             theme: themeStore,
             settings: settingsStore,
             vendor: vendorStatusStore

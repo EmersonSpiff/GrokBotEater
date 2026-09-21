@@ -425,6 +425,7 @@ private struct MenuBarTemplateSchematic: View {
 
 private struct MenuBarLivePreview: View {
     @EnvironmentObject private var usageStore: UsageStore
+    @EnvironmentObject private var grokBotUsageStore: GrokBotUsageStore
     @EnvironmentObject private var themeStore: ThemeStore
     @EnvironmentObject private var settingsStore: SettingsStore
     @EnvironmentObject private var vendorStatusStore: VendorStatusStore
@@ -435,7 +436,11 @@ private struct MenuBarLivePreview: View {
 
     var body: some View {
         let data = MenuBarRenderer.RenderData.live(
-            usage: usageStore, theme: themeStore, settings: settingsStore, vendor: vendorStatusStore
+            usage: usageStore,
+            grokBotUsage: grokBotUsageStore,
+            theme: themeStore,
+            settings: settingsStore,
+            vendor: vendorStatusStore
         )
         let rendered = MenuBarRenderer.renderWithHitRects(data)
         let w = rendered.image.size.width * scale
