@@ -13,7 +13,13 @@ final class GrokBotAPIClient: GrokBotAPIClientProtocol, @unchecked Sendable {
         request.httpBody = "{}".data(using: .utf8)
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("https://cursor.com", forHTTPHeaderField: "Origin")
-        request.setValue("CursorAppLogin=\(cookie)", forHTTPHeaderField: "Cookie")
+        let cookieHeader: String
+        if cookie.hasPrefix("WorkosCursorSessionToken=") || cookie.hasPrefix("CursorAppLogin=") {
+            cookieHeader = cookie
+        } else {
+            cookieHeader = "WorkosCursorSessionToken=\(cookie)"
+        }
+        request.setValue(cookieHeader, forHTTPHeaderField: "Cookie")
         return request
     }
     
