@@ -782,6 +782,7 @@
 "menuBarSegment.sonnet" = "Sonnet";
 "menuBarSegment.fable" = "Fable";
 "menuBarSegment.extraCredits" = "Extra Credits";
+"menuBarSegment.grokBot" = "Grok Bot";
 "menuBarSegment.sessionPacing" = "Session pacing";
 "menuBarSegment.weeklyPacing" = "Weekly pacing";
 "menuBarSegment.fablePacing" = "Fable pacing";

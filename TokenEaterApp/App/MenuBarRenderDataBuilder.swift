@@ -7,6 +7,7 @@ extension MenuBarRenderer.RenderData {
     /// render the exact same pixels for the current composition.
     static func live(
         usage: UsageStore,
+        grokBotUsage: GrokBotUsageStore,
         theme: ThemeStore,
         settings: SettingsStore,
         vendor: VendorStatusStore
@@ -16,6 +17,8 @@ extension MenuBarRenderer.RenderData {
             fiveHourPct: usage.fiveHourPct,
             sevenDayPct: usage.sevenDayPct,
             sonnetPct: usage.sonnetPct,
+            grokBotPct: grokBotUsage.usagePercent,
+            hasGrokBot: grokBotUsage.hasGrokBot,
             weeklyPacingDelta: Int(usage.pacingResult?.delta ?? 0),
             weeklyPacingZone: usage.pacingResult?.zone ?? .onTrack,
             hasWeeklyPacing: usage.pacingResult != nil,

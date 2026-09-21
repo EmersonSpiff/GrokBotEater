@@ -8,6 +8,8 @@ enum MenuBarRenderer {
         let fiveHourPct: Int
         let sevenDayPct: Int
         let sonnetPct: Int
+        let grokBotPct: Int
+        let hasGrokBot: Bool
         let weeklyPacingDelta: Int
         let weeklyPacingZone: PacingZone
         let hasWeeklyPacing: Bool
@@ -351,6 +353,7 @@ enum MenuBarRenderer {
         switch kind {
         case .fable: return data.hasFable
         case .extraCredits: return data.hasExtraCredits
+        case .grokBot: return data.hasGrokBot
         // Pacing segments follow a 3-state model: absent (bucket missing) ->
         // drawn nothing; idle (bucket present, no active window yet) -> a muted
         // "-" placeholder from `pacingContent`; active -> shape + delta. So
@@ -535,6 +538,7 @@ enum MenuBarRenderer {
         case .sonnet: return data.sonnetPct
         case .fable: return data.fablePct
         case .extraCredits: return data.extraCreditsPct
+        case .grokBot: return data.grokBotPct
         default: return 0
         }
     }
@@ -546,6 +550,7 @@ enum MenuBarRenderer {
         case .sonnet: return MetricID.sonnet.shortLabel
         case .fable: return MetricID.fable.shortLabel
         case .extraCredits: return MetricID.extraCredits.shortLabel
+        case .grokBot: return "GB"
         default: return ""
         }
     }
@@ -556,14 +561,14 @@ enum MenuBarRenderer {
         case .weekly: return data.sevenDayResetDate
         case .sonnet: return data.sonnetResetDate
         case .fable: return data.fableResetDate
-        default: return nil  // extraCredits: no reset window -> static threshold
+        default: return nil  // extraCredits + grokBot: no reset window -> static threshold
         }
     }
 
     private static func usageWindow(_ kind: MenuBarSegmentKind) -> TimeInterval {
         switch kind {
         case .session: return 5 * 3600
-        case .weekly, .sonnet, .fable: return 7 * 86_400
+        case .weekly, .sonnet, .fable, .grokBot: return 7 * 86_400
         default: return 0  // extraCredits: windowless
         }
     }
