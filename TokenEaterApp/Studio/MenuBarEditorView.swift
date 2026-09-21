@@ -207,7 +207,23 @@ struct MenuBarEditorView<PreviewHeader: View, PreviewFooter: View>: View {
             segmentsHeader
             segmentsList
         }
+        .onAppear { pruneClaudeSegments() }
     }
+
+    private func pruneClaudeSegments() {
+        let claude: Set<MenuBarSegmentKind> = [
+            .session, .weekly, .sonnet, .fable, .extraCredits,
+            .sessionPacing, .weeklyPacing, .fablePacing,
+            .sessionReset, .serviceStatus
+        ]
+        // Grok Bot-focused Studio: drop leftover Claude-only segments.
+        settingsStore.menuBarComposition.segments.removeAll { claude.contains($0.kind) }
+        let hasGrok = settingsStore.menuBarComposition.segments.contains { $0.kind == .grokBot }
+        if settingsStore.menuBarComposition.segments.isEmpty || !hasGrok {
+            settingsStore.menuBarComposition = MenuBarBuiltinTemplate.classic.composition
+        }
+    }
+
 
     private var segmentsHeader: some View {
         HStack {
@@ -219,36 +235,13 @@ struct MenuBarEditorView<PreviewHeader: View, PreviewFooter: View>: View {
 
     private var segmentsList: some View {
         MenuBarSegmentListEditor(selectedSegmentID: $selectedSegmentID)
-            .onAppear { pruneClaudeOnlySegments() }
-    }
-
-    /// GrokBotEater does not track Claude Code pools — drop leftover TokenEater segments.
-    private func pruneClaudeOnlySegments() {
-        let claudeKinds: Set<MenuBarSegmentKind> = [
-            .session, .weekly, .sonnet, .fable, .extraCredits,
-            .sessionPacing, .weeklyPacing, .fablePacing, .sessionReset
-        ]
-        let before = settingsStore.menuBarComposition.segments.count
-        settingsStore.menuBarComposition.segments.removeAll { claudeKinds.contains($0.kind) }
-        if settingsStore.menuBarComposition.segments.isEmpty {
-            settingsStore.menuBarComposition.segments = [
-                MenuBarSegment(kind: .grokBot, style: .text)
-            ]
-        }
-        if settingsStore.menuBarComposition.segments.count != before {
-            selectedSegmentID = settingsStore.menuBarComposition.segments.first?.id
-        }
     }
 
     private var addSegmentMenu: some View {
         AddElementMenuButton(title: String(localized: "menuBar.editor.addSegment")) {
             Section(String(localized: "menuBar.editor.family.metrics")) {
-                // GrokBotEater tracks Grok Bot usage — not Claude Code pools.
                 let metricKinds: [MenuBarSegmentKind] = [.grokBot]
                 ForEach(metricKinds) { addButton(for: $0) }
-            }
-            Section(String(localized: "menuBar.editor.family.status")) {
-                addButton(for: .serviceStatus)
             }
         }
     }
@@ -273,10 +266,9 @@ struct MenuBarEditorView<PreviewHeader: View, PreviewFooter: View>: View {
 
     private func accountHasKind(_ kind: MenuBarSegmentKind) -> Bool {
         switch kind {
-        case .grokBot: return grokBotUsageStore.hasGrokBot || grokBotUsageStore.usagePercent > 0
-        case .fable, .fablePacing, .extraCredits, .session, .weekly, .sonnet,
-             .sessionPacing, .weeklyPacing, .sessionReset:
-            return false
+        case .fable, .fablePacing: return usageStore.hasFable
+        case .extraCredits: return usageStore.hasExtraCredits
+        case .grokBot: return grokBotUsageStore.hasGrokBot || grokBotUsageStore.shouldShowRing
         default: return true
         }
     }
@@ -332,7 +324,7 @@ private struct MenuBarTemplateCard: View {
                         Image(systemName: "person.fill").font(.system(size: 7)).foregroundStyle(DS.Palette.textTertiary)
                     }
                     Text(name).font(.system(size: 9, weight: .semibold))
-                        .foregroundStyle(isActive || hovering ? DS.Palette.textPrimary : DS.Palette.textSecondary).lineLimit(1)
+                        .foregroundStyle(isActive || hovering ? .white : .white.opacity(0.65)).lineLimit(1)
                 }
             }
             .padding(8)
@@ -584,11 +576,10 @@ private struct MenuBarSegmentListEditor: View {
 
     private func isAvailable(_ kind: MenuBarSegmentKind) -> Bool {
         switch kind {
-        case .grokBot: return true
-        case .serviceStatus: return true
-        case .session, .weekly, .sonnet, .fable, .extraCredits,
-             .sessionPacing, .weeklyPacing, .fablePacing, .sessionReset:
-            return false
+        case .fable, .fablePacing: return usageStore.hasFable
+        case .extraCredits: return usageStore.hasExtraCredits
+        case .grokBot: return grokBotUsageStore.hasGrokBot || grokBotUsageStore.shouldShowRing
+        default: return true
         }
     }
 
@@ -632,11 +623,11 @@ private struct MenuBarSegmentRow: View {
                     .font(.system(size: 12, weight: .semibold)).foregroundStyle(DS.Palette.textTertiary).frame(width: 14)
                 Image(systemName: segment.kind.symbolName)
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(segment.isHidden ? DS.Palette.textTertiary : DS.Palette.textSecondary).frame(width: 16)
+                    .foregroundStyle(segment.isHidden ? .white.opacity(0.3) : .white.opacity(0.7)).frame(width: 16)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(segment.kind.localizedLabel)
                         .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(segment.isHidden ? DS.Palette.textTertiary : DS.Palette.textPrimary).lineLimit(1)
+                        .foregroundStyle(segment.isHidden ? .white.opacity(0.35) : .white.opacity(0.9)).lineLimit(1)
                     if !isAvailable {
                         Text(String(localized: "menuBar.editor.unavailable"))
                             .font(.system(size: 9)).foregroundStyle(.orange.opacity(0.7))
@@ -646,7 +637,7 @@ private struct MenuBarSegmentRow: View {
                 Button(action: onToggleHidden) {
                     Image(systemName: segment.isHidden ? "eye.slash.fill" : "eye.fill")
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(segment.isHidden ? DS.Palette.textTertiary : Color.blue)
+                        .foregroundStyle(segment.isHidden ? .white.opacity(0.35) : .blue)
                         .frame(width: 20, height: 20).contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)

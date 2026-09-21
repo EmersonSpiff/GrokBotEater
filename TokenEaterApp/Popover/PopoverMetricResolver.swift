@@ -19,8 +19,23 @@ enum PopoverMetricResolver {
         let windowDuration: TimeInterval
     }
 
-    static func usageSnapshot(for kind: PopoverElementKind, usage: UsageStore) -> UsageSnapshot? {
+    static func usageSnapshot(
+        for kind: PopoverElementKind,
+        usage: UsageStore,
+        grokBot: GrokBotUsageStore
+    ) -> UsageSnapshot? {
         switch kind {
+        case .grokBot:
+            let resetDate = grokBot.nextResetDate
+            return UsageSnapshot(
+                label: String(localized: "metric.grokBot"),
+                pct: grokBot.usagePercent,
+                resetDate: resetDate,
+                resetText: resetDate != nil
+                    ? ResetCountdownFormatter.weekly(from: resetDate).relative
+                    : "",
+                windowDuration: resetDate != nil ? 7 * 86_400 : 0
+            )
         case .session:
             return UsageSnapshot(
                 label: String(localized: "metric.session"),
@@ -76,21 +91,24 @@ enum PopoverMetricResolver {
     /// Presence gating: elements whose data doesn't exist on this account (or
     /// right now) render nothing and their row recompacts, matching the old
     /// satellite behavior.
-    static func isAvailable(_ kind: PopoverElementKind, usage: UsageStore) -> Bool {
+    ///
+    /// Grok Bot-first: Claude usage / pacing / plan badge never show. Utilities
+    /// and actions stay available.
+    static func isAvailable(
+        _ kind: PopoverElementKind,
+        usage: UsageStore,
+        grokBot: GrokBotUsageStore
+    ) -> Bool {
         switch kind {
-        case .fable: return usage.hasFable
-        case .extraCredits: return usage.hasExtraCredits
-        // Pacing follows the 3-state model (absent / idle / active): available
-        // when the underlying bucket is PRESENT, so an idle bucket (present but
-        // no active window yet) still renders its "-" placeholder cell instead
-        // of vanishing. `pacing(for:)` returns nil for idle -> the cell draws
-        // the placeholder; a truly absent bucket returns false here and the row
-        // recompacts.
-        case .sessionPacing: return usage.lastUsage?.fiveHour != nil
-        case .weeklyPacing: return usage.lastUsage?.sevenDay != nil
-        case .fablePacing: return usage.hasFable
-        case .planBadge: return usage.planType != .unknown
-        default: return true
+        case .grokBot:
+            return grokBot.hasGrokBot || grokBot.lastUpdate != nil || grokBot.usagePercent > 0
+        case .session, .weekly, .sonnet, .fable, .extraCredits,
+             .sessionPacing, .weeklyPacing, .fablePacing:
+            return false
+        case .planBadge:
+            return false
+        case .watchers, .timestamp, .openButton, .quitButton, .refreshButton:
+            return true
         }
     }
 

@@ -34,6 +34,7 @@ extension EnvironmentValues {
 /// its top breathing room remains as chrome.
 struct ComposablePopoverView: View {
     @EnvironmentObject private var usageStore: UsageStore
+    @EnvironmentObject private var grokBotUsageStore: GrokBotUsageStore
     @EnvironmentObject private var settingsStore: SettingsStore
 
     static let popoverWidth: CGFloat = 300
@@ -64,6 +65,7 @@ struct ComposablePopoverView: View {
 /// which SwiftUI documents as undefined geometry).
 private struct PopoverGrid: View {
     @EnvironmentObject private var usageStore: UsageStore
+    @EnvironmentObject private var grokBotUsageStore: GrokBotUsageStore
     @EnvironmentObject private var settingsStore: SettingsStore
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.popoverElementTap) private var tapHandler
@@ -106,7 +108,7 @@ private struct PopoverGrid: View {
 
     private var visibleElements: [PopoverElement] {
         settingsStore.popoverComposition.visibleElements.filter {
-            PopoverMetricResolver.isAvailable($0.kind, usage: usageStore)
+            PopoverMetricResolver.isAvailable($0.kind, usage: usageStore, grokBot: grokBotUsageStore)
         }
     }
 

@@ -208,31 +208,25 @@ enum MenuBarBuiltinTemplate: String, CaseIterable, Identifiable {
         switch self {
         case .classic:
             return MenuBarComposition(segments: [
-                MenuBarSegment(kind: .session, style: .labelValue),
-                MenuBarSegment(kind: .weekly, style: .labelValue),
+                MenuBarSegment(kind: .grokBot, style: .labelValue),
             ])
         case .minimalist:
             return MenuBarComposition(segments: [
-                MenuBarSegment(kind: .session, style: .valueOnly),
+                MenuBarSegment(kind: .grokBot, style: .valueOnly),
             ])
         case .pills:
             return MenuBarComposition(segments: [
-                MenuBarSegment(kind: .session, style: .pill),
-                MenuBarSegment(kind: .weekly, style: .pill),
+                MenuBarSegment(kind: .grokBot, style: .pill),
             ])
         case .pacingFocus:
+            // No Claude pacing; keep a single Grok Bot label+value.
             return MenuBarComposition(segments: [
-                MenuBarSegment(kind: .session, style: .labelValue),
-                MenuBarSegment(kind: .sessionPacing, style: .dotDelta),
+                MenuBarSegment(kind: .grokBot, style: .labelValue),
             ])
         case .complete:
             return MenuBarComposition(segments: [
-                MenuBarSegment(kind: .session, style: .labelValue),
-                MenuBarSegment(kind: .sessionReset, style: .text),
-                MenuBarSegment(kind: .weekly, style: .labelValue),
-                MenuBarSegment(kind: .sessionPacing, style: .dotDelta),
-                MenuBarSegment(kind: .weeklyPacing, style: .dotDelta),
-                MenuBarSegment(kind: .sonnet, style: .labelValue),
+                MenuBarSegment(kind: .grokBot, style: .labelValue),
+                MenuBarSegment(kind: .grokBot, style: .pill),
             ])
         }
     }

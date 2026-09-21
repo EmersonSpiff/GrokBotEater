@@ -28,9 +28,11 @@ extension MenuBarRenderer.RenderData {
             fablePacingDelta: Int(usage.fablePacing?.delta ?? 0),
             fablePacingZone: usage.fablePacing?.zone ?? .onTrack,
             hasFablePacing: usage.fablePacing != nil,
-            hasConfig: usage.hasConfig,
-            hasError: usage.hasError,
-            isAwaitingRefresh: usage.isAwaitingRefresh,
+            // Claude UsageStore refresh is disabled (Keychain spam); treat Grok Bot as configured.
+            hasConfig: grokBotUsage.hasGrokBot || grokBotUsage.lastUpdate != nil || grokBotUsage.usagePercent > 0,
+            // Prefer Grok Bot error state so a missing Claude token does not collapse the menu bar.
+            hasError: grokBotUsage.errorState.hasError,
+            isAwaitingRefresh: grokBotUsage.isLoading,
             themeColors: theme.current,
             thresholds: theme.thresholds,
             menuBarMonochrome: theme.menuBarMonochrome,
