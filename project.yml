@@ -13,8 +13,8 @@ settings:
     MACOSX_DEPLOYMENT_TARGET: "14.0"
     CODE_SIGN_STYLE: Automatic
     DEVELOPMENT_TEAM: "S7B8M9JYF4"
-    MARKETING_VERSION: "5.13.1"
-    CURRENT_PROJECT_VERSION: "516"
+    MARKETING_VERSION: "5.13.3"
+    CURRENT_PROJECT_VERSION: "530"
     ARCHS: "arm64 x86_64"
 
 targets:
@@ -76,8 +76,8 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.emersonspiff.grokboteater.app.widget
         PRODUCT_NAME: GrokBotEaterWidgetExtension
-        MARKETING_VERSION: "5.13.1"
-        CURRENT_PROJECT_VERSION: "516"
+        MARKETING_VERSION: "5.13.3"
+        CURRENT_PROJECT_VERSION: "530"
         CODE_SIGN_ENTITLEMENTS: TokenEaterWidget/TokenEaterWidget.entitlements
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks"
     info:

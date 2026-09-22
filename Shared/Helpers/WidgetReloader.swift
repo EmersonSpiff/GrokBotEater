@@ -6,9 +6,12 @@ import Foundation
 /// to avoid exhausting the shared reload budget.
 @MainActor
 enum WidgetReloader {
+    /// Legacy Claude kinds (harmless if absent).
     static let usageKind = "TokenEaterWidget"
     static let pacingKind = "PacingWidget"
-    static let grokBotUsageKind = "GrokBotUsageWidget"
+    /// Current Grok Bot Eater widget (renamed from GrokBotUsageWidget in 5.13.2).
+    static let grokBotUsageKind = "GrokBotEaterWidget"
+    static let legacyGrokBotUsageKind = "GrokBotUsageWidget"
 
     private static var pending: DispatchWorkItem?
 
@@ -20,6 +23,7 @@ enum WidgetReloader {
             WidgetCenter.shared.reloadTimelines(ofKind: usageKind)
             WidgetCenter.shared.reloadTimelines(ofKind: pacingKind)
             WidgetCenter.shared.reloadTimelines(ofKind: grokBotUsageKind)
+            WidgetCenter.shared.reloadTimelines(ofKind: legacyGrokBotUsageKind)
         }
         pending = item
         DispatchQueue.global(qos: .utility).asyncAfter(
