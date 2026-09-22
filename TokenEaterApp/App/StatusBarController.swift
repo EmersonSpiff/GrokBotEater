@@ -192,8 +192,8 @@ final class StatusBarController: NSObject {
             .removeDuplicates()
             .sink { [weak self] enabled in
                 guard let self else { return }
-                if enabled { self.vendorStatusStore.start() }
-                else { self.vendorStatusStore.stop() }
+                // Claude/Anthropic outage polling stays off for GrokBotEater.
+                self.vendorStatusStore.stop()
             }
             .store(in: &cancellables)
 
@@ -213,6 +213,12 @@ final class StatusBarController: NSObject {
         vendorStatusStore.healthyPollInterval = TimeInterval(settingsStore.statusPollInterval)
         themeStore.syncToSharedFile()
 
+        // GrokBotEater: never poll Claude/Anthropic statuspage (legacy TokenEater default).
+        if settingsStore.outageMonitoringEnabled {
+            settingsStore.outageMonitoringEnabled = false
+        }
+        vendorStatusStore.stop()
+
         grokBotUsageStore.refreshIntervalSeconds = TimeInterval(settingsStore.refreshInterval)
         grokBotUsageStore.reloadConfig()
         grokBotUsageStore.startAutoRefresh(interval: TimeInterval(settingsStore.refreshInterval))
@@ -228,9 +234,7 @@ final class StatusBarController: NSObject {
             }
         }
 
-        if settingsStore.outageMonitoringEnabled {
-            vendorStatusStore.start()
-        }
+        // Outage monitoring disabled for GrokBotEater (Claude statuspage).
     }
 
     /// Single source of truth for the notification-toggle bundle, shared by the
