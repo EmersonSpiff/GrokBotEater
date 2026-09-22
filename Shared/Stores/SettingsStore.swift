@@ -205,6 +205,9 @@ final class SettingsStore: ObservableObject {
     var notifTrackFable: Bool {
         get { notification.trackFable } set { notification.trackFable = newValue }
     }
+    var notifTrackGrokBot: Bool {
+        get { notification.trackGrokBot } set { notification.trackGrokBot = newValue }
+    }
     var notifSendRecovery: Bool {
         get { notification.sendRecovery } set { notification.sendRecovery = newValue }
     }

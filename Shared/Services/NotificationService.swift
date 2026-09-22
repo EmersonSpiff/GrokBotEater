@@ -71,6 +71,7 @@ private enum Surface: String {
     case weekly
     case sonnet
     case fable
+    case grokBot
 
     /// `weekly` and `sonnet` share the long-form body (date-based)
     /// but each gets its own title to avoid generic alerts.
@@ -488,6 +489,19 @@ final class NotificationService: NotificationServiceProtocol {
             let dateTime = NotificationBodyFormatter.formatDateTime(resetsAt)
             return String(format: NSLocalizedString("notif.body.\(surface.bodyFamily).green", comment: ""), dateTime)
         }
+    }
+
+    // MARK: - Grok Bot
+
+    func evaluateGrokBot(usagePercent: Int, resetDate: Date?, toggles: NotificationToggles) {
+        guard toggles.masterEnabled, toggles.trackGrokBot else { return }
+
+        let snapshot = MetricSnapshot(
+            pct: usagePercent,
+            resetsAt: resetDate,
+            windowDuration: 7 * 24 * 3600
+        )
+        checkSurface(.grokBot, snapshot: snapshot, pacing: nil, toggles: toggles)
     }
 
     // MARK: - Send

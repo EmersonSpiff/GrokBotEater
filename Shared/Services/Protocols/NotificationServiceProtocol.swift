@@ -32,6 +32,7 @@ struct NotificationToggles {
     let trackWeekly: Bool
     let trackSonnet: Bool
     let trackFable: Bool
+    let trackGrokBot: Bool
     let sendRecovery: Bool
     let pacingHot: Bool
     let pacingWarning: Bool
@@ -75,4 +76,5 @@ protocol NotificationServiceProtocol {
         toggles: NotificationToggles
     )
     func checkVendorHealth(_ status: VendorStatus, toggles: NotificationToggles)
+    func evaluateGrokBot(usagePercent: Int, resetDate: Date?, toggles: NotificationToggles)
 }
