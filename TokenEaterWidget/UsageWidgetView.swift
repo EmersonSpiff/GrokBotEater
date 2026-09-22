@@ -23,15 +23,21 @@ enum WidgetTheme {
 // MARK: - Widget Background (macOS 13 compat)
 
 struct WidgetBackgroundModifier: ViewModifier {
-    var backgroundColor: Color = Color(hex: WidgetTheme.theme.widgetBackground).opacity(0.85)
+    /// Opaque fill — translucent blacks over a light system plate read as a blank white widget
+    /// when the theme text is white.
+    var backgroundColor: Color = Color(hex: WidgetTheme.theme.widgetBackground)
 
     func body(content: Content) -> some View {
         if #available(macOS 14.0, *) {
             content.containerBackground(for: .widget) {
-                backgroundColor
+                // Always paint an opaque plate behind content.
+                ZStack {
+                    Color.black
+                    backgroundColor
+                }
             }
         } else {
-            content.padding().background(backgroundColor)
+            content.padding().background(Color.black.overlay(backgroundColor))
         }
     }
 }

@@ -58,7 +58,62 @@ final class GrokBotUsageStore: ObservableObject {
     }
     
     private func loadCached() {
-        // Widget shared snapshot lands with WidgetKit; not required for Studio/menu bar.
+        // Re-derive Daily / Pacing from the last weekly snapshot so a fresh install
+        // does not leave dials stuck until the next API refresh.
+        guard let snap = sharedFileService.grokBotSnapshot,
+              snap.hasGrokBot,
+              snap.shouldDrawRing else { return }
+        usagePercent = snap.usagePercent
+        shouldShowRing = snap.shouldDrawRing
+        hasGrokBot = snap.hasGrokBot
+        currentPeriodStart = snap.currentPeriodStart
+        lastUpdate = snap.lastSync
+        recomputePacingAndPublish(weeklyPercent: snap.usagePercent, periodStart: snap.currentPeriodStart)
+    }
+
+    /// Derive Daily / Pacing from weekly % + period start and write the shared snapshot.
+    private func recomputePacingAndPublish(weeklyPercent: Int, periodStart: String?) {
+        let now = Date()
+        let todayKey = GrokBotPacingCalculator.dayKey(for: now)
+
+        // New billing period (plan upgrade / weekly reset) must drop the old day sample.
+        let previousPeriod = sharedFileService.grokBotSnapshot?.currentPeriodStart
+        let periodChanged = previousPeriod != nil && periodStart != nil && previousPeriod != periodStart
+
+        var dailySample = sharedFileService.grokBotDailySample
+        if periodChanged || dailySample == nil || dailySample?.dayKey != todayKey {
+            dailySample = GrokBotDailySample(
+                dayKey: todayKey,
+                weeklyAtDayStart: weeklyPercent,
+                recordedAt: now
+            )
+            sharedFileService.updateGrokBotDailySample(dailySample!)
+        }
+
+        let pacingSchedule = sharedFileService.pacingSchedule
+        let pacing = GrokBotPacingCalculator.calculate(
+            weeklyPercent: weeklyPercent,
+            periodStart: periodStart,
+            dailySample: dailySample,
+            now: now,
+            margin: 10,
+            activeDays: pacingSchedule.effectiveActiveDays,
+            activeHours: pacingSchedule.effectiveHours
+        )
+
+        let snapshot = GrokBotSharedSnapshot(
+            usagePercent: weeklyPercent,
+            hasGrokBot: hasGrokBot,
+            shouldDrawRing: shouldShowRing,
+            currentPeriodStart: periodStart,
+            lastSync: lastUpdate ?? now,
+            dailyPercent: pacing?.dailyPercent,
+            pacingDelta: pacing?.pacingDelta,
+            pacingZone: pacing?.pacingZone.rawValue,
+            pacingMessage: pacing?.pacingMessage
+        )
+        sharedFileService.updateGrokBotSnapshot(snapshot)
+        WidgetReloader.scheduleReload()
     }
     
     func refresh(force: Bool = false) async {
@@ -158,44 +213,8 @@ final class GrokBotUsageStore: ObservableObject {
             statusMessage = "Grok Bot: Usage data unavailable"
         }
         
-        let now = Date()
-        let todayKey = GrokBotPacingCalculator.dayKey(for: now)
-        
-        var dailySample = sharedFileService.grokBotDailySample
-        if dailySample == nil || dailySample?.dayKey != todayKey {
-            dailySample = GrokBotDailySample(
-                dayKey: todayKey,
-                weeklyAtDayStart: usagePercent,
-                recordedAt: now
-            )
-            sharedFileService.updateGrokBotDailySample(dailySample!)
-        }
-        
-        let pacingSchedule = sharedFileService.pacingSchedule
-        let pacing = GrokBotPacingCalculator.calculate(
-            weeklyPercent: usagePercent,
-            periodStart: currentPeriodStart,
-            dailySample: dailySample,
-            now: now,
-            margin: 10,
-            activeDays: pacingSchedule.effectiveActiveDays,
-            activeHours: pacingSchedule.effectiveHours
-        )
-
-        let snapshot = GrokBotSharedSnapshot(
-            usagePercent: usagePercent,
-            hasGrokBot: true,
-            shouldDrawRing: shouldShowRing,
-            currentPeriodStart: currentPeriodStart,
-            lastSync: lastUpdate ?? Date(),
-            dailyPercent: pacing?.dailyPercent,
-            pacingDelta: pacing?.pacingDelta,
-            pacingZone: pacing?.pacingZone.rawValue,
-            pacingMessage: pacing?.pacingMessage
-        )
-        sharedFileService.updateGrokBotSnapshot(snapshot)
-        WidgetReloader.scheduleReload()
-        logger.info("Grok Bot refresh succeeded: \(self.usagePercent)% used, shouldDrawRing=\(self.shouldDrawRing)")
+        recomputePacingAndPublish(weeklyPercent: usagePercent, periodStart: currentPeriodStart)
+        logger.info("Grok Bot refresh succeeded: \(self.usagePercent)% used, shouldDrawRing=\(self.shouldShowRing), daily=\(self.sharedFileService.grokBotSnapshot?.dailyPercent ?? -1)")
         
         evaluateNotifications()
     }

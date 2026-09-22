@@ -937,13 +937,13 @@
 "notif.body.fable.green.fallback" = "Fable refilled, you're back";
 
 /* Grok Bot widget */
-"widget.grokBot" = "Grok Bot";
+"widget.grokBot" = "Grok Bot Eater";
 "widget.grokBot.eater" = "Grok Bot Eater";
 "widget.grokBot.appName" = "GrokBotEater";
 "widget.grokBot.weekly" = "Weekly usage";
 "widget.grokBot.weekly.label" = "Weekly";
 "widget.grokBot.daily" = "Daily";
-"widget.grokBot.daily.subtitle" = "~14% per day";
+"widget.grokBot.daily.subtitle" = "~14%/day";
 "widget.grokBot.empty" = "Open GrokBotEater and connect to load usage";
 "widget.grokBot.unavailable" = "Grok Bot usage is not available for this plan";
 "widget.title.grokBot" = "Grok Bot";
@@ -961,8 +961,8 @@
 "pacing.grokBot.ontrack.2" = "Right on track";
 "pacing.grokBot.ontrack.3" = "Balanced";
 "pacing.grokBot.warning.1" = "Getting warm";
-"pacing.grokBot.warning.2" = "Pick up speed";
+"pacing.grokBot.warning.2" = "Ahead of pace";
 "pacing.grokBot.warning.3" = "Watch the pace";
-"pacing.grokBot.hot.1" = "Running hot";
-"pacing.grokBot.hot.2" = "Burning fast";
-"pacing.grokBot.hot.3" = "Cool it down";
+"pacing.grokBot.hot.1" = "Will empty early";
+"pacing.grokBot.hot.2" = "Emptying today";
+"pacing.grokBot.hot.3" = "Upgrade or slow";

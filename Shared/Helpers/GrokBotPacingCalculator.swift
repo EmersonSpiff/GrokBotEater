@@ -4,10 +4,12 @@ enum GrokBotPacingCalculator {
     /// Calculate daily and pacing metrics for Grok Bot weekly usage.
     /// Returns (dailyPercent, pacingDelta, pacingZone, pacingMessage).
     ///
-    /// **Daily calculation**: Percent of today's fair share actually burned today.
-    /// - Today's burn = `max(0, currentWeekly - weeklyAtDayStart)` from the daily sample
-    /// - Fair share ≈ `100 / activeDays` (respects workweek schedule)
-    /// - Daily % = `(todayBurn / fairShare) × 100`
+    /// Weekly % itself always comes from the Cursor API — this only derives dials.
+    ///
+    /// **Daily calculation** (signup-agnostic):
+    /// - Expected so far = elapsedFraction × 100 from THIS user’s periodStart
+    /// - Floor elapsed at 2 hours of the window so early refresh doesn’t explode
+    /// - Daily dial = (actualWeekly / expectedSoFar) × 100 (100% = even pace)
     ///
     /// **Pacing calculation**: Ahead/behind vs. even burn across the period.
     /// - Expected = elapsed fraction × 100 (respects workweek active time)
@@ -29,19 +31,7 @@ enum GrokBotPacingCalculator {
         
         guard now >= periodStartDate, now <= resetDate else { return nil }
         
-        // MARK: - Daily calculation
-        
-        let dailyPercent: Int
-        if let sample = dailySample, isDayKeyCurrent(sample.dayKey, now: now) {
-            let todayBurn = max(0, weeklyPercent - sample.weeklyAtDayStart)
-            let activeDaysCount = activeDays.count
-            let fairDailyShare = activeDaysCount > 0 ? 100.0 / Double(activeDaysCount) : 100.0 / 7.0
-            dailyPercent = Int((Double(todayBurn) / fairDailyShare * 100).rounded())
-        } else {
-            dailyPercent = 0
-        }
-        
-        // MARK: - Pacing calculation
+        // MARK: - Elapsed fraction of the weekly window
         
         let isFullWindow = activeDays.count >= 7 && activeHours == nil
         let clampedElapsed: Double
@@ -62,6 +52,17 @@ enum GrokBotPacingCalculator {
             clampedElapsed = total > 0 ? min(max(elapsed / total, 0), 1) : 0
         }
         
+        // MARK: - Daily (even-pace ratio from THIS user’s periodStart → reset)
+        // Signup-agnostic: only periodStart differs. Floor expected at 2h of the
+        // window so a brand-new period doesn’t report ∞×.
+        let minElapsed = (2.0 * 3600.0) / periodDuration
+        let expectedForDaily = max(clampedElapsed, minElapsed) * 100
+        let dailyPercent = expectedForDaily > 0
+            ? Int((Double(weeklyPercent) / expectedForDaily * 100).rounded())
+            : 0
+        _ = dailySample
+        
+        // MARK: - Pacing (true elapsed vs actual; same clock as Daily)
         let expectedUsage = clampedElapsed * 100
         let pacingDelta = Double(weeklyPercent) - expectedUsage
         
@@ -82,6 +83,20 @@ enum GrokBotPacingCalculator {
         return (dailyPercent, pacingDelta, zone, message)
     }
     
+
+    /// Inclusive local calendar days from period-start day through `to`'s day.
+    /// Mon start + Tue now → 2 (so day 2 of 7 matches ~28% fair share).
+    static func inclusiveLocalCalendarDaysElapsed(
+        from start: Date,
+        to end: Date,
+        calendar: Calendar = .current
+    ) -> Int {
+        let startDay = calendar.startOfDay(for: start)
+        let endDay = calendar.startOfDay(for: end)
+        let days = calendar.dateComponents([.day], from: startDay, to: endDay).day ?? 0
+        return max(1, days + 1)
+    }
+
     /// Generate the local day key (yyyy-MM-dd) for a given date.
     static func dayKey(for date: Date, calendar: Calendar = .current) -> String {
         let components = calendar.dateComponents([.year, .month, .day], from: date)
