@@ -149,11 +149,25 @@ final class GrokBotUsageStore: ObservableObject {
             statusMessage = "Grok Bot: Usage data unavailable"
         }
         
+        let now = Date()
+        let todayKey = GrokBotPacingCalculator.dayKey(for: now)
+        
+        var dailySample = sharedFileService.grokBotDailySample
+        if dailySample == nil || dailySample?.dayKey != todayKey {
+            dailySample = GrokBotDailySample(
+                dayKey: todayKey,
+                weeklyAtDayStart: usagePercent,
+                recordedAt: now
+            )
+            sharedFileService.updateGrokBotDailySample(dailySample!)
+        }
+        
         let pacingSchedule = sharedFileService.pacingSchedule
         let pacing = GrokBotPacingCalculator.calculate(
             weeklyPercent: usagePercent,
             periodStart: currentPeriodStart,
-            now: Date(),
+            dailySample: dailySample,
+            now: now,
             margin: 10,
             activeDays: pacingSchedule.effectiveActiveDays,
             activeHours: pacingSchedule.effectiveHours

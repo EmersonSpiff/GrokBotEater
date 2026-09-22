@@ -23,7 +23,8 @@ struct GrokBotPacingCalculatorTests {
     func returnsNilWhenPeriodStartIsNil() {
         let result = GrokBotPacingCalculator.calculate(
             weeklyPercent: 50,
-            periodStart: nil
+            periodStart: nil,
+            dailySample: nil
         )
         #expect(result == nil)
     }
@@ -32,7 +33,8 @@ struct GrokBotPacingCalculatorTests {
     func returnsNilWhenPeriodStartIsEmpty() {
         let result = GrokBotPacingCalculator.calculate(
             weeklyPercent: 50,
-            periodStart: ""
+            periodStart: "",
+            dailySample: nil
         )
         #expect(result == nil)
     }
@@ -41,7 +43,8 @@ struct GrokBotPacingCalculatorTests {
     func returnsNilWhenPeriodStartIsInvalid() {
         let result = GrokBotPacingCalculator.calculate(
             weeklyPercent: 50,
-            periodStart: "not-a-date"
+            periodStart: "not-a-date",
+            dailySample: nil
         )
         #expect(result == nil)
     }
@@ -55,6 +58,7 @@ struct GrokBotPacingCalculatorTests {
         let result = GrokBotPacingCalculator.calculate(
             weeklyPercent: 0,
             periodStart: periodStart,
+            dailySample: nil,
             now: now
         )
         #expect(result?.pacingDelta == 0)
@@ -68,6 +72,7 @@ struct GrokBotPacingCalculatorTests {
         let result = GrokBotPacingCalculator.calculate(
             weeklyPercent: 50,
             periodStart: periodStart,
+            dailySample: nil,
             now: now
         )
         #expect(result?.pacingDelta == 0)
@@ -81,6 +86,7 @@ struct GrokBotPacingCalculatorTests {
         let result = GrokBotPacingCalculator.calculate(
             weeklyPercent: 80,
             periodStart: periodStart,
+            dailySample: nil,
             now: now,
             margin: 10
         )
@@ -95,6 +101,7 @@ struct GrokBotPacingCalculatorTests {
         let result = GrokBotPacingCalculator.calculate(
             weeklyPercent: 20,
             periodStart: periodStart,
+            dailySample: nil,
             now: now,
             margin: 10
         )
@@ -109,6 +116,7 @@ struct GrokBotPacingCalculatorTests {
         let result = GrokBotPacingCalculator.calculate(
             weeklyPercent: 55,
             periodStart: periodStart,
+            dailySample: nil,
             now: now,
             margin: 10
         )
@@ -123,6 +131,7 @@ struct GrokBotPacingCalculatorTests {
         let result = GrokBotPacingCalculator.calculate(
             weeklyPercent: 65,
             periodStart: periodStart,
+            dailySample: nil,
             now: now,
             margin: 10
         )
@@ -130,47 +139,147 @@ struct GrokBotPacingCalculatorTests {
         #expect(result?.pacingZone == .warning)
     }
 
-    // MARK: - Daily calculation
+    // MARK: - Daily calculation (corrected)
 
-    @Test("daily calculation at 0% weekly: daily is 0%")
-    func dailyAtZeroWeekly() {
+    @Test("daily is 0 when no sample exists")
+    func dailyIsZeroWithoutSample() {
         let now = Self.stableNow()
         let periodStart = makePeriodStart(elapsedFraction: 0.5, now: now)
         let result = GrokBotPacingCalculator.calculate(
-            weeklyPercent: 0,
+            weeklyPercent: 50,
             periodStart: periodStart,
+            dailySample: nil,
             now: now
         )
         #expect(result?.dailyPercent == 0)
     }
 
-    @Test("daily calculation at 14% weekly (~fair daily budget): daily is ~100%")
-    func dailyAtFairBudget() {
+    @Test("daily is 0 when sample is from a different day")
+    func dailyIsZeroWhenSampleIsStale() {
         let now = Self.stableNow()
         let periodStart = makePeriodStart(elapsedFraction: 0.5, now: now)
+        let yesterdayKey = GrokBotPacingCalculator.dayKey(for: now.addingTimeInterval(-86400))
+        let staleSample = GrokBotDailySample(
+            dayKey: yesterdayKey,
+            weeklyAtDayStart: 30,
+            recordedAt: now.addingTimeInterval(-86400)
+        )
         let result = GrokBotPacingCalculator.calculate(
-            weeklyPercent: 14,
+            weeklyPercent: 50,
             periodStart: periodStart,
+            dailySample: staleSample,
             now: now
         )
-        let fairDailyBudget = 100.0 / 7.0
-        let dailyUsed = 14.0 * (1.0 / 7.0)
-        let expectedDaily = Int((dailyUsed / fairDailyBudget * 100).rounded())
+        #expect(result?.dailyPercent == 0)
+    }
+
+    @Test("daily is 0 when weeklyAtDayStart equals current weekly (no burn today)")
+    func dailyIsZeroWhenNoBurnToday() {
+        let now = Self.stableNow()
+        let periodStart = makePeriodStart(elapsedFraction: 0.5, now: now)
+        let todayKey = GrokBotPacingCalculator.dayKey(for: now)
+        let sample = GrokBotDailySample(
+            dayKey: todayKey,
+            weeklyAtDayStart: 50,
+            recordedAt: now
+        )
+        let result = GrokBotPacingCalculator.calculate(
+            weeklyPercent: 50,
+            periodStart: periodStart,
+            dailySample: sample,
+            now: now
+        )
+        #expect(result?.dailyPercent == 0)
+    }
+
+    @Test("daily calculation: 10% burned today, fair share ~14.3%, daily ≈ 70%")
+    func dailyCalculationBasicBurn() {
+        let now = Self.stableNow()
+        let periodStart = makePeriodStart(elapsedFraction: 0.5, now: now)
+        let todayKey = GrokBotPacingCalculator.dayKey(for: now)
+        let sample = GrokBotDailySample(
+            dayKey: todayKey,
+            weeklyAtDayStart: 40,
+            recordedAt: now
+        )
+        let result = GrokBotPacingCalculator.calculate(
+            weeklyPercent: 50,
+            periodStart: periodStart,
+            dailySample: sample,
+            now: now
+        )
+        let todayBurn = 50 - 40
+        let fairDailyShare = 100.0 / 7.0
+        let expectedDaily = Int((Double(todayBurn) / fairDailyShare * 100).rounded())
         #expect(result?.dailyPercent == expectedDaily)
     }
 
-    @Test("daily calculation at 70% weekly: daily is ~500%")
-    func dailyAtHighWeekly() {
+    @Test("daily calculation: 14% burned today (fair share), daily ≈ 100%")
+    func dailyCalculationFairShareBurn() {
         let now = Self.stableNow()
         let periodStart = makePeriodStart(elapsedFraction: 0.5, now: now)
+        let todayKey = GrokBotPacingCalculator.dayKey(for: now)
+        let sample = GrokBotDailySample(
+            dayKey: todayKey,
+            weeklyAtDayStart: 40,
+            recordedAt: now
+        )
+        let result = GrokBotPacingCalculator.calculate(
+            weeklyPercent: 54,
+            periodStart: periodStart,
+            dailySample: sample,
+            now: now
+        )
+        let todayBurn = 54 - 40
+        let fairDailyShare = 100.0 / 7.0
+        let expectedDaily = Int((Double(todayBurn) / fairDailyShare * 100).rounded())
+        #expect(result?.dailyPercent == expectedDaily)
+    }
+
+    @Test("daily calculation: 30% burned today, daily ≈ 210% (over budget)")
+    func dailyCalculationHighBurn() {
+        let now = Self.stableNow()
+        let periodStart = makePeriodStart(elapsedFraction: 0.5, now: now)
+        let todayKey = GrokBotPacingCalculator.dayKey(for: now)
+        let sample = GrokBotDailySample(
+            dayKey: todayKey,
+            weeklyAtDayStart: 40,
+            recordedAt: now
+        )
         let result = GrokBotPacingCalculator.calculate(
             weeklyPercent: 70,
             periodStart: periodStart,
+            dailySample: sample,
             now: now
         )
-        let fairDailyBudget = 100.0 / 7.0
-        let dailyUsed = 70.0 * (1.0 / 7.0)
-        let expectedDaily = Int((dailyUsed / fairDailyBudget * 100).rounded())
+        let todayBurn = 70 - 40
+        let fairDailyShare = 100.0 / 7.0
+        let expectedDaily = Int((Double(todayBurn) / fairDailyShare * 100).rounded())
+        #expect(result?.dailyPercent == expectedDaily)
+    }
+
+    @Test("daily ≠ weekly when weekly is high but today's burn is low")
+    func dailyNotEqualToWeekly() {
+        let now = Self.stableNow()
+        let periodStart = makePeriodStart(elapsedFraction: 0.5, now: now)
+        let todayKey = GrokBotPacingCalculator.dayKey(for: now)
+        
+        let sample = GrokBotDailySample(
+            dayKey: todayKey,
+            weeklyAtDayStart: 85,
+            recordedAt: now
+        )
+        let result = GrokBotPacingCalculator.calculate(
+            weeklyPercent: 90,
+            periodStart: periodStart,
+            dailySample: sample,
+            now: now
+        )
+        
+        #expect(result?.dailyPercent != 90)
+        let todayBurn = 90 - 85
+        let fairDailyShare = 100.0 / 7.0
+        let expectedDaily = Int((Double(todayBurn) / fairDailyShare * 100).rounded())
         #expect(result?.dailyPercent == expectedDaily)
     }
 
@@ -188,6 +297,7 @@ struct GrokBotPacingCalculatorTests {
         let result = GrokBotPacingCalculator.calculate(
             weeklyPercent: 50,
             periodStart: periodStart,
+            dailySample: nil,
             now: now,
             activeDays: PacingSchedule.workweek
         )
@@ -199,6 +309,30 @@ struct GrokBotPacingCalculatorTests {
         }
     }
 
+    @Test("daily with workweek schedule uses activeDays count for fair share")
+    func dailyWithWorkweekSchedule() {
+        let now = Self.stableNow()
+        let periodStart = makePeriodStart(elapsedFraction: 0.5, now: now)
+        let todayKey = GrokBotPacingCalculator.dayKey(for: now)
+        let sample = GrokBotDailySample(
+            dayKey: todayKey,
+            weeklyAtDayStart: 40,
+            recordedAt: now
+        )
+        let result = GrokBotPacingCalculator.calculate(
+            weeklyPercent: 60,
+            periodStart: periodStart,
+            dailySample: sample,
+            now: now,
+            activeDays: PacingSchedule.workweek
+        )
+        
+        let todayBurn = 60 - 40
+        let fairDailyShare = 100.0 / Double(PacingSchedule.workweek.count)
+        let expectedDaily = Int((Double(todayBurn) / fairDailyShare * 100).rounded())
+        #expect(result?.dailyPercent == expectedDaily)
+    }
+
     // MARK: - Zone boundaries
 
     @Test("zone is chill when delta < -margin")
@@ -208,6 +342,7 @@ struct GrokBotPacingCalculatorTests {
         let result = GrokBotPacingCalculator.calculate(
             weeklyPercent: 30,
             periodStart: periodStart,
+            dailySample: nil,
             now: now,
             margin: 10
         )
@@ -223,6 +358,7 @@ struct GrokBotPacingCalculatorTests {
         let resultPlus5 = GrokBotPacingCalculator.calculate(
             weeklyPercent: 55,
             periodStart: periodStart,
+            dailySample: nil,
             now: now,
             margin: 10
         )
@@ -231,6 +367,7 @@ struct GrokBotPacingCalculatorTests {
         let resultMinus5 = GrokBotPacingCalculator.calculate(
             weeklyPercent: 45,
             periodStart: periodStart,
+            dailySample: nil,
             now: now,
             margin: 10
         )
@@ -244,6 +381,7 @@ struct GrokBotPacingCalculatorTests {
         let result = GrokBotPacingCalculator.calculate(
             weeklyPercent: 65,
             periodStart: periodStart,
+            dailySample: nil,
             now: now,
             margin: 10
         )
@@ -258,6 +396,7 @@ struct GrokBotPacingCalculatorTests {
         let result = GrokBotPacingCalculator.calculate(
             weeklyPercent: 75,
             periodStart: periodStart,
+            dailySample: nil,
             now: now,
             margin: 10
         )
@@ -274,6 +413,7 @@ struct GrokBotPacingCalculatorTests {
         let result = GrokBotPacingCalculator.calculate(
             weeklyPercent: 80,
             periodStart: periodStart,
+            dailySample: nil,
             now: now
         )
         #expect(result?.pacingMessage != nil)
@@ -293,6 +433,7 @@ struct GrokBotPacingCalculatorTests {
         let result = GrokBotPacingCalculator.calculate(
             weeklyPercent: 50,
             periodStart: periodStart,
+            dailySample: nil,
             now: now
         )
         #expect(result != nil)
@@ -309,8 +450,31 @@ struct GrokBotPacingCalculatorTests {
         let result = GrokBotPacingCalculator.calculate(
             weeklyPercent: 50,
             periodStart: periodStart,
+            dailySample: nil,
             now: now
         )
         #expect(result != nil)
+    }
+
+    // MARK: - Day key generation
+
+    @Test("dayKey generates yyyy-MM-dd format")
+    func dayKeyGeneratesCorrectFormat() {
+        let calendar = Calendar.current
+        let components = DateComponents(year: 2026, month: 9, day: 22)
+        guard let date = calendar.date(from: components) else { return }
+        
+        let key = GrokBotPacingCalculator.dayKey(for: date, calendar: calendar)
+        #expect(key == "2026-09-22")
+    }
+
+    @Test("dayKey pads single-digit month and day with zeros")
+    func dayKeyPadsSingleDigits() {
+        let calendar = Calendar.current
+        let components = DateComponents(year: 2026, month: 1, day: 5)
+        guard let date = calendar.date(from: components) else { return }
+        
+        let key = GrokBotPacingCalculator.dayKey(for: date, calendar: calendar)
+        #expect(key == "2026-01-05")
     }
 }

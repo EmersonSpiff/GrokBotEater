@@ -31,6 +31,7 @@ final class MockSharedFileService: SharedFileServiceProtocol, @unchecked Sendabl
     var lastWeekDailyTotals: [Int]? { _lastWeekDailyTotals }
     var lastWeekTotalsRefreshedAt: Date? { _lastWeekTotalsRefreshedAt }
     var grokBotSnapshot: GrokBotSharedSnapshot? = nil
+    var grokBotDailySample: GrokBotDailySample? = nil
 
     func updateAfterSync(usage: CachedUsage, syncDate: Date) {
         updateAfterSyncCallCount += 1
@@ -60,6 +61,7 @@ final class MockSharedFileService: SharedFileServiceProtocol, @unchecked Sendabl
     }
 
     func updateGrokBotSnapshot(_ snapshot: GrokBotSharedSnapshot) { grokBotSnapshot = snapshot }
+    func updateGrokBotDailySample(_ sample: GrokBotDailySample) { grokBotDailySample = sample }
     func updateLastWeekDailyTotals(_ totals: [Int], refreshedAt: Date) {
         updateLastWeekDailyTotalsCallCount += 1
         _lastWeekDailyTotals = totals
