@@ -219,6 +219,7 @@ final class StatusBarController: NSObject {
         }
         vendorStatusStore.stop()
 
+        grokBotUsageStore.notifTogglesProvider = { [weak self] in self?.makeNotificationToggles() }
         grokBotUsageStore.refreshIntervalSeconds = TimeInterval(settingsStore.refreshInterval)
         grokBotUsageStore.reloadConfig()
         grokBotUsageStore.startAutoRefresh(interval: TimeInterval(settingsStore.refreshInterval))
@@ -246,6 +247,7 @@ final class StatusBarController: NSObject {
             trackWeekly: settingsStore.notifTrackWeekly,
             trackSonnet: settingsStore.notifTrackSonnet,
             trackFable: settingsStore.notifTrackFable,
+            trackGrokBot: settingsStore.notifTrackGrokBot,
             sendRecovery: settingsStore.notifSendRecovery,
             pacingHot: settingsStore.notifPacingHot,
             pacingWarning: settingsStore.notifPacingWarning,

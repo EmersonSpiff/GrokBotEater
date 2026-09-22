@@ -6,7 +6,7 @@ import AppKit
 struct MenuBarRendererTests {
 
     private let theme = ThemeColors.default
-    private let thresholds = UsageThresholds.default // warning: 60, critical: 85
+    private let thresholds = UsageThresholds.default // warning: 60, critical: 75
     private let now = Date(timeIntervalSince1970: 1_700_000_000)
 
     private func reset(_ minutesAway: Double) -> Date {
@@ -51,7 +51,7 @@ struct MenuBarRendererTests {
 
     @Test("high pre-critical utilization with ample remaining escalates to critical")
     func projectedRiskEscalatesToCritical() {
-        // 80% utilization (below critical 85) with 3h left: risk = 144 -> critical band.
+        // 80% utilization (above critical 75) with 3h left: risk = 144 -> critical band.
         let observed = color(80, minutesRemaining: 180)
         let expected = theme.gaugeNSColor(for: 100, thresholds: thresholds)
         #expect(observed == expected)
@@ -205,7 +205,7 @@ struct MenuBarPeriodLabelColorTests {
 struct MenuBarGaugeColorTests {
 
     private let theme = ThemeColors.default
-    private let thresholds = UsageThresholds.default // warning 60, critical 85
+    private let thresholds = UsageThresholds.default // warning 60, critical 75
     private let now = Date(timeIntervalSince1970: 1_700_000_000)
 
     @Test("windowless metric uses the threshold ladder even when Smart Color is on")

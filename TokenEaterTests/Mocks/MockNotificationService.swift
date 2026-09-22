@@ -56,4 +56,10 @@ final class MockNotificationService: NotificationServiceProtocol {
     func checkVendorHealth(_ status: VendorStatus, toggles: NotificationToggles) {
         vendorHealthChecks.append((status, toggles))
     }
+    
+    var lastGrokBotEvaluation: (usagePercent: Int, resetDate: Date?, toggles: NotificationToggles)?
+    
+    func evaluateGrokBot(usagePercent: Int, resetDate: Date?, toggles: NotificationToggles) {
+        lastGrokBotEvaluation = (usagePercent, resetDate, toggles)
+    }
 }

@@ -40,7 +40,7 @@ struct ThemeStoreTests {
 
         #expect(store.selectedPreset == "default")
         #expect(store.warningThreshold == 60)
-        #expect(store.criticalThreshold == 85)
+        #expect(store.criticalThreshold == 75)
         #expect(store.menuBarMonochrome == false)
         #expect(store.customTheme == ThemeColors.default)
     }

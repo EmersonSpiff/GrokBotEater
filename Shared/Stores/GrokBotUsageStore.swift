@@ -30,20 +30,29 @@ final class GrokBotUsageStore: ObservableObject {
     private let apiClient: GrokBotAPIClientProtocol
     private let cookieReader: CursorCookieReaderProtocol
     private let sharedFileService: SharedFileServiceProtocol
+    private let notificationService: NotificationServiceProtocol
     
     private var refreshTask: Task<Void, Never>?
     private var autoRefreshTask: Task<Void, Never>?
     
     var refreshIntervalSeconds: TimeInterval = 300 // 5 minutes, match Claude
     
+    /// Closure that returns the current notification toggles bundle. Wired by
+    /// `StatusBarController` at bootstrap once SettingsStore is available so
+    /// the store can fire notifications based on the latest user-facing toggles
+    /// without owning a direct SettingsStore reference.
+    var notifTogglesProvider: (() -> NotificationToggles?)?
+    
     init(
         apiClient: GrokBotAPIClientProtocol = GrokBotAPIClient(),
         cookieReader: CursorCookieReaderProtocol = CursorCookieReader(),
-        sharedFileService: SharedFileServiceProtocol = SharedFileService()
+        sharedFileService: SharedFileServiceProtocol = SharedFileService(),
+        notificationService: NotificationServiceProtocol = NotificationService()
     ) {
         self.apiClient = apiClient
         self.cookieReader = cookieReader
         self.sharedFileService = sharedFileService
+        self.notificationService = notificationService
         
         loadCached()
     }
@@ -159,7 +168,18 @@ final class GrokBotUsageStore: ObservableObject {
         )
         sharedFileService.updateGrokBotSnapshot(snapshot)
         WidgetReloader.scheduleReload()
-        logger.info("Grok Bot refresh succeeded: \(self.usagePercent)% used, shouldDrawRing=\(self.shouldShowRing)")
+        logger.info("Grok Bot refresh succeeded: \(self.usagePercent)% used, shouldDrawRing=\(self.shouldDrawRing)")
+        
+        evaluateNotifications()
+    }
+    
+    private func evaluateNotifications() {
+        guard let toggles = notifTogglesProvider?() else { return }
+        notificationService.evaluateGrokBot(
+            usagePercent: usagePercent,
+            resetDate: nextResetDate,
+            toggles: toggles
+        )
     }
 
     private static func parsePeriodStart(_ raw: String?) -> Date? {

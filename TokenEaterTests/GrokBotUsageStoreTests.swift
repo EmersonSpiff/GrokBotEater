@@ -205,4 +205,46 @@ struct GrokBotUsageStoreTests {
         #expect(result.success == false)
         #expect(result.message.contains("cookie not found"))
     }
+    
+    @Test("Refresh evaluates notifications when toggles provider is wired")
+    func refreshEvaluatesNotifications() async {
+        let mockClient = MockGrokBotAPIClient()
+        let mockCookieReader = MockCursorCookieReader()
+        let mockNotification = MockNotificationService()
+        mockCookieReader.cookieToReturn = "valid-session-cookie"
+        
+        let response = GrokBotUsageResponse(
+            usagePercent: 75.0,
+            currentPeriodStart: "2026-09-20T00:00:00.000Z",
+            usesPooledEnterpriseAllowance: false,
+            includedLimitZero: false,
+            hasNonZeroIncludedLimit: true
+        )
+        mockClient.fetchUsageResult = .success(response)
+        
+        let store = GrokBotUsageStore(
+            apiClient: mockClient,
+            cookieReader: mockCookieReader,
+            notificationService: mockNotification
+        )
+        
+        let toggles = NotificationToggles(
+            masterEnabled: true,
+            trackFiveHour: true, trackWeekly: true, trackSonnet: true, trackFable: true, trackGrokBot: true,
+            sendRecovery: true, pacingHot: true, pacingWarning: false,
+            resetReminderSession: false, resetReminderWeekly: false,
+            resetReminderSessionOffsetMinutes: 15, resetReminderWeeklyOffsetMinutes: 60,
+            extraCredits: true, tokenExpired: false,
+            smartColorEnabled: true, smartColorProfile: .default, pacingMargin: 10,
+            thresholds: .default,
+            vendorDegraded: true, vendorRestored: true
+        )
+        store.notifTogglesProvider = { toggles }
+        
+        await store.refresh(force: true)
+        
+        #expect(store.usagePercent == 75)
+        #expect(mockNotification.lastGrokBotEvaluation != nil)
+        #expect(mockNotification.lastGrokBotEvaluation?.usagePercent == 75)
+    }
 }
