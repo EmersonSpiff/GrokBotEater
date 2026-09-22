@@ -31,8 +31,12 @@ struct GrokBotWidgetView: View {
 
     private var smallContent: some View {
         let pct = entry.usagePercent
-        let color = theme.gaugeColor(for: Double(pct), thresholds: thresholds)
-        let gradient = theme.gaugeGradient(for: Double(pct), thresholds: thresholds)
+        let color = theme.gaugeColor(for: min(Double(pct), 100), thresholds: thresholds)
+        let gradient = theme.gaugeGradient(for: min(Double(pct), 100), thresholds: thresholds)
+        
+        let loopCount = max(1, Int(ceil(Double(pct) / 100)))
+        let remainder = Double(pct).truncatingRemainder(dividingBy: 100)
+        let currentLoopFraction = remainder == 0 && pct > 0 ? 1.0 : remainder / 100
 
         return VStack(spacing: 0) {
             WidgetHeader("widget.grokBot.eater")
@@ -40,11 +44,22 @@ struct GrokBotWidgetView: View {
             ZStack {
                 Circle()
                     .stroke(.white.opacity(WidgetTokens.trackOpacity), lineWidth: WidgetTokens.ringSmall)
-                Circle()
-                    .trim(from: 0, to: min(Double(pct), 100) / 100)
-                    .stroke(gradient, style: StrokeStyle(lineWidth: WidgetTokens.ringSmall, lineCap: .round))
-                    .rotationEffect(.degrees(-90))
-                    .shadow(color: color.opacity(0.32), radius: 5)
+                
+                ForEach(0..<loopCount, id: \.self) { loopIndex in
+                    let isCurrentLoop = loopIndex == loopCount - 1
+                    let fraction = isCurrentLoop ? currentLoopFraction : 1.0
+                    let intensity = 1.0 - (Double(loopIndex) * 0.15)
+                    
+                    Circle()
+                        .trim(from: 0, to: fraction)
+                        .stroke(
+                            gradient.opacity(max(0.4, intensity)),
+                            style: StrokeStyle(lineWidth: WidgetTokens.ringSmall, lineCap: .round)
+                        )
+                        .rotationEffect(.degrees(-90))
+                        .shadow(color: color.opacity(0.32), radius: 5)
+                }
+                
                 HeroPercent(pct)
             }
             .frame(maxWidth: .infinity)
@@ -131,8 +146,21 @@ struct CircularGrokBotView: View {
     var theme: ThemeColors
     var thresholds: UsageThresholds
 
-    private var ringGradient: LinearGradient {
-        theme.gaugeGradient(for: utilization, thresholds: thresholds)
+    private var baseGradient: LinearGradient {
+        theme.gaugeGradient(for: min(utilization, 100), thresholds: thresholds)
+    }
+    
+    private var baseColor: Color {
+        theme.gaugeColor(for: min(utilization, 100), thresholds: thresholds)
+    }
+    
+    private func loopCount() -> Int {
+        max(1, Int(ceil(utilization / 100)))
+    }
+    
+    private func currentLoopFraction() -> Double {
+        let remainder = utilization.truncatingRemainder(dividingBy: 100)
+        return remainder == 0 && utilization > 0 ? 1.0 : remainder / 100
     }
 
     var body: some View {
@@ -141,12 +169,21 @@ struct CircularGrokBotView: View {
                 Circle()
                     .stroke(.white.opacity(0.08), lineWidth: 4.5)
 
-                Circle()
-                    .trim(from: 0, to: min(utilization, 100) / 100)
-                    .stroke(ringGradient, style: StrokeStyle(lineWidth: 4.5, lineCap: .round))
-                    .rotationEffect(.degrees(-90))
+                ForEach(0..<loopCount(), id: \.self) { loopIndex in
+                    let isCurrentLoop = loopIndex == loopCount() - 1
+                    let fraction = isCurrentLoop ? currentLoopFraction() : 1.0
+                    let intensity = 1.0 - (Double(loopIndex) * 0.15)
+                    
+                    Circle()
+                        .trim(from: 0, to: fraction)
+                        .stroke(
+                            baseGradient.opacity(max(0.4, intensity)),
+                            style: StrokeStyle(lineWidth: 4.5, lineCap: .round)
+                        )
+                        .rotationEffect(.degrees(-90))
+                }
 
-                Text("\(Int(utilization))%")
+                Text(formatPercentage(utilization))
                     .font(.system(size: 12, weight: .black, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(Color(hex: theme.widgetText))
@@ -165,6 +202,14 @@ struct CircularGrokBotView: View {
         }
         .frame(maxWidth: .infinity)
     }
+    
+    private func formatPercentage(_ value: Double) -> String {
+        if value > 100 {
+            let multiplier = value / 100
+            return String(format: "%.1f×", multiplier)
+        }
+        return "\(Int(value))%"
+    }
 }
 
 struct CircularGrokBotPacingView: View {
@@ -180,6 +225,18 @@ struct CircularGrokBotPacingView: View {
     private var ringGradient: LinearGradient {
         theme.pacingGradient(for: zone)
     }
+    
+    private func loopCount() -> Int {
+        let absDelta = abs(delta)
+        return max(1, Int(ceil(absDelta / 100)))
+    }
+    
+    private func currentLoopFraction() -> Double {
+        let absDelta = abs(delta)
+        let remainder = absDelta.truncatingRemainder(dividingBy: 100)
+        let fraction = remainder == 0 && absDelta > 0 ? 1.0 : remainder / 100
+        return min(fraction * 0.7, 0.7)
+    }
 
     var body: some View {
         VStack(spacing: 5) {
@@ -187,13 +244,22 @@ struct CircularGrokBotPacingView: View {
                 Circle()
                     .stroke(.white.opacity(0.08), lineWidth: 4.5)
 
-                Circle()
-                    .trim(from: 0, to: 0.7)
-                    .stroke(ringGradient, style: StrokeStyle(lineWidth: 4.5, lineCap: .round))
-                    .rotationEffect(.degrees(-90))
+                ForEach(0..<loopCount(), id: \.self) { loopIndex in
+                    let isCurrentLoop = loopIndex == loopCount() - 1
+                    let fraction = isCurrentLoop ? currentLoopFraction() : 0.7
+                    let intensity = 1.0 - (Double(loopIndex) * 0.15)
+                    
+                    Circle()
+                        .trim(from: 0, to: fraction)
+                        .stroke(
+                            ringGradient.opacity(max(0.4, intensity)),
+                            style: StrokeStyle(lineWidth: 4.5, lineCap: .round)
+                        )
+                        .rotationEffect(.degrees(-90))
+                }
 
                 let sign = delta >= 0 ? "+" : ""
-                Text("\(sign)\(Int(delta))%")
+                Text(formatDelta(delta))
                     .font(.system(size: 10, weight: .black, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(ringColor)
@@ -212,5 +278,16 @@ struct CircularGrokBotPacingView: View {
             }
         }
         .frame(maxWidth: .infinity)
+    }
+    
+    private func formatDelta(_ value: Double) -> String {
+        let absValue = abs(value)
+        let sign = value >= 0 ? "+" : "-"
+        
+        if absValue > 100 {
+            let multiplier = absValue / 100
+            return String(format: "%@%.1f×", sign, multiplier)
+        }
+        return "\(sign)\(Int(absValue))%"
     }
 }
