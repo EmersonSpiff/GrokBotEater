@@ -9,6 +9,11 @@ struct GrokBotUsageEntry: TimelineEntry {
     let currentPeriodStart: String?
     let lastSync: Date?
     let error: String?
+    
+    let dailyPercent: Int?
+    let pacingDelta: Double?
+    let pacingZone: String?
+    let pacingMessage: String?
 
     init(
         date: Date,
@@ -17,7 +22,11 @@ struct GrokBotUsageEntry: TimelineEntry {
         shouldDrawRing: Bool = false,
         currentPeriodStart: String? = nil,
         lastSync: Date? = nil,
-        error: String? = nil
+        error: String? = nil,
+        dailyPercent: Int? = nil,
+        pacingDelta: Double? = nil,
+        pacingZone: String? = nil,
+        pacingMessage: String? = nil
     ) {
         self.date = date
         self.usagePercent = usagePercent
@@ -26,6 +35,10 @@ struct GrokBotUsageEntry: TimelineEntry {
         self.currentPeriodStart = currentPeriodStart
         self.lastSync = lastSync
         self.error = error
+        self.dailyPercent = dailyPercent
+        self.pacingDelta = pacingDelta
+        self.pacingZone = pacingZone
+        self.pacingMessage = pacingMessage
     }
 
     static var placeholder: GrokBotUsageEntry {
@@ -34,7 +47,11 @@ struct GrokBotUsageEntry: TimelineEntry {
             usagePercent: 42,
             hasGrokBot: true,
             shouldDrawRing: true,
-            lastSync: Date()
+            lastSync: Date(),
+            dailyPercent: 10,
+            pacingDelta: 2.5,
+            pacingZone: "onTrack",
+            pacingMessage: "Steady pace"
         )
     }
 

@@ -938,18 +938,31 @@
 
 /* Grok Bot widget */
 "widget.grokBot" = "Grok Bot";
+"widget.grokBot.eater" = "Grok Bot Eater";
 "widget.grokBot.appName" = "GrokBotEater";
 "widget.grokBot.weekly" = "Weekly usage";
+"widget.grokBot.weekly.label" = "Weekly";
+"widget.grokBot.daily" = "Daily";
+"widget.grokBot.daily.subtitle" = "~14% per day";
 "widget.grokBot.empty" = "Open GrokBotEater and connect to load usage";
 "widget.grokBot.unavailable" = "Grok Bot usage is not available for this plan";
 "widget.title.grokBot" = "Grok Bot";
 "widget.description.grokBot" = "Weekly Grok Bot usage from your Cursor session";
 
 
-"widget.grokBot.title" = "Grok Bot Usage";
-"widget.grokBot.description" = "Weekly Grok Bot sand-usage from your Cursor plan.";
-"widget.grokBot" = "Grok Bot";
-"widget.grokBot.appName" = "GrokBotEater";
-"widget.grokBot.weekly" = "Weekly usage";
-"widget.grokBot.empty" = "Open GrokBotEater and Connect to sync usage.";
-"widget.grokBot.unavailable" = "Grok Bot usage isn’t on this plan (or no personal ring).";
+"widget.grokBot.title" = "Grok Bot Eater";
+"widget.grokBot.description" = "Track daily pacing and weekly Grok Bot sand-usage from your Cursor plan.";
+
+/* Grok Bot pacing messages */
+"pacing.grokBot.chill.1" = "Plenty left";
+"pacing.grokBot.chill.2" = "Easy week";
+"pacing.grokBot.chill.3" = "Smooth sailing";
+"pacing.grokBot.ontrack.1" = "Steady pace";
+"pacing.grokBot.ontrack.2" = "Right on track";
+"pacing.grokBot.ontrack.3" = "Balanced";
+"pacing.grokBot.warning.1" = "Getting warm";
+"pacing.grokBot.warning.2" = "Pick up speed";
+"pacing.grokBot.warning.3" = "Watch the pace";
+"pacing.grokBot.hot.1" = "Running hot";
+"pacing.grokBot.hot.2" = "Burning fast";
+"pacing.grokBot.hot.3" = "Cool it down";

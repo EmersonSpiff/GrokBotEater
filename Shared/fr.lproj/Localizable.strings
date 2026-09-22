@@ -931,22 +931,31 @@
 
 /* Grok Bot widget */
 "widget.grokBot" = "Grok Bot";
+"widget.grokBot.eater" = "Grok Bot Eater";
 "widget.grokBot.appName" = "GrokBotEater";
 "widget.grokBot.weekly" = "Usage hebdomadaire";
+"widget.grokBot.weekly.label" = "Hebdo";
+"widget.grokBot.daily" = "Quotidien";
+"widget.grokBot.daily.subtitle" = "~14% par jour";
 "widget.grokBot.empty" = "Ouvre GrokBotEater et connecte-toi pour charger l'usage";
 "widget.grokBot.unavailable" = "L'usage Grok Bot n'est pas disponible pour ce plan";
 "widget.title.grokBot" = "Grok Bot";
-"widget.description.grokBot" = "Usage hebdomadaire Grok Bot depuis ta session Cursor";
+"widget.description.grokBot" = "Usage hebdomadaire Grok Bot de votre session Cursor";
 
-"history.coming.title" = "Historique";
-"history.coming.subtitle" = "Usage Grok Bot dans le temps";
-"history.coming.badge" = "Bientôt";
-"history.coming.body" = "Cet onglet montrait les jetons Claude Code. L’historique Grok Bot n’est pas encore branché.";
 
-"widget.grokBot.title" = "Usage Grok Bot";
-"widget.grokBot.description" = "Usage hebdomadaire Grok Bot de votre plan Cursor.";
-"widget.grokBot" = "Grok Bot";
-"widget.grokBot.appName" = "GrokBotEater";
-"widget.grokBot.weekly" = "Usage hebdo";
-"widget.grokBot.empty" = "Ouvrez GrokBotEater et Connectez pour synchroniser.";
-"widget.grokBot.unavailable" = "Usage Grok Bot indisponible sur ce plan.";
+"widget.grokBot.title" = "Grok Bot Eater";
+"widget.grokBot.description" = "Suivez le rythme quotidien et l'usage hebdomadaire Grok Bot de votre plan Cursor.";
+
+/* Grok Bot pacing messages */
+"pacing.grokBot.chill.1" = "Beaucoup reste";
+"pacing.grokBot.chill.2" = "Semaine tranquille";
+"pacing.grokBot.chill.3" = "Tout va bien";
+"pacing.grokBot.ontrack.1" = "Rythme régulier";
+"pacing.grokBot.ontrack.2" = "Sur la bonne voie";
+"pacing.grokBot.ontrack.3" = "Équilibré";
+"pacing.grokBot.warning.1" = "Ça chauffe";
+"pacing.grokBot.warning.2" = "Accélère un peu";
+"pacing.grokBot.warning.3" = "Surveille le rythme";
+"pacing.grokBot.hot.1" = "Trop rapide";
+"pacing.grokBot.hot.2" = "Brûle vite";
+"pacing.grokBot.hot.3" = "Ralentis";

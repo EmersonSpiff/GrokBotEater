@@ -100,14 +100,26 @@ struct HeroPercent: View {
     }
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 1) {
-            Text("\(value)")
-                .font(font)
-                .monospacedDigit()
-                .foregroundStyle(Color(hex: WidgetTheme.theme.widgetText))
-            Text("%")
-                .font(subscriptFont)
-                .foregroundStyle(Color(hex: WidgetTheme.theme.widgetText).opacity(WidgetTokens.tertiary))
+        if value > 100 {
+            HStack(alignment: .firstTextBaseline, spacing: 1) {
+                Text(String(format: "%.1f", Double(value) / 100))
+                    .font(font)
+                    .monospacedDigit()
+                    .foregroundStyle(Color(hex: WidgetTheme.theme.widgetText))
+                Text("×")
+                    .font(subscriptFont)
+                    .foregroundStyle(Color(hex: WidgetTheme.theme.widgetText).opacity(WidgetTokens.tertiary))
+            }
+        } else {
+            HStack(alignment: .firstTextBaseline, spacing: 1) {
+                Text("\(value)")
+                    .font(font)
+                    .monospacedDigit()
+                    .foregroundStyle(Color(hex: WidgetTheme.theme.widgetText))
+                Text("%")
+                    .font(subscriptFont)
+                    .foregroundStyle(Color(hex: WidgetTheme.theme.widgetText).opacity(WidgetTokens.tertiary))
+            }
         }
     }
 }
