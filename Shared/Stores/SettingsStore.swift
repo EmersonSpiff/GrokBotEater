@@ -365,7 +365,7 @@ final class SettingsStore: ObservableObject {
             let val = UserDefaults.standard.integer(forKey: "refreshInterval")
             return val >= 180 ? val : 300
         }()
-        self.outageMonitoringEnabled = SettingsDefaults.bool(key: "outageMonitoringEnabled", default: true)
+        self.outageMonitoringEnabled = SettingsDefaults.bool(key: "outageMonitoringEnabled", default: false)
         self.statusPollInterval = {
             let val = UserDefaults.standard.integer(forKey: "statusPollInterval")
             return val >= 60 ? val : 300
