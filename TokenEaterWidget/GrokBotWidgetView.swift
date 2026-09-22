@@ -28,12 +28,20 @@ struct GrokBotWidgetView: View {
     /// Matches GrokBotUsageStore default / Settings floor (300s).
     private static let appRefreshInterval: TimeInterval = 300
 
-    private static func nextAppRefreshDate(lastSync: Date?) -> Date? {
+    /// Absolute deadline for the next local app refresh (lastSync + 5m).
+    /// May be in the past if the app has not refreshed yet.
+    private static func nextAppRefreshDeadline(lastSync: Date?, now: Date = Date()) -> Date {
         guard let lastSync else {
-            return Date().addingTimeInterval(appRefreshInterval)
+            return now.addingTimeInterval(appRefreshInterval)
         }
-        let next = lastSync.addingTimeInterval(appRefreshInterval)
-        return next > Date() ? next : Date().addingTimeInterval(15)
+        return lastSync.addingTimeInterval(appRefreshInterval)
+    }
+
+    private static func formatRefreshCountdown(seconds remaining: Int) -> String {
+        let clamped = max(0, remaining)
+        let m = clamped / 60
+        let s = clamped % 60
+        return String(format: "%d:%02d", m, s)
     }
 
     private static func resetDate(fromPeriodStart raw: String?) -> Date? {
@@ -151,15 +159,21 @@ struct GrokBotWidgetView: View {
             }
 
             // Countdown to next local app refresh (not weekly Grok reset).
+            // Do NOT use Text(_:style: .timer) — after the deadline WidgetKit
+            // keeps ticking and the label counts UP (e.g. 1:24:00 elapsed).
             HStack(spacing: 5) {
-                if let next = Self.nextAppRefreshDate(lastSync: entry.lastSync) {
-                    Image(systemName: "clock")
-                        .font(.system(size: 9, weight: .semibold))
-                        .foregroundStyle(Color.white.opacity(0.35))
-                    Text(next, style: .timer)
+                Image(systemName: "clock")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(Color.white.opacity(0.35))
+                TimelineView(.periodic(from: .now, by: 1)) { context in
+                    let deadline = Self.nextAppRefreshDeadline(
+                        lastSync: entry.lastSync,
+                        now: context.date
+                    )
+                    let remaining = Int(deadline.timeIntervalSince(context.date).rounded())
+                    Text(Self.formatRefreshCountdown(seconds: remaining))
                         .font(.system(size: 8, design: .rounded).monospacedDigit())
                         .foregroundStyle(Color.white.opacity(0.45))
-                        .multilineTextAlignment(.leading)
                         .monospacedDigit()
                 }
                 Spacer(minLength: 0)

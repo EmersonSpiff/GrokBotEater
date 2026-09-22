@@ -21,7 +21,12 @@ struct GrokBotWidgetProvider: TimelineProvider {
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<GrokBotUsageEntry>) -> Void) {
         let entry = fetchEntry()
-        let next = Calendar.current.date(byAdding: .minute, value: 15, to: Date()) ?? Date().addingTimeInterval(900)
+        let now = Date()
+        // Reload often enough that Daily can ease down while idle and the
+        // footer countdown stays tied to a fresh lastSync from the app.
+        let refreshDeadline = (entry.lastSync ?? now).addingTimeInterval(300)
+        let oneMinute = now.addingTimeInterval(60)
+        let next = min(max(refreshDeadline, now.addingTimeInterval(15)), oneMinute)
         completion(Timeline(entries: [entry], policy: .after(next)))
     }
 
