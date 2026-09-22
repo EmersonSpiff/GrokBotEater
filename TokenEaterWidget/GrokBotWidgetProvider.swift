@@ -37,7 +37,11 @@ struct GrokBotWidgetProvider: TimelineProvider {
             hasGrokBot: snapshot.hasGrokBot,
             shouldDrawRing: snapshot.shouldDrawRing,
             currentPeriodStart: snapshot.currentPeriodStart,
-            lastSync: snapshot.lastSync
+            lastSync: snapshot.lastSync,
+            dailyPercent: snapshot.dailyPercent,
+            pacingDelta: snapshot.pacingDelta,
+            pacingZone: snapshot.pacingZone,
+            pacingMessage: snapshot.pacingMessage
         )
     }
 }

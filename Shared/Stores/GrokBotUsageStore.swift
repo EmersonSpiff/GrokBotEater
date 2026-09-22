@@ -132,7 +132,7 @@ final class GrokBotUsageStore: ObservableObject {
         lastResponse = response
         usagePercent = response.usagePercentInt
         shouldShowRing = response.shouldDrawRing
-        hasGrokBot = true // Connected — show menu-bar / popover even if ring flag is off
+        hasGrokBot = true
         currentPeriodStart = response.currentPeriodStart
         lastUpdate = Date()
         errorState = .none
@@ -149,13 +149,26 @@ final class GrokBotUsageStore: ObservableObject {
             statusMessage = "Grok Bot: Usage data unavailable"
         }
         
+        let pacingSchedule = sharedFileService.pacingSchedule
+        let pacing = GrokBotPacingCalculator.calculate(
+            weeklyPercent: usagePercent,
+            periodStart: currentPeriodStart,
+            now: Date(),
+            margin: 10,
+            activeDays: pacingSchedule.effectiveActiveDays,
+            activeHours: pacingSchedule.effectiveHours
+        )
 
         let snapshot = GrokBotSharedSnapshot(
             usagePercent: usagePercent,
             hasGrokBot: true,
             shouldDrawRing: shouldShowRing,
             currentPeriodStart: currentPeriodStart,
-            lastSync: lastUpdate ?? Date()
+            lastSync: lastUpdate ?? Date(),
+            dailyPercent: pacing?.dailyPercent,
+            pacingDelta: pacing?.pacingDelta,
+            pacingZone: pacing?.pacingZone.rawValue,
+            pacingMessage: pacing?.pacingMessage
         )
         sharedFileService.updateGrokBotSnapshot(snapshot)
         WidgetReloader.scheduleReload()
