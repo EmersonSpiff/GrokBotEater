@@ -6,15 +6,7 @@ struct VendorStatusBanner: View {
     @EnvironmentObject private var vendorStatusStore: VendorStatusStore
 
     var body: some View {
-        if vendorStatusStore.isDegraded, let status = vendorStatusStore.claudeStatus {
-            content(for: status)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(10)
-                .background(Color.white.opacity(0.04))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-                .padding(.horizontal, 16)
-                .padding(.bottom, 8)
-        }
+        EmptyView()
     }
 
     private func tint(_ health: VendorHealth) -> Color {

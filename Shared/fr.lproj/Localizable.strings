@@ -348,7 +348,7 @@
 
 /* Service Status */
 "sidebar.serviceStatus" = "État du service";
-"sidebar.serviceStatus.subtitle" = "Surveillance des pannes de Claude";
+"sidebar.serviceStatus.subtitle" = "Surveillance des pannes de service (désactivée pour GrokBotEater)";
 "settings.status.master" = "Surveillance";
 "settings.status.group.polling" = "Fréquence";
 "settings.status.group.polling.hint" = "Fréquence de vérification de l'état de Claude. Accélérée automatiquement pendant une panne.";

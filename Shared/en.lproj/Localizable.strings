@@ -348,7 +348,7 @@
 
 /* Service Status */
 "sidebar.serviceStatus" = "Service Status";
-"sidebar.serviceStatus.subtitle" = "Outage monitoring for Claude";
+"sidebar.serviceStatus.subtitle" = "Service outage monitoring (disabled for GrokBotEater)";
 "settings.status.master" = "Monitoring";
 "settings.status.group.polling" = "Polling";
 "settings.status.group.polling.hint" = "How often to check Claude's status. Checks speed up automatically during an outage.";

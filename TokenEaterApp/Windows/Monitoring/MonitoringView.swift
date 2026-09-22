@@ -106,9 +106,6 @@ struct MonitoringView: View {
                     )
             }
 
-            if vendorStatusStore.isDegraded, let status = vendorStatusStore.claudeStatus {
-                statusPill(status)
-            }
 
             Spacer()
 
