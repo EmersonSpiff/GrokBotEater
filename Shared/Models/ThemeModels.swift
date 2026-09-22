@@ -347,5 +347,5 @@ struct UsageThresholds: Codable, Equatable {
     var warningPercent: Int
     var criticalPercent: Int
 
-    static let `default` = UsageThresholds(warningPercent: 60, criticalPercent: 85)
+    static let `default` = UsageThresholds(warningPercent: 60, criticalPercent: 75)
 }

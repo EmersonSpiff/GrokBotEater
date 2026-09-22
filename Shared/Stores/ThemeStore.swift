@@ -51,7 +51,7 @@ final class ThemeStore: ObservableObject {
         }()
         self.criticalThreshold = {
             let val = UserDefaults.standard.integer(forKey: "criticalThreshold")
-            return val > 0 ? val : 85
+            return val > 0 ? val : 75
         }()
         self.menuBarMonochrome = UserDefaults.standard.bool(forKey: "menuBarMonochrome")
 
@@ -93,7 +93,7 @@ final class ThemeStore: ObservableObject {
         selectedPreset = "default"
         customTheme = .default
         warningThreshold = 60
-        criticalThreshold = 85
+        criticalThreshold = 75
         menuBarMonochrome = false
         syncToSharedFile()
     }

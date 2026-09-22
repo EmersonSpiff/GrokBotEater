@@ -69,7 +69,7 @@ git checkout cursor/fix-grokbot-widget-notifications-58a1
 
 This includes:
 - The widget reload fix (same line as the hotfix above, but properly structured)
-- Threshold notifications (warning @ 60%, critical @ 85%)
+- Threshold notifications (warning @ 60%, critical @ 75%)
 - Settings toggle for Grok Bot notifications (default ON)
 - EN/FR localization
 - Unit tests
