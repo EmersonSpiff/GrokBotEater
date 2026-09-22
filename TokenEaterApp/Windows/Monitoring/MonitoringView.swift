@@ -219,7 +219,8 @@ struct MonitoringView: View {
                         pct: pct,
                         gaugeColor: gaugeColor,
                         gaugeGradient: gaugeGradient,
-                        zone: zone
+                        zone: zone,
+                        resetDate: resetDate
                     )
                 }
             }
@@ -260,16 +261,15 @@ struct MonitoringView: View {
     }
 
     @ViewBuilder
-    private func heroFrontContent(pct: Int, gaugeColor: Color, gaugeGradient: LinearGradient, zone: PacingZone?) -> some View {
+    private func heroFrontContent(pct: Int, gaugeColor: Color, gaugeGradient: LinearGradient, zone: PacingZone?, resetDate: Date?) -> some View {
         HStack(alignment: .center, spacing: DS.Spacing.lg) {
             // Left -> labels + meta
             VStack(alignment: .leading, spacing: DS.Spacing.sm) {
                 HStack(spacing: DS.Spacing.xs) {
-                    Circle()
-                        .fill(gaugeColor)
-                        .frame(width: 6, height: 6)
-                        .dsGlow(gaugeColor, radius: 4, opacity: 0.6)
-                    Text(String(localized: "dashboard.hero.grokbot.label").uppercased())
+                    Image(systemName: "calendar")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(gaugeColor.opacity(0.8))
+                    Text(String(localized: "metric.weekly").uppercased())
                         .font(DS.Typography.micro)
                         .tracking(1.5)
                         .foregroundStyle(DS.Palette.textSecondary)
@@ -289,6 +289,7 @@ struct MonitoringView: View {
                         .baselineOffset(5)
                 }
 
+                let countdown = ResetCountdownFormatter.weekly(from: resetDate)
                 HStack(spacing: DS.Spacing.xs) {
                     Image(systemName: "clock.arrow.circlepath")
                         .font(.system(size: 11, weight: .semibold))
@@ -297,14 +298,14 @@ struct MonitoringView: View {
                         .font(DS.Typography.micro)
                         .tracking(1.2)
                         .foregroundStyle(DS.Palette.textTertiary)
-                    Text(usageStore.fiveHourReset.isEmpty ? "-" : usageStore.fiveHourReset)
+                    Text(countdown.relative.isEmpty ? "-" : countdown.relative)
                         .font(DS.Typography.metricInline)
                         .foregroundStyle(DS.Palette.textPrimary)
-                    if let resetDate = usageStore.lastUsage?.fiveHour?.resetsAtDate {
+                    if let resetDate {
                         Text("·")
                             .font(DS.Typography.metricInline)
                             .foregroundStyle(DS.Palette.textTertiary.opacity(0.5))
-                        Text(resetDate.formatted(.dateTime.hour().minute()))
+                        Text(resetDate.formatted(.dateTime.weekday(.abbreviated).hour().minute()))
                             .font(DS.Typography.metricInline)
                             .foregroundStyle(DS.Palette.textPrimary)
                     }

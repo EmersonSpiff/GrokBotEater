@@ -422,6 +422,7 @@
 "dashboard.pacing.reset.hours" = "Resets in %dh";
 "dashboard.hero.session.label" = "Session · 5h window";
 "dashboard.hero.resetsIn" = "Resets in";
+"dashboard.hero.grokbot.label" = "Weekly";
 "pacing.zone.chill" = "Chill";
 "pacing.zone.ontrack" = "On track";
 "pacing.zone.warning" = "Watch out";
