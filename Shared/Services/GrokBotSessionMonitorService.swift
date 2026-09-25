@@ -26,6 +26,11 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
     private var localWorkBotIds: Set<String> = []
     private let grokBotSupportDir: URL?
     
+    private let axService: GrokBotAXWorkingService
+    private var axWorkingStates: [String: Bool] = [:]
+    private var axIsAvailable: Bool = false
+    private var axCancellables: Set<AnyCancellable> = []
+    
     private var grokBotAppSupportDir: URL {
         if let override = grokBotSupportDir { return override }
         let home: String
@@ -40,18 +45,40 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
     init(
         scanInterval: TimeInterval = 3.0,
         activityWindowSeconds: TimeInterval = 600,
-        grokBotSupportDirOverride: URL? = nil
+        grokBotSupportDirOverride: URL? = nil,
+        axService: GrokBotAXWorkingService? = nil
     ) {
         self.scanInterval = scanInterval
         self.activityWindowSeconds = activityWindowSeconds
         self.grokBotSupportDir = grokBotSupportDirOverride
+        self.axService = axService ?? GrokBotAXWorkingService(grokBotSupportDirOverride: grokBotSupportDirOverride)
     }
     
     func startMonitoring() {
+        // Bind to AX service publishers
+        axService.workingStatePublisher
+            .sink { [weak self] states in
+                self?.queue.async {
+                    self?.axWorkingStates = states
+                }
+            }
+            .store(in: &axCancellables)
+        
+        axService.isAvailablePublisher
+            .sink { [weak self] available in
+                self?.queue.async {
+                    self?.axIsAvailable = available
+                }
+            }
+            .store(in: &axCancellables)
+        
+        axService.startMonitoring()
         queue.async { [weak self] in self?.startTimerLocked() }
     }
     
     func stopMonitoring() {
+        axService.stopMonitoring()
+        axCancellables.removeAll()
         queue.async { [weak self] in
             self?.timer?.cancel()
             self?.timer = nil
@@ -141,20 +168,47 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
                 let isStreaming = transcript?.entries.last?.isStreaming == true
                 let isWaitingOnUser = entry.awaitingUserResponse
                 
+                // Check AX working state (primary source when available)
+                let nameLower = entry.name.lowercased()
+                let axWorking = axIsAvailable ? (axWorkingStates[nameLower] ?? false) : nil
+                
                 // Determine state (before runningLocally attribution)
                 let state: GrokBotSessionState
-                if isStreaming || (transcript != nil && isLastEntryUserMessage(transcript!)) {
-                    state = .working
-                } else if isWaitingOnUser {
-                    state = .waitingOnUser
-                } else {
-                    // Idle, but check if it's "done" (recently finished with unread output)
-                    let hasUnread = entry.unreadCount > 0
-                    let recentlyActive = Date().timeIntervalSince(lastActivity) < 600 // 10 minutes
-                    if hasUnread && recentlyActive {
-                        state = .done
+                if let axWorking = axWorking {
+                    // AX is available for this bot - use it as primary source
+                    if axWorking {
+                        state = .working
                     } else {
-                        state = .idle
+                        // AX says not working - check other states (Waiting/Done/Idle)
+                        // Do NOT fall back to transcript heuristic for Working
+                        if isWaitingOnUser {
+                            state = .waitingOnUser
+                        } else {
+                            // Check if recently finished (Done)
+                            let hasUnread = entry.unreadCount > 0
+                            let recentlyActive = Date().timeIntervalSince(lastActivity) < 600 // 10 minutes
+                            if hasUnread && recentlyActive {
+                                state = .done
+                            } else {
+                                state = .idle
+                            }
+                        }
+                    }
+                } else {
+                    // AX unavailable - fall back to transcript heuristics
+                    if isStreaming || (transcript != nil && isLastEntryUserMessage(transcript!)) {
+                        state = .working
+                    } else if isWaitingOnUser {
+                        state = .waitingOnUser
+                    } else {
+                        // Idle, but check if it's "done" (recently finished with unread output)
+                        let hasUnread = entry.unreadCount > 0
+                        let recentlyActive = Date().timeIntervalSince(lastActivity) < 600 // 10 minutes
+                        if hasUnread && recentlyActive {
+                            state = .done
+                        } else {
+                            state = .idle
+                        }
                     }
                 }
                 

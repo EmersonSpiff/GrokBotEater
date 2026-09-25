@@ -593,6 +593,12 @@
 "settings.watchers.localwork" = "Bots qui utilisent ce Mac";
 "settings.watchers.localwork.hint" = "Les commandes exécutées sur ce Mac sont affichées sur ces bots";
 "settings.watchers.localwork.nobots" = "Aucun bot trouvé";
+"settings.watchers.accessibility" = "Accès à l'accessibilité";
+"settings.watchers.accessibility.hint" = "Permet au watcher de voir exactement quand un bot travaille dans Grok Bot";
+"settings.watchers.accessibility.status" = "Accès à l'accessibilité";
+"settings.watchers.accessibility.status.on" = "Activé";
+"settings.watchers.accessibility.status.off" = "Désactivé";
+"settings.watchers.accessibility.grant" = "Accorder l'accès";
 "settings.watchers.display.branchPriority.hint" = "Affiche la branche git en titre quand elle n'est pas par défaut, sinon le nom du projet.";
 "settings.watchers.display.projectAndBranch.hint" = "Affiche toujours le nom du projet en titre, avec la branche à côté du statut.";
 

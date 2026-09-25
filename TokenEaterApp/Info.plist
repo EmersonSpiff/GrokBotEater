@@ -35,5 +35,7 @@
 	<string>public.app-category.utilities</string>
 	<key>LSUIElement</key>
 	<true/>
+	<key>NSAccessibilityUsageDescription</key>
+	<string>GrokBotEater needs Accessibility access to detect when your Grok Bot agents are actively working. This lets the watcher show real-time Working status by reading the Grok Bot app's interface.</string>
 </dict>
 </plist>

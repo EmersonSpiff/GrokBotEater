@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import ApplicationServices
 
 struct AgentWatchersSectionView: View {
     @EnvironmentObject private var settingsStore: SettingsStore
@@ -7,6 +8,8 @@ struct AgentWatchersSectionView: View {
     @EnvironmentObject private var grokBotAgentSessionStore: GrokBotAgentSessionStore
 
     @State private var showTerminalSetup = false
+    @State private var axPermissionGranted = false
+    @State private var axCheckTimer: Timer?
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
@@ -20,6 +23,7 @@ struct AgentWatchersSectionView: View {
                 styleGroup
                 behaviorGroup
                 localWorkBotsGroup
+                accessibilityPermissionGroup
                 legendGroup
 
                 ResetSectionButton(
@@ -341,6 +345,84 @@ struct AgentWatchersSectionView: View {
             RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .fill(DS.Palette.bgElevated.opacity(0.15))
         )
+    }
+    
+    // MARK: - Accessibility Permission Group
+    
+    private var accessibilityPermissionGroup: some View {
+        groupSection(
+            title: "settings.watchers.accessibility",
+            subtitle: "settings.watchers.accessibility.hint"
+        ) {
+            HStack(spacing: 12) {
+                Image(systemName: axPermissionGranted ? "checkmark.circle.fill" : "xmark.circle.fill")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(axPermissionGranted ? DS.Palette.accentGreen : DS.Palette.textTertiary)
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(String(localized: "settings.watchers.accessibility.status"))
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(DS.Palette.textPrimary)
+                    Text(axPermissionGranted 
+                         ? String(localized: "settings.watchers.accessibility.status.on")
+                         : String(localized: "settings.watchers.accessibility.status.off"))
+                        .font(.system(size: 11))
+                        .foregroundStyle(axPermissionGranted ? DS.Palette.accentGreen : DS.Palette.textTertiary)
+                }
+                
+                Spacer()
+                
+                if !axPermissionGranted {
+                    Button {
+                        openAccessibilitySettings()
+                    } label: {
+                        Text(String(localized: "settings.watchers.accessibility.grant"))
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                    .fill(DS.Palette.accentBlue)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .onAppear {
+            checkAccessibilityPermission()
+            startAccessibilityCheckTimer()
+        }
+        .onDisappear {
+            stopAccessibilityCheckTimer()
+        }
+    }
+    
+    private func checkAccessibilityPermission() {
+        axPermissionGranted = AXIsProcessTrusted()
+    }
+    
+    private func startAccessibilityCheckTimer() {
+        axCheckTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            checkAccessibilityPermission()
+        }
+    }
+    
+    private func stopAccessibilityCheckTimer() {
+        axCheckTimer?.invalidate()
+        axCheckTimer = nil
+    }
+    
+    private func openAccessibilitySettings() {
+        // Prompt with system dialog
+        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+        _ = AXIsProcessTrustedWithOptions(options)
+        
+        // Also open System Settings to the right pane
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+            NSWorkspace.shared.open(url)
+        }
     }
     
     private func triggerIcon(_ zone: OverlayTriggerZone) -> String {
