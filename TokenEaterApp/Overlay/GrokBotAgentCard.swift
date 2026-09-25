@@ -238,30 +238,30 @@ struct GrokBotAgentCard: View {
     }
     
     @ViewBuilder
-    private func applySymbolEffect(to image: Image) -> some View {
+    private func applySymbolEffect<V: View>(to view: V) -> some View {
         if animationsEnabled {
             switch session.state {
             case .working:
-                image.symbolEffect(.bounce, options: .repeating)
+                view.symbolEffect(.bounce, options: .repeating)
             case .waitingOnUser:
                 if #available(macOS 15, *) {
-                    image.symbolEffect(.wiggle, options: .repeating)
+                    view.symbolEffect(.wiggle, options: .repeating)
                 } else {
-                    image.symbolEffect(.pulse, options: .repeating)
+                    view.symbolEffect(.pulse, options: .repeating)
                 }
             case .runningLocally:
                 if #available(macOS 15, *) {
-                    image.symbolEffect(.breathe)
+                    view.symbolEffect(.breathe)
                 } else {
-                    image.symbolEffect(.pulse)
+                    view.symbolEffect(.pulse)
                 }
             case .done:
-                image.symbolEffect(.scale)
+                view.symbolEffect(.scale)
             case .idle:
-                image
+                view
             }
         } else {
-            image
+            view
         }
     }
 }

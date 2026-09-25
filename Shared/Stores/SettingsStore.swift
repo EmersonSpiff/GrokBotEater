@@ -153,6 +153,12 @@ final class SettingsStore: ObservableObject {
     var watcherAnimationsEnabled: Bool {
         get { overlay.watcherAnimationsEnabled } set { overlay.watcherAnimationsEnabled = newValue }
     }
+    var overlayDisplayTarget: OverlayDisplayTarget {
+        get { overlay.overlayDisplayTarget } set { overlay.overlayDisplayTarget = newValue }
+    }
+    var overlaySpecificDisplay: OverlayDisplayReference? {
+        get { overlay.overlaySpecificDisplay } set { overlay.overlaySpecificDisplay = newValue }
+    }
 
     // Pacing - extracted into a child ObservableObject domain slice. Views should
     // prefer `settings.pacing.$x` for bindings; the forwards below keep existing

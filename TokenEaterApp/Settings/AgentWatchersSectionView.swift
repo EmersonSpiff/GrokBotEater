@@ -241,7 +241,7 @@ struct AgentWatchersSectionView: View {
             } label: {
                 HStack {
                     Text(OverlayDisplayTarget.followMenuBar.label)
-                    if settingsStore.overlayDisplayTarget == .followMenuBar {
+                    if settingsStore.overlayDisplayTarget == .followMenuBar && settingsStore.overlaySpecificDisplay == nil {
                         Image(systemName: "checkmark")
                     }
                 }
@@ -253,7 +253,7 @@ struct AgentWatchersSectionView: View {
             } label: {
                 HStack {
                     Text(OverlayDisplayTarget.mainDisplay.label)
-                    if settingsStore.overlayDisplayTarget == .mainDisplay {
+                    if settingsStore.overlayDisplayTarget == .mainDisplay && settingsStore.overlaySpecificDisplay == nil {
                         Image(systemName: "checkmark")
                     }
                 }
