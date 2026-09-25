@@ -7,6 +7,7 @@ struct GrokBotAgentCard: View {
     let leftSide: Bool
     let animationsEnabled: Bool
     let style: WatcherStyle
+    let detailedMode: Bool
     let onTap: () -> Void
     
     private var baseWidth: CGFloat { 30 * scale }
@@ -18,12 +19,40 @@ struct GrokBotAgentCard: View {
     }
     
     private var stateColor: Color {
-        switch session.state {
-        case .working: return Color(red: 0.3, green: 0.7, blue: 1.0)
-        case .waitingOnUser: return .orange
-        case .runningLocally: return .purple
-        case .idle: return .gray
-        case .done: return .green
+        if detailedMode {
+            switch session.state {
+            case .working: return Color(red: 0.3, green: 0.7, blue: 1.0)
+            case .waitingOnUser: return .orange
+            case .runningLocally: return .purple
+            case .idle: return .gray
+            case .done: return .green
+            }
+        } else {
+            switch session.state {
+            case .working, .runningLocally:
+                return Color(red: 0.95, green: 0.62, blue: 0.22)
+            case .waitingOnUser, .idle, .done:
+                return Color(red: 0.3, green: 0.78, blue: 0.52)
+            }
+        }
+    }
+    
+    private var neonColor: Color {
+        if detailedMode {
+            switch session.state {
+            case .working: return Color(red: 0.2, green: 0.75, blue: 1.0)
+            case .waitingOnUser: return Color(red: 1.0, green: 0.6, blue: 0.1)
+            case .runningLocally: return Color(red: 0.8, green: 0.4, blue: 1.0)
+            case .idle: return Color(red: 0.6, green: 0.6, blue: 0.65)
+            case .done: return Color(red: 0.2, green: 1.0, blue: 0.5)
+            }
+        } else {
+            switch session.state {
+            case .working, .runningLocally:
+                return Color(red: 1.0, green: 0.55, blue: 0.1)
+            case .waitingOnUser, .idle, .done:
+                return Color(red: 0.2, green: 1.0, blue: 0.55)
+            }
         }
     }
     
@@ -109,21 +138,65 @@ struct GrokBotAgentCard: View {
     @ViewBuilder
     private var cardBackground: some View {
         let cornerRadius = 8.0 * scale
+        let materialOpacity = min(1.0, max(0.0, Double(proximity - 0.15) / 0.5))
         
-        Group {
+        ZStack {
             if style == .frost {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(.black.opacity(0.55))
+                    .opacity(materialOpacity)
+                
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .fill(.ultraThinMaterial)
+                    .opacity(materialOpacity)
+                
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(stateColor)
+                    .opacity(max(0, 1 - materialOpacity) * 0.85)
+                
+                if proximity > 0.3 {
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .strokeBorder(stateColor.opacity(0.15), lineWidth: 0.5)
+                        .opacity(materialOpacity)
+                }
             } else {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(.black.opacity(0.75))
+                    .fill(.black.opacity(0.85))
+                    .opacity(materialOpacity)
+                
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(neonColor)
+                    .opacity(max(0, 1 - materialOpacity) * 0.9)
+                
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .strokeBorder(neonColor.opacity(0.8), lineWidth: 1.5)
+                    .opacity(materialOpacity)
             }
         }
-        .overlay(
-            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .stroke(stateColor.opacity(0.3), lineWidth: 1)
-        )
-        .shadow(color: .black.opacity(0.3), radius: 4 * scale, x: 0, y: 2 * scale)
+        .shadow(color: shadowColor, radius: shadowRadius * scale, y: shadowY * scale)
+    }
+    
+    private var shadowColor: Color {
+        switch style {
+        case .frost:
+            return .black.opacity(Double(proximity) * 0.1)
+        case .neon:
+            return neonColor.opacity(Double(proximity) * 0.25)
+        }
+    }
+    
+    private var shadowRadius: CGFloat {
+        switch style {
+        case .frost: return 6
+        case .neon: return 8
+        }
+    }
+    
+    private var shadowY: CGFloat {
+        switch style {
+        case .frost: return 2
+        case .neon: return 0
+        }
     }
     
     @ViewBuilder

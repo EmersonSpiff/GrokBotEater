@@ -248,11 +248,16 @@ struct AgentWatchersSectionView: View {
 
                 Divider().opacity(0.12)
 
-                grokBotStatusRow(symbol: "sparkles", color: Color(red: 0.3, green: 0.7, blue: 1.0), label: "Working", description: "Agent is generating a response")
-                grokBotStatusRow(symbol: "person.bubble", color: .orange, label: "Waiting on you", description: "Agent needs your input")
-                grokBotStatusRow(symbol: "desktopcomputer.and.macbook", color: .purple, label: "Running locally", description: "Local command in progress")
-                grokBotStatusRow(symbol: "moon.stars", color: .gray, label: "Idle", description: "No activity")
-                grokBotStatusRow(symbol: "checkmark.square", color: .green, label: "Done", description: "Finished with new output")
+                if settingsStore.watchersDetailedMode {
+                    grokBotStatusRow(symbol: "sparkles", color: Color(red: 0.3, green: 0.7, blue: 1.0), label: "Working", description: "Agent is generating a response")
+                    grokBotStatusRow(symbol: "person.bubble", color: .orange, label: "Waiting on you", description: "Agent needs your input")
+                    grokBotStatusRow(symbol: "desktopcomputer.and.macbook", color: .purple, label: "Running locally", description: "Local command in progress")
+                    grokBotStatusRow(symbol: "moon.stars", color: .gray, label: "Idle", description: "No activity")
+                    grokBotStatusRow(symbol: "checkmark.square", color: .green, label: "Done", description: "Finished with new output")
+                } else {
+                    grokBotStatusRow(symbol: "sparkles", color: Color(red: 0.95, green: 0.62, blue: 0.22), label: "Working", description: "Agent is active (working, running locally)")
+                    grokBotStatusRow(symbol: "moon.stars", color: Color(red: 0.3, green: 0.78, blue: 0.52), label: "Idle", description: "Agent needs you, idle, or done")
+                }
             }
             .animation(.spring(response: 0.32, dampingFraction: 0.85), value: settingsStore.watchersDetailedMode)
         }
@@ -347,11 +352,11 @@ struct AgentWatchersSectionView: View {
 
     // MARK: - Style preview cards
 
-    /// Renders the actual `SessionTraitView` (the same component that drives
+    /// Renders the actual `GrokBotAgentCard` (the same component that drives
     /// the live overlay) at proximity 1.0 with a forced style override. This
     /// guarantees pixel-parity with what the user sees on screen, AND the
     /// preview reactively updates when the user flips Display mode / Legend
-    /// detail / animations - because SessionTraitView reads those from
+    /// detail / animations - because GrokBotAgentCard reads those from
     /// settingsStore directly.
     private func stylePreviewCard(_ style: WatcherStyle) -> some View {
         let isSelected = settingsStore.watcherStyle == style
@@ -361,11 +366,15 @@ struct AgentWatchersSectionView: View {
             }
         } label: {
             VStack(alignment: .leading, spacing: 8) {
-                SessionTraitView(
-                    session: previewSession,
+                GrokBotAgentCard(
+                    session: previewGrokBotSession,
                     proximity: 1.0,
                     scale: 0.92,
-                    forcedStyle: style
+                    leftSide: false,
+                    animationsEnabled: settingsStore.watcherAnimationsEnabled,
+                    style: style,
+                    detailedMode: settingsStore.overlay.watchersDetailedMode,
+                    onTap: {}
                 )
                 .frame(maxWidth: .infinity, alignment: .trailing)
                 .allowsHitTesting(false)
@@ -395,24 +404,21 @@ struct AgentWatchersSectionView: View {
         .buttonStyle(.plain)
     }
 
-    /// Synthetic session driving the style preview tiles. Mirrors the
-    /// onboarding mocks so users see the same realistic example. `lastUpdate`
-    /// uses `Date()` per render so the freshness check inside SessionTraitView
-    /// keeps the tile rendering "live" rather than going stale-faded.
-    private var previewSession: ClaudeSession {
+    /// Synthetic Grok Bot session driving the style preview tiles.
+    private var previewGrokBotSession: GrokBotSession {
         let now = Date()
-        return ClaudeSession(
+        return GrokBotSession(
             id: "settings-watcher-preview",
-            projectPath: "/Users/dev/tokeneater",
-            gitBranch: "feat/menu-bar",
-            model: "grok-bot",
-            state: .thinking,
-            lastUpdate: now,
-            startedAt: now.addingTimeInterval(-300),
-            processPid: 1,
-            sourceKind: .terminal,
-            contextTokens: 70_000,
-            contextMax: 200_000
+            name: "grok-bot-agent",
+            title: nil,
+            state: .working,
+            lastActivityAt: now,
+            awaitingUserResponse: false,
+            unreadCount: 0,
+            isHiddenFromSidebar: false,
+            isStreaming: true,
+            hasLocalWork: false,
+            lastTranscriptTimestamp: now
         )
     }
 

@@ -34,6 +34,7 @@ struct OverlayView: View {
                     leftSide: leftSide,
                     animationsEnabled: settingsStore.watcherAnimationsEnabled,
                     style: settingsStore.overlay.watcherStyle,
+                    detailedMode: settingsStore.overlay.watchersDetailedMode,
                     onTap: { togglePinnedCard(id: session.id) }
                 )
                 .animation(
