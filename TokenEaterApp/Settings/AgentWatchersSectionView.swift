@@ -101,13 +101,7 @@ struct AgentWatchersSectionView: View {
                     .padding(.top, 4)
                 HStack(spacing: 6) {
                     ForEach(OverlayTriggerZone.allCases) { zone in
-                        BinaryChoiceChip(
-                            label: zone.localizedLabel,
-                            icon: triggerIcon(zone),
-                            isActive: settingsStore.overlayTriggerZone == zone
-                        ) {
-                            settingsStore.overlayTriggerZone = zone
-                        }
+                        triggerZoneChip(zone)
                     }
                 }
 
@@ -214,6 +208,19 @@ struct AgentWatchersSectionView: View {
         case .narrow:  return "rectangle.center.inset.filled"
         case .medium:  return "square.split.bottomrightquarter"
         case .wide:    return "rectangle.expand.vertical"
+        }
+    }
+    
+    @ViewBuilder
+    private func triggerZoneChip(_ zone: OverlayTriggerZone) -> some View {
+        let needsRotation = zone == .minimal || zone == .wide
+        BinaryChoiceChip(
+            label: zone.localizedLabel,
+            icon: triggerIcon(zone),
+            isActive: settingsStore.overlayTriggerZone == zone,
+            iconRotation: needsRotation ? 90 : 0
+        ) {
+            settingsStore.overlayTriggerZone = zone
         }
     }
 

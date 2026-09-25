@@ -173,6 +173,22 @@ struct NotificationsSectionView: View {
                 
                 Divider().padding(.vertical, 2)
                 
+                darkToggle(String(localized: "settings.notifications.track.grokBotDailyBudget"), isOn: $settingsStore.notification.trackGrokBotDailyBudget)
+                Text("Alert when today's usage crosses thresholds of your daily budget share")
+                    .font(.system(size: 11))
+                    .foregroundStyle(DS.Palette.textTertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.leading, 32)
+                
+                darkToggle(String(localized: "settings.notifications.track.grokBotPace"), isOn: $settingsStore.notification.trackGrokBotPace)
+                Text("Alert when weekly usage pace exceeds threshold (configured in Settings > Pacing)")
+                    .font(.system(size: 11))
+                    .foregroundStyle(DS.Palette.textTertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.leading, 32)
+                
+                Divider().padding(.vertical, 2)
+                
                 darkToggle("Send recovery notification", isOn: $settingsStore.notification.sendRecovery)
                 Text("Notify when usage drops back below the warning threshold after a weekly reset")
                     .font(.system(size: 11))

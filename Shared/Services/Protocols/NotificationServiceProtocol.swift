@@ -80,4 +80,19 @@ protocol NotificationServiceProtocol {
     )
     func checkVendorHealth(_ status: VendorStatus, toggles: NotificationToggles)
     func evaluateGrokBot(usagePercent: Int, resetDate: Date?, toggles: NotificationToggles)
+    func evaluateGrokBotDailyBudget(
+        weeklyUsedPercent: Int,
+        resetDate: Date?,
+        todayUsagePercent: Double,
+        now: Date,
+        toggles: NotificationToggles
+    )
+    func evaluateGrokBotPace(
+        weeklyUsedPercent: Int,
+        elapsedPercent: Double,
+        resetDate: Date?,
+        dailyUsageToReachPace: Double,
+        now: Date,
+        toggles: NotificationToggles
+    )
 }

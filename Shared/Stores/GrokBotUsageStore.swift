@@ -268,7 +268,7 @@ final class GrokBotUsageStore: ObservableObject {
         }
         
         // Pace alerts
-        if let resetDate = nextResetDate, let snapshot = sharedFileService.grokBotSnapshot, let periodStart = snapshot.currentPeriodStart {
+        if let resetDate = nextResetDate, let snapshot = sharedFileService.grokBotSnapshot, let periodStartString = snapshot.currentPeriodStart, let periodStart = Self.parsePeriodStart(periodStartString) {
             let now = Date()
             let totalDuration = resetDate.timeIntervalSince(periodStart)
             let elapsed = now.timeIntervalSince(periodStart)

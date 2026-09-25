@@ -102,6 +102,25 @@ struct PacingSectionView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
+            
+            // Pace alert threshold
+            glassCard {
+                VStack(alignment: .leading, spacing: 10) {
+                    cardLabel(String(localized: "settings.pacing.paceThreshold"))
+                    HStack(spacing: 12) {
+                        Text("\(String(format: "%.2f", settingsStore.pacingPaceThreshold))x")
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                            .foregroundStyle(DS.Palette.textPrimary)
+                            .monospacedDigit()
+                            .frame(width: 60, alignment: .trailing)
+                        TokenEaterSlider(value: $settingsStore.pacing.paceThreshold, in: 1.1...2.0, step: 0.05)
+                    }
+                    Text(String(localized: "settings.pacing.paceThreshold.hint"))
+                        .font(.system(size: 11))
+                        .foregroundStyle(DS.Palette.textTertiary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
 
             // Workweek pacing
             workweekCard

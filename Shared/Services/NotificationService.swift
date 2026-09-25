@@ -548,15 +548,46 @@ final class NotificationService: NotificationServiceProtocol {
     ) {
         guard toggles.masterEnabled, toggles.trackGrokBotDailyBudget, let resetDate else { return }
         
-        // Calculate daily budget share
         let calendar = Calendar.current
         let startOfToday = calendar.startOfDay(for: now)
+        
+        // Store weekly usage at start of day (first refresh after midnight)
+        let dayStartWeeklyKey = "dayStartWeekly_grokBotDaily"
+        let lastMidnightKey = "lastMidnight_grokBotDaily"
+        let lastMidnight = state.lastResetsAt(forKey: lastMidnightKey)
+        let midnightChanged = lastMidnight == nil || !calendar.isDate(lastMidnight!, inSameDayAs: startOfToday)
+        
+        var weeklyAtDayStart: Int
+        if midnightChanged {
+            // First refresh after midnight - store current weekly usage as day start
+            weeklyAtDayStart = weeklyUsedPercent
+            UserDefaults.standard.set(weeklyAtDayStart, forKey: dayStartWeeklyKey)
+            state.setLastResetsAt(startOfToday, forKey: lastMidnightKey)
+            logger.info("Daily budget: new day started, weekly at day start = \(weeklyAtDayStart)%")
+            
+            // Re-arm level at midnight
+            let key = "lastLevel_grokBotDaily"
+            let previousRaw = state.lastLevel(forKey: key)
+            if previousRaw != UsageLevel.green.rawValue {
+                logger.info("Daily budget re-armed at midnight: \(previousRaw)→green")
+                state.setLastLevel(UsageLevel.green.rawValue, forKey: key)
+            }
+        } else {
+            // Use stored day start value
+            weeklyAtDayStart = UserDefaults.standard.integer(forKey: dayStartWeeklyKey)
+            if weeklyAtDayStart == 0 {
+                // First run or missing data - use current as fallback
+                weeklyAtDayStart = weeklyUsedPercent
+            }
+        }
+        
+        // Calculate daily budget share using weekly usage at START of day
         let daysRemaining = max(0.1, resetDate.timeIntervalSince(startOfToday) / 86400.0)
-        let remainingBudget = max(0, 100 - weeklyUsedPercent)
+        let remainingBudget = max(0.0, 100.0 - Double(weeklyAtDayStart))
         let todayShare = remainingBudget / daysRemaining
         let todayShareUsedPercent = todayShare > 0 ? (todayUsagePercent / todayShare) * 100 : 0
         
-        logger.info("Daily budget: today=\(todayUsagePercent)% / share=\(String(format: "%.1f", todayShare))% = \(String(format: "%.0f", todayShareUsedPercent))% used, weekly=\(weeklyUsedPercent)%, days remaining=\(String(format: "%.1f", daysRemaining))")
+        logger.info("Daily budget: today=\(todayUsagePercent)% / share=\(String(format: "%.1f", todayShare))% = \(String(format: "%.0f", todayShareUsedPercent))% used, weeklyAtDayStart=\(weeklyAtDayStart)%, days remaining=\(String(format: "%.1f", daysRemaining))")
         
         let key = "lastLevel_grokBotDaily"
         let previousRaw = state.lastLevel(forKey: key)
@@ -569,18 +600,6 @@ final class NotificationService: NotificationServiceProtocol {
             current = .orange
         } else {
             current = .green
-        }
-        
-        // Re-arm: reset level at local midnight or when usage drops below threshold
-        let lastMidnightKey = "lastMidnight_grokBotDaily"
-        let lastMidnight = state.lastResetsAt(forKey: lastMidnightKey)
-        let midnightChanged = lastMidnight == nil || !calendar.isDate(lastMidnight!, inSameDayAs: startOfToday)
-        if midnightChanged {
-            state.setLastResetsAt(startOfToday, forKey: lastMidnightKey)
-            if previous != .green {
-                logger.info("Daily budget re-armed at midnight: \(previous.rawValue)→green")
-                state.setLastLevel(UsageLevel.green.rawValue, forKey: key)
-            }
         }
         
         let hysteresis = 2.0

@@ -23,7 +23,7 @@
 "settings.group.weekly" = "Weekly";
 "settings.group.sonnet" = "Daily Usage";
 "metric.weekly" = "Weekly";
-"metric.sonnet" = "Daily";
+"metric.sonnet" = "Today";
 "metric.reset" = "Resets in %@";
 
 /* Widget */
@@ -141,7 +141,7 @@
 "guide.title" = "Setup Guide";
 "guide.oauth.title" = "Cursor";
 "guide.oauth.badge" = "Recommended";
-"guide.oauth.step1" = "Install **Cursor** (the AI IDE)";
+"guide.oauth.step1" = "Install **Grok Bot**";
 "guide.oauth.step2" = "Open GrokBotEater and click **Connect**";
 "guide.oauth.step3" = "Done - token refreshes automatically";
 "guide.widget" = "Add the widget";
@@ -149,7 +149,7 @@
 
 /* Errors - API */
 "error.notoken" = "Cursor session not found. Open GrokBotEater and Connect.";
-"error.tokenexpired" = "OAuth token expired - restart Cursor to refresh it";
+"error.tokenexpired" = "OAuth token expired - restart Grok Bot to refresh it";
 "error.invalidurl" = "Invalid URL";
 "error.invalidresponse" = "Invalid server response";
 "error.http" = "HTTP error %d";
@@ -158,16 +158,16 @@
 "error.network.generic" = "Network error - couldn't reach the usage API. Check your connection.";
 "error.invalidresponse.short" = "Invalid response";
 "error.keychainlocked" = "Keychain locked - will retry automatically";
-"error.unsupportedplan" = "Usage data not available - Cursor Pro plan required";
+"error.unsupportedplan" = "Usage data not available - Grok Bot plan required";
 "error.banner.keychain" = "Keychain locked";
 "error.banner.keychain.hint" = "Will retry automatically - or open Settings to re-authorize";
 "error.banner.reauth" = "Authorization needed";
 "error.banner.reauth.hint" = "Token expired and automatic recovery failed";
 "error.banner.reauth.button" = "Re-authorize";
 "error.banner.waiting" = "Waiting for Grok Bot to refresh";
-"error.banner.apiunavailable" = "Usage API throttled by Cursor";
-"error.banner.apiunavailable.hint" = "This is a rate limit on Cursor's usage API, not your token or setup. Nothing for you to fix - GrokBotEater keeps retrying and refreshes as soon as the limit clears.";
-"error.banner.apiunavailable.settings" = "This is on Cursor's side (their usage API), not your token or setup. GrokBotEater retries automatically and recovers when the limit clears.";
+"error.banner.apiunavailable" = "Usage API rate limited";
+"error.banner.apiunavailable.hint" = "This is a rate limit on Grok Bot's usage API, not your token or setup. Nothing for you to fix - GrokBotEater keeps retrying and refreshes as soon as the limit clears.";
+"error.banner.apiunavailable.settings" = "This is on Grok Bot's side (their usage API), not your token or setup. GrokBotEater retries automatically and recovers when the limit clears.";
 "error.banner.apiunavailable.learnmore" = "Learn more";
 "error.banner.lastupdate" = "Last successful update: %@";
 "error.banner.retry.button" = "Retry now";
@@ -741,12 +741,12 @@
 "popoverElement.session" = "Weekly Usage";
 "popoverElement.weekly" = "Weekly";
 "popoverElement.sonnet" = "Daily";
-"popoverElement.fable" = "Fable";
+"popoverElement.fable" = "Daily Grok Bot";
 "popoverElement.extraCredits" = "Extra Credits";
 "popoverElement.grokBot" = "Grok Bot";
 "popoverElement.sessionPacing" = "Session pacing";
 "popoverElement.weeklyPacing" = "Weekly pacing";
-"popoverElement.fablePacing" = "Fable pacing";
+"popoverElement.fablePacing" = "Daily pacing";
 "popoverElement.watchers" = "Agent watchers";
 "popoverElement.timestamp" = "Updated timestamp";
 "popoverElement.openButton" = "Open GrokBotEater button";
@@ -800,12 +800,12 @@
 "menuBarSegment.session" = "Weekly Usage";
 "menuBarSegment.weekly" = "Weekly";
 "menuBarSegment.sonnet" = "Daily";
-"menuBarSegment.fable" = "Fable";
+"menuBarSegment.fable" = "Daily Grok Bot";
 "menuBarSegment.extraCredits" = "Extra Credits";
 "menuBarSegment.grokBot" = "Grok Bot";
 "menuBarSegment.sessionPacing" = "Session pacing";
 "menuBarSegment.weeklyPacing" = "Weekly pacing";
-"menuBarSegment.fablePacing" = "Fable pacing";
+"menuBarSegment.fablePacing" = "Daily pacing";
 "menuBarSegment.sessionReset" = "Session reset countdown";
 "menuBarSegment.serviceStatus" = "Service status";
 
@@ -922,7 +922,7 @@
 "dashboard.status.affected" = "Affected: %@";
 
 /* Fable (Daily Grok Bot usage) */
-"metric.fable" = "Daily";
+"metric.fable" = "Daily pace";
 "widget.fable" = "Daily";
 "settings.notifications.track.fable" = "Track daily usage";
 "notif.title.fable.pace" = "Ahead of Fable pace";
@@ -948,11 +948,11 @@
 "widget.grokBot.empty" = "Open GrokBotEater and connect to load usage";
 "widget.grokBot.unavailable" = "Grok Bot usage is not available for this plan";
 "widget.title.grokBot" = "Grok Bot";
-"widget.description.grokBot" = "Weekly Grok Bot usage from your Cursor session";
+"widget.description.grokBot" = "Weekly Grok Bot usage from your Grok Bot account";
 
 
 "widget.grokBot.title" = "Grok Bot Eater";
-"widget.grokBot.description" = "Track daily pacing and weekly Grok Bot sand-usage from your Cursor plan.";
+"widget.grokBot.description" = "Track daily pacing and weekly Grok Bot usage from your Grok Bot plan.";
 
 /* Grok Bot pacing messages */
 "pacing.grokBot.chill.1" = "Plenty left";
