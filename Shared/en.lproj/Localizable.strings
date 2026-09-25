@@ -809,7 +809,7 @@
 "menuBarSegment.sessionReset" = "Session reset countdown";
 "menuBarSegment.serviceStatus" = "Service status";
 
-"menuBarStyle.segment.labelValue" = "Label + value";
+"menuBarStyle.segment.labelValue" = "Icon + value";
 "menuBarStyle.segment.valueOnly" = "Value only";
 "menuBarStyle.segment.mono" = "Mono";
 "menuBarStyle.segment.pill" = "Pill";

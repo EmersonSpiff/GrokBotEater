@@ -1,6 +1,9 @@
 import AppKit
 import SwiftUI
 import Combine
+import os.log
+
+private let logger = Logger(subsystem: "com.emersonspiff.grokboteater.app", category: "OverlayWindow")
 
 @MainActor
 final class OverlayState: ObservableObject {
@@ -88,12 +91,15 @@ final class OverlayWindowController {
             overlayState.$contextMenuSessionId
         )
             .map { sessions, hidden, openMenu in
-                openMenu != nil || sessions.contains { !$0.isDead && !hidden.contains($0.id) }
+                let visibleSessions = sessions.filter { !$0.isDead && !hidden.contains($0.id) }
+                logger.info("Overlay session check: \(sessions.count) total, \(visibleSessions.count) visible, menuOpen=\(openMenu != nil)")
+                return openMenu != nil || !visibleSessions.isEmpty
             }
             .removeDuplicates()
             .receive(on: RunLoop.main)
             .sink { [weak self] hasVisible in
                 guard let self, self.settingsStore.overlayEnabled else { return }
+                logger.info("Overlay visibility decision: hasVisible=\(hasVisible), enabled=\(self.settingsStore.overlayEnabled)")
                 if hasVisible {
                     self.showOverlay()
                 } else {
@@ -166,6 +172,9 @@ final class OverlayWindowController {
     }
 
     private func showOverlay() {
+        let sessionCount = grokBotAgentSessionStore.overlaySessions.count
+        logger.info("showOverlay called: \(sessionCount) Grok Bot agent sessions visible")
+        
         guard panel == nil else {
             panel?.orderFront(nil)
             return

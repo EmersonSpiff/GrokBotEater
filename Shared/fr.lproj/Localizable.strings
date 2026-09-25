@@ -802,7 +802,7 @@
 "menuBarSegment.sessionReset" = "Compte à rebours session";
 "menuBarSegment.serviceStatus" = "Statut du service";
 
-"menuBarStyle.segment.labelValue" = "Label + valeur";
+"menuBarStyle.segment.labelValue" = "Icône + valeur";
 "menuBarStyle.segment.valueOnly" = "Valeur seule";
 "menuBarStyle.segment.mono" = "Mono";
 "menuBarStyle.segment.pill" = "Pill";

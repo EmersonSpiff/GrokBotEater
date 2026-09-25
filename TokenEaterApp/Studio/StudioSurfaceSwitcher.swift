@@ -33,11 +33,12 @@ private struct StudioSurfaceCard: View {
     var body: some View {
         // Same card language as the Monitoring tiles: panel fill + material,
         // a faint accent wash, an accent-tinted hairline that strengthens on
-        // active / hover, and a plain depth shadow. No coloured glow halo, so
-        // the Studio reads as the same app as the Stats page.
+        // active / hover, and a plain depth shadow. Active card gets a stronger
+        // highlight and border so the user clearly knows which section is selected.
         let accent = DS.Palette.accentStudio
-        let strokeOpacity = isActive ? 0.45 : (isHovering ? 0.30 : 0.12)
-        let washOpacity = isActive ? 0.12 : (isHovering ? 0.07 : 0.04)
+        let strokeOpacity = isActive ? 0.70 : (isHovering ? 0.30 : 0.12)
+        let washOpacity = isActive ? 0.20 : (isHovering ? 0.07 : 0.04)
+        let strokeWidth: CGFloat = isActive ? 2.0 : 1.0
 
         Button(action: action) {
             HStack(spacing: DS.Spacing.sm) {
@@ -80,9 +81,9 @@ private struct StudioSurfaceCard: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: DS.Radius.card, style: .continuous)
-                    .stroke(accent.opacity(strokeOpacity), lineWidth: 1)
+                    .stroke(accent.opacity(strokeOpacity), lineWidth: strokeWidth)
             )
-            .dsShadow(isActive || isHovering ? DS.Shadow.lift : DS.Shadow.subtle)
+            .dsShadow(isActive ? DS.Shadow.emphasis : (isHovering ? DS.Shadow.lift : DS.Shadow.subtle))
         }
         .buttonStyle(CardPressStyle(isHovered: isHovering, accent: accent, cornerRadius: DS.Radius.card))
         .onHover { hovering in

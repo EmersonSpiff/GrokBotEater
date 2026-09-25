@@ -98,6 +98,8 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
         
         // Build sessions
         let now = Date()
+        logger.info("Grok Bot scan: roster has \(roster.count) entries, \(roster.filter { !$0.isGroup && !$0.isHiddenFromSidebar }.count) non-group visible entries")
+        
         let sessions = roster
             .filter { !$0.isGroup && !$0.isHiddenFromSidebar }
             .compactMap { entry -> GrokBotSession? in
@@ -144,6 +146,7 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
                 )
             }
         
+        logger.info("Grok Bot scan complete: \(sessions.count) active sessions found")
         sessionsSubject.send(sessions)
     }
     
