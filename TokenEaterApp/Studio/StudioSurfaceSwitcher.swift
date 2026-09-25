@@ -83,7 +83,7 @@ private struct StudioSurfaceCard: View {
                 RoundedRectangle(cornerRadius: DS.Radius.card, style: .continuous)
                     .stroke(accent.opacity(strokeOpacity), lineWidth: strokeWidth)
             )
-            .dsShadow(isActive ? DS.Shadow.emphasis : (isHovering ? DS.Shadow.lift : DS.Shadow.subtle))
+            .dsShadow(isActive ? DS.Shadow.elev : (isHovering ? DS.Shadow.lift : DS.Shadow.subtle))
         }
         .buttonStyle(CardPressStyle(isHovered: isHovering, accent: accent, cornerRadius: DS.Radius.card))
         .onHover { hovering in
