@@ -66,30 +66,27 @@ struct PacingSectionView: View {
                 }
             }
 
-            // Thresholds (only relevant when Smart Color is OFF: smart mode
-            // owns its own calibration via the chosen profile).
-            if !settingsStore.smartColorEnabled {
-                glassCard {
-                    VStack(alignment: .leading, spacing: 8) {
-                        cardLabel(String(localized: "settings.theme.thresholds"))
-                        thresholdSlider(label: String(localized: "settings.theme.warning"), value: $warningSlider, range: 10...90)
-                        thresholdSlider(label: String(localized: "settings.theme.critical"), value: $criticalSlider, range: 15...95)
+            // Thresholds - always visible for Grok Bot alerts
+            glassCard {
+                VStack(alignment: .leading, spacing: 8) {
+                    cardLabel("Grok Bot Alert Thresholds")
+                    thresholdSlider(label: String(localized: "settings.theme.warning"), value: $warningSlider, range: 40...90)
+                    thresholdSlider(label: String(localized: "settings.theme.critical"), value: $criticalSlider, range: 45...95)
 
-                        Text(String(localized: "settings.theme.thresholds.hint"))
-                            .font(.system(size: 11))
-                            .foregroundStyle(DS.Palette.textTertiary)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .padding(.top, 4)
+                    Text("Set the usage % that triggers warning (orange) and critical (red) notifications. Also used for gauge colors when Smart Color is off.")
+                        .font(.system(size: 11))
+                        .foregroundStyle(DS.Palette.textTertiary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 4)
 
-                        HStack(spacing: 24) {
-                            Spacer()
-                            themePreviewGauge(pct: Double(max(themeStore.warningThreshold - 15, 5)), label: "Normal")
-                            themePreviewGauge(pct: Double(themeStore.warningThreshold + themeStore.criticalThreshold) / 2.0, label: "Warning")
-                            themePreviewGauge(pct: Double(min(themeStore.criticalThreshold + 5, 100)), label: "Critical")
-                            Spacer()
-                        }
-                        .padding(.top, 8)
+                    HStack(spacing: 24) {
+                        Spacer()
+                        themePreviewGauge(pct: Double(max(themeStore.warningThreshold - 15, 5)), label: "Normal")
+                        themePreviewGauge(pct: Double(themeStore.warningThreshold + themeStore.criticalThreshold) / 2.0, label: "Warning")
+                        themePreviewGauge(pct: Double(min(themeStore.criticalThreshold + 5, 100)), label: "Critical")
+                        Spacer()
                     }
+                    .padding(.top, 8)
                 }
             }
 

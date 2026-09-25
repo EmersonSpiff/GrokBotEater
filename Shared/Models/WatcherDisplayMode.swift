@@ -6,8 +6,15 @@ enum WatcherDisplayMode: String, CaseIterable {
 
     var label: String {
         switch self {
-        case .branchPriority: return String(localized: "settings.watchers.display.branchPriority")
-        case .projectAndBranch: return String(localized: "settings.watchers.display.projectAndBranch")
+        case .branchPriority: return "Most recent first"
+        case .projectAndBranch: return "Waiting first"
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .branchPriority: return "clock"
+        case .projectAndBranch: return "hand.raised.fill"
         }
     }
 }

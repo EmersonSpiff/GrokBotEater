@@ -83,12 +83,12 @@ struct AgentWatchersSectionView: View {
         groupSection(title: "settings.watchers.behavior", subtitle: "settings.watchers.behavior.hint") {
             VStack(alignment: .leading, spacing: 14) {
                 // Display mode -> chip pair
-                groupLabel("settings.watchers.display")
+                groupLabel("Agent sort order")
                 HStack(spacing: 8) {
                     ForEach(WatcherDisplayMode.allCases, id: \.self) { mode in
                         BinaryChoiceChip(
                             label: mode.label,
-                            icon: mode == .branchPriority ? "arrow.triangle.branch" : "folder.fill",
+                            icon: mode.icon,
                             isActive: settingsStore.watcherDisplayMode == mode
                         ) {
                             settingsStore.watcherDisplayMode = mode
