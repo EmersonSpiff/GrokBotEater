@@ -969,13 +969,16 @@
 "pacing.grokBot.hot.3" = "Upgrade or slow";
 
 /* Daily Budget Alerts */
-"notif.title.grokBot.daily.orange" = "Daily budget warning";
-"notif.title.grokBot.daily.red" = "Daily budget critical";
-"notif.body.grokBot.daily" = "Today: %@%% of your %@%% daily share. Weekly: %d%%, resets %@.";
+"notif.title.grokBot.daily.orange" = "Today's budget at 60%";
+"notif.title.grokBot.daily.red" = "Today's budget almost used";
+"notif.title.grokBot.daily.green" = "Today's budget refilled";
+"notif.body.grokBot.daily" = "You've used %@%% of today's budget (%@%% of your weekly limit; today's share is %@%%). Weekly: %d%%, resets %@.";
+"notif.body.grokBot.daily.green" = "Fresh daily budget at %@";
+"notif.body.grokBot.daily.green.fallback" = "Fresh daily budget, you're back";
 
 /* Pace Alerts */
-"notif.title.grokBot.pace" = "Pace above threshold";
-"notif.body.grokBot.pace" = "Current pace: %.2fx. Weekly: %d%%. Use ≤%.1f%% today to reach 1.0x by reset (%@).";
+"notif.title.grokBot.pace" = "Ahead of pace";
+"notif.body.grokBot.pace" = "You're using Grok Bot at %.2fx your normal pace. Weekly: %d%%, resets %@.";
 
 /* Settings - Daily Budget */
 "settings.notifications.track.grokBotDailyBudget" = "Daily budget alerts";

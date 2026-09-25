@@ -962,13 +962,16 @@
 "pacing.grokBot.hot.3" = "Upgrade ou ralentis";
 
 /* Daily Budget Alerts */
-"notif.title.grokBot.daily.orange" = "Alerte budget quotidien";
-"notif.title.grokBot.daily.red" = "Budget quotidien critique";
-"notif.body.grokBot.daily" = "Aujourd'hui : %@%% de votre part quotidienne de %@%%. Hebdo : %d%%, réinitialise %@.";
+"notif.title.grokBot.daily.orange" = "Budget du jour à 60%";
+"notif.title.grokBot.daily.red" = "Budget du jour presque épuisé";
+"notif.title.grokBot.daily.green" = "Budget du jour rempli";
+"notif.body.grokBot.daily" = "Vous avez utilisé %@%% du budget d'aujourd'hui (%@%% de votre limite hebdomadaire; la part d'aujourd'hui est %@%%). Hebdo : %d%%, réinitialise %@.";
+"notif.body.grokBot.daily.green" = "Nouveau budget quotidien à %@";
+"notif.body.grokBot.daily.green.fallback" = "Nouveau budget quotidien, c'est reparti";
 
 /* Pace Alerts */
-"notif.title.grokBot.pace" = "Rythme au-dessus du seuil";
-"notif.body.grokBot.pace" = "Rythme actuel : %.2fx. Hebdo : %d%%. Utilisez ≤%.1f%% aujourd'hui pour atteindre 1.0x avant la réinitialisation (%@).";
+"notif.title.grokBot.pace" = "Rythme en avance";
+"notif.body.grokBot.pace" = "Vous utilisez Grok Bot à %.2fx votre rythme normal. Hebdo : %d%%, réinitialise %@.";
 
 /* Settings - Daily Budget */
 "settings.notifications.track.grokBotDailyBudget" = "Alertes budget quotidien";

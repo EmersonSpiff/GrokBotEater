@@ -271,7 +271,7 @@ final class OverlayWindowController {
             ? screenFrame.minX
             : screenFrame.maxX - w
 
-        logger.info("Positioning overlay on screen: \(screen.localizedName)")
+        logger.info("Positioning overlay on screen: \(screen.localizedName, privacy: .public)")
         panel.setFrame(NSRect(x: x, y: screenFrame.minY, width: w, height: screenFrame.height), display: true)
     }
     

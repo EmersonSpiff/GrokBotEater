@@ -651,7 +651,10 @@ final class NotificationService: NotificationServiceProtocol {
             return
         }
         
-        guard current != previous else { return }
+        guard current != previous else {
+            logger.debug("Daily budget: level unchanged (\(current.rawValue))")
+            return
+        }
         
         if current > previous {
             logger.info("Daily budget alert: \(previous.rawValue)→\(current.rawValue), sending notification")
@@ -659,6 +662,7 @@ final class NotificationService: NotificationServiceProtocol {
             content.sound = .default
             content.title = String(localized: "notif.title.grokBot.daily.\(current == .red ? "red" : "orange")")
             content.body = String(format: NSLocalizedString("notif.body.grokBot.daily", comment: ""),
+                                  String(format: "%.1f", todayShareUsedPercent),
                                   String(format: "%.1f", todayConsumptionPercent),
                                   String(format: "%.1f", todayShare),
                                   weeklyUsedPercent,
@@ -707,9 +711,8 @@ final class NotificationService: NotificationServiceProtocol {
         content.sound = .default
         content.title = String(localized: "notif.title.grokBot.pace")
         content.body = String(format: NSLocalizedString("notif.body.grokBot.pace", comment: ""),
-                              String(format: "%.2f", pace),
+                              pace,
                               weeklyUsedPercent,
-                              String(format: "%.1f", dailyUsageToReachPace),
                               NotificationBodyFormatter.formatDateTime(resetDate))
         sendAndPersist(id: "pace_grokBot", content: content, onSuccess: {
             self.state.setLastResetsAt(now, forKey: key)
