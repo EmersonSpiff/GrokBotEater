@@ -201,9 +201,9 @@ struct GrokBotAgentCard: View {
     
     @ViewBuilder
     private var stateIcon: some View {
-        // Scale icon size based on proximity: smaller when collapsed, larger when expanded
-        let collapsedIconSize = 10.0 * scale
-        let expandedIconSize = 13.0 * scale
+        // Scale icon size based on proximity: larger minimum for collapsed readability
+        let collapsedIconSize = 15.0 * scale
+        let expandedIconSize = 16.0 * scale
         let iconSize = collapsedIconSize + (expandedIconSize - collapsedIconSize) * proximity
         
         let collapsedCircleSize = 5.0 * scale
@@ -219,7 +219,7 @@ struct GrokBotAgentCard: View {
             }
             
             stateIconImage
-                .font(.system(size: iconSize, weight: .semibold))
+                .font(.system(size: iconSize, weight: .medium))
         }
     }
     
@@ -227,13 +227,26 @@ struct GrokBotAgentCard: View {
     private var stateIconImage: some View {
         let baseImage = Image(systemName: stateGlyph)
         
+        // When collapsed (proximity < 0.3), background is solid color, so use white icon for contrast
+        // When expanded (proximity >= 0.3), background is glass/material, so use status color
+        let iconColor = proximity < 0.3 ? Color.white : stateColor
+        
         if session.state == .runningLocally {
-            applySymbolEffect(to: baseImage
-                .symbolRenderingMode(.palette)
-                .foregroundStyle(Color.secondary, stateColor))
+            // For palette rendering, adjust colors based on proximity
+            if proximity < 0.3 {
+                // Collapsed: white frame with white screen (high contrast on colored background)
+                applySymbolEffect(to: baseImage
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(Color.white, Color.white.opacity(0.85)))
+            } else {
+                // Expanded: gray frame with colored screen
+                applySymbolEffect(to: baseImage
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(Color.secondary, stateColor))
+            }
         } else {
             applySymbolEffect(to: baseImage)
-                .foregroundStyle(stateColor)
+                .foregroundStyle(iconColor)
         }
     }
     
