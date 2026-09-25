@@ -165,7 +165,7 @@ final class GrokBotSessionStore: @unchecked Sendable {
             }
             
             if status == errSecSuccess {
-                logger.info("Keychain write succeeded", privacy: .public)
+                logger.info("Keychain write succeeded")
             } else {
                 logger.error("Keychain write failed: \(status, privacy: .public)")
             }
