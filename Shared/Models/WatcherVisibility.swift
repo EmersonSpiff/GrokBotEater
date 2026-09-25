@@ -5,6 +5,8 @@ import Foundation
 /// the per-tick scan, so they cost more local CPU. Capped at 7 days on purpose
 /// (no "always") to keep the steady-state scan bounded.
 enum WatcherVisibility: Int, CaseIterable, Sendable {
+    case fiveMinutes = 300
+    case tenMinutes = 600
     case thirtyMinutes = 1800
     case twoHours = 7200
     case eightHours = 28800
@@ -16,6 +18,8 @@ enum WatcherVisibility: Int, CaseIterable, Sendable {
     /// Compact, locale-neutral chip label.
     var label: String {
         switch self {
+        case .fiveMinutes: return "5m"
+        case .tenMinutes: return "10m"
         case .thirtyMinutes: return "30m"
         case .twoHours: return "2h"
         case .eightHours: return "8h"
