@@ -201,13 +201,22 @@ struct GrokBotAgentCard: View {
     
     @ViewBuilder
     private var stateIcon: some View {
-        let iconSize = 13.0 * scale
-        let circleSize = 28.0 * scale
+        // Scale icon size based on proximity: smaller when collapsed, larger when expanded
+        let collapsedIconSize = 10.0 * scale
+        let expandedIconSize = 13.0 * scale
+        let iconSize = collapsedIconSize + (expandedIconSize - collapsedIconSize) * proximity
+        
+        let collapsedCircleSize = 5.0 * scale
+        let expandedCircleSize = 28.0 * scale
+        let circleSize = collapsedCircleSize + (expandedCircleSize - collapsedCircleSize) * proximity
         
         ZStack {
-            Circle()
-                .fill(stateColor.opacity(0.3))
-                .frame(width: circleSize, height: circleSize)
+            if proximity > 0.3 {
+                // Show circle background only when expanded
+                Circle()
+                    .fill(stateColor.opacity(0.3))
+                    .frame(width: circleSize, height: circleSize)
+            }
             
             stateIconImage
                 .font(.system(size: iconSize, weight: .semibold))
@@ -273,11 +282,5 @@ struct GrokBotAgentContextMenu: View {
                     Label("Hide", systemImage: "eye.slash")
                 }
             }
-            .simultaneousGesture(
-                TapGesture()
-                    .onEnded { _ in
-                        onMenuOpen()
-                    }
-            )
     }
 }

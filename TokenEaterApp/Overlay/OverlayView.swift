@@ -152,10 +152,15 @@ struct OverlayView: View {
     }
     
     private func togglePinnedCard(id: String) {
-        if overlayState.pinnedCardId == id {
+        let oldPinnedId = overlayState.pinnedCardId
+        let wasPinned = oldPinnedId == id
+        
+        if wasPinned {
             overlayState.pinnedCardId = nil
+            print("[Overlay] Card clicked: unpinned '\(id)' (was pinned, now collapsed)")
         } else {
             overlayState.pinnedCardId = id
+            print("[Overlay] Card clicked: pinned '\(id)' (was \(oldPinnedId.map { "pinned '\($0)'" } ?? "none"), now expanded)")
         }
     }
 }
