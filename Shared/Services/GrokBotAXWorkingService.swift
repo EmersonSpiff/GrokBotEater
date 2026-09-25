@@ -142,7 +142,7 @@ final class GrokBotAXWorkingService: @unchecked Sendable {
         for (name, isWorking) in workingStates {
             let wasWorking = lastWorkingStates[name] ?? false
             if isWorking != wasWorking {
-                logger.info("AX: '\(name)' working state: \(wasWorking) → \(isWorking)")
+                logger.info("AX: '\(name, privacy: .public)' working state: \(wasWorking) → \(isWorking)")
             }
         }
         lastWorkingStates = workingStates

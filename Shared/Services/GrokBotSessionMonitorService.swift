@@ -158,24 +158,52 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
             hasLoggedFirstScan = true
         }
         
+        // Log AX working states and check for unmatched names
+        if axIsAvailable && !axWorkingStates.isEmpty {
+            let workingNames = axWorkingStates.filter { $0.value }.map { $0.key }.sorted()
+            logger.info("AX merge: working=[\(workingNames.joined(separator: ", "), privacy: .public)]")
+            
+            // Warn about AX names that don't match any roster entry
+            let rosterNamesLower = Set(roster.filter { !$0.isGroup && !$0.isHiddenFromSidebar }.map { $0.name.lowercased() })
+            for axName in axWorkingStates.keys {
+                if !rosterNamesLower.contains(axName) {
+                    logger.warning("AX: bot '\(axName, privacy: .public)' from tree not found in roster")
+                }
+            }
+        }
+        
         var sessions = roster
             .filter { !$0.isGroup && !$0.isHiddenFromSidebar }
             .compactMap { entry -> GrokBotSession? in
                 let lastActivity = Date(timeIntervalSince1970: Double(entry.lastActivityAt) / 1000.0)
+                let nameLower = entry.name.lowercased()
                 
-                // Filter by activity window
-                guard now.timeIntervalSince(lastActivity) < activityWindowSeconds else {
-                    return nil
+                // Check AX working state (primary source when available)
+                let axWorking = axIsAvailable ? (axWorkingStates[nameLower] ?? false) : nil
+                
+                // If AX says working, bypass activity window filter and treat as fresh
+                let effectiveActivityTime: Date
+                let bypassedActivityWindow: Bool
+                if axWorking == true {
+                    // AX working - bump activity to now so it's always visible
+                    effectiveActivityTime = now
+                    bypassedActivityWindow = true
+                } else {
+                    effectiveActivityTime = lastActivity
+                    bypassedActivityWindow = false
+                }
+                
+                // Filter by activity window (unless AX working)
+                if !bypassedActivityWindow {
+                    guard now.timeIntervalSince(effectiveActivityTime) < activityWindowSeconds else {
+                        return nil
+                    }
                 }
                 
                 // Check transcript for working state
                 let transcript = readTranscript(supportDir: supportDir, agentId: entry.id)
                 let isStreaming = transcript?.entries.last?.isStreaming == true
                 let isWaitingOnUser = entry.awaitingUserResponse
-                
-                // Check AX working state (primary source when available)
-                let nameLower = entry.name.lowercased()
-                let axWorking = axIsAvailable ? (axWorkingStates[nameLower] ?? false) : nil
                 
                 // Determine state (before runningLocally attribution)
                 let state: GrokBotSessionState
@@ -226,7 +254,7 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
                     name: entry.name,
                     title: entry.title,
                     state: state,
-                    lastActivityAt: lastActivity,
+                    lastActivityAt: effectiveActivityTime,
                     awaitingUserResponse: isWaitingOnUser,
                     unreadCount: entry.unreadCount,
                     isHiddenFromSidebar: entry.isHiddenFromSidebar,
@@ -235,6 +263,13 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
                     lastTranscriptTimestamp: lastTranscriptTimestamp
                 )
             }
+        
+        // Log matched sessions for AX-working bots
+        if axIsAvailable && !axWorkingStates.isEmpty {
+            let workingNames = Set(axWorkingStates.filter { $0.value }.map { $0.key })
+            let matchedSessions = sessions.filter { workingNames.contains($0.name.lowercased()) }.map { $0.id }
+            logger.info("AX merge: matched sessions=[\(matchedSessions.joined(separator: ", "), privacy: .public)]")
+        }
         
         // Attribution: If local commands are running, attribute runningLocally to a bot.
         // If the user assigned bots (Settings > Agent Watchers > 'Bots that use this Mac'),
