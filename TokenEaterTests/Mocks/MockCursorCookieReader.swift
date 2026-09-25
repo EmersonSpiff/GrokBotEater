@@ -7,4 +7,8 @@ final class MockCursorCookieReader: CursorCookieReaderProtocol {
     func readCookie() -> String? {
         cookieToReturn
     }
+    
+    func readCookieAsync() async -> String? {
+        cookieToReturn
+    }
 }

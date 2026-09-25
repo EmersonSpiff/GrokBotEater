@@ -162,14 +162,22 @@ final class GrokBotUsageStore: ObservableObject {
     }
     
     func reloadConfig() {
-        let hasCookie = cookieReader.readCookie() != nil
-        if !hasCookie {
-            errorState = .cookieUnavailable
-            statusMessage = "Cursor session not found"
-        }
+        // Start with loading state immediately (non-blocking)
+        errorState = nil
+        statusMessage = "Loading..."
         
         refreshTask?.cancel()
         refreshTask = Task {
+            // Load cookie asynchronously on background thread
+            let cookie = await cookieReader.readCookieAsync()
+            
+            await MainActor.run {
+                if cookie == nil {
+                    errorState = .cookieUnavailable
+                    statusMessage = "Cursor session not found"
+                }
+            }
+            
             await refresh(force: true)
         }
     }

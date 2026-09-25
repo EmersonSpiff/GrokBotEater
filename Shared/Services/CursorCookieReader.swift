@@ -28,6 +28,7 @@ final class CursorCookieReader: CursorCookieReaderProtocol, @unchecked Sendable 
     }
 
     /// Prefer the Keychain web session, then fall back to disk scrape.
+    /// Synchronous: returns cached cookie or scrapes disk. Does NOT hit Keychain.
     func readCookie() -> String? {
         if let saved = sessionStore.savedCookie() {
             return saved
@@ -38,6 +39,24 @@ final class CursorCookieReader: CursorCookieReaderProtocol, @unchecked Sendable 
             return ide
         }
         return scrapeCookieFromDisk()
+    }
+    
+    /// Async version: loads from Keychain on background thread, then falls back to disk scrape.
+    /// Call this once at app launch to populate the cache without blocking the main thread.
+    func readCookieAsync() async -> String? {
+        if let saved = await sessionStore.loadCookieAsync() {
+            return saved
+        }
+        // Disk scrape and IDE token read are also I/O-heavy, run them on background thread
+        return await Task.detached { [weak self] in
+            guard let self else { return nil }
+            if let ide = CursorIDETokenReader.sessionCookieValue() {
+                // Cache so subsequent reads don't reopen the large vscdb.
+                self.sessionStore.save(cookie: ide)
+                return ide
+            }
+            return self.scrapeCookieFromDisk()
+        }.value
     }
 
     /// Disk scrape only (ignores Keychain). Useful for diagnostics.

@@ -15,27 +15,43 @@ final class GrokBotSessionStore: @unchecked Sendable {
     private var memoryCookie: String?
     private let lock = NSLock()
 
+    /// Synchronous accessor: returns the cached cookie immediately, or nil if not yet loaded.
+    /// Use `loadCookieAsync()` to populate the cache on app launch without blocking the main thread.
     func savedCookie() -> String? {
+        lock.lock()
+        defer { lock.unlock() }
+        return memoryCookie
+    }
+    
+    /// Async load from Keychain. Call this once at app launch to populate the cache
+    /// without blocking the main thread. Subsequent `savedCookie()` calls return instantly.
+    func loadCookieAsync() async -> String? {
+        // Check cache first
         lock.lock()
         if let cached = memoryCookie, !cached.isEmpty {
             lock.unlock()
             return cached
         }
         lock.unlock()
-
-        if let value = readAccount(account) {
-            lock.lock()
-            memoryCookie = value
-            lock.unlock()
-            return value
-        }
-        // Migrate legacy Keychain item from CursorAppLogin era.
-        if let legacy = readAccount("CursorAppLogin") {
-            save(cookie: legacy)
-            deleteAccount("CursorAppLogin")
-            return legacy
-        }
-        return nil
+        
+        // Read from Keychain on background thread
+        return await Task.detached { [weak self] in
+            guard let self else { return nil }
+            
+            if let value = self.readAccount(self.account) {
+                self.lock.lock()
+                self.memoryCookie = value
+                self.lock.unlock()
+                return value
+            }
+            // Migrate legacy Keychain item from CursorAppLogin era.
+            if let legacy = self.readAccount("CursorAppLogin") {
+                self.save(cookie: legacy)
+                self.deleteAccount("CursorAppLogin")
+                return legacy
+            }
+            return nil
+        }.value
     }
 
     private func readAccount(_ accountName: String) -> String? {
