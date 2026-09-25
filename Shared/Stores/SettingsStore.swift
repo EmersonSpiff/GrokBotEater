@@ -150,6 +150,9 @@ final class SettingsStore: ObservableObject {
     var watcherVisibility: WatcherVisibility {
         get { overlay.watcherVisibility } set { overlay.watcherVisibility = newValue }
     }
+    var watcherIdleTimeout: WatcherIdleTimeout {
+        get { overlay.watcherIdleTimeout } set { overlay.watcherIdleTimeout = newValue }
+    }
     var watcherAnimationsEnabled: Bool {
         get { overlay.watcherAnimationsEnabled } set { overlay.watcherAnimationsEnabled = newValue }
     }

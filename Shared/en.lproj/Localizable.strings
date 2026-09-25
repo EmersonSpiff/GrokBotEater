@@ -584,6 +584,12 @@
 "settings.watchers.display.projectAndBranch" = "Project + Branch";
 "settings.watchers.scanrate" = "Scan rate";
 "settings.watchers.visibility" = "Visibility";
+"settings.watchers.idletimeout" = "Idle timeout";
+"settings.watchers.idletimeout.3min" = "3 min";
+"settings.watchers.idletimeout.5min" = "5 min";
+"settings.watchers.idletimeout.10min" = "10 min";
+"settings.watchers.idletimeout.15min" = "15 min";
+"settings.watchers.idletimeout.30min" = "30 min";
 "settings.watchers.display.branchPriority.hint" = "Shows the git branch as the title when on a non-default branch, otherwise the project name.";
 "settings.watchers.display.projectAndBranch.hint" = "Always shows the project name as the title, with the branch displayed next to the status.";
 

@@ -42,6 +42,9 @@ final class OverlaySettingsStore: ObservableObject {
     @Published var watcherVisibility: WatcherVisibility {
         didSet { UserDefaults.standard.set(watcherVisibility.rawValue, forKey: "watcherVisibility") }
     }
+    @Published var watcherIdleTimeout: WatcherIdleTimeout {
+        didSet { UserDefaults.standard.set(watcherIdleTimeout.rawValue, forKey: "watcherIdleTimeout") }
+    }
 
     // Performance
     @Published var watcherAnimationsEnabled: Bool {
@@ -84,6 +87,8 @@ final class OverlaySettingsStore: ObservableObject {
             .flatMap(WatcherScanInterval.init(rawValue:)) ?? .twoSeconds
         self.watcherVisibility = (UserDefaults.standard.object(forKey: "watcherVisibility") as? Int)
             .flatMap(WatcherVisibility.init(rawValue:)) ?? .thirtyMinutes
+        self.watcherIdleTimeout = (UserDefaults.standard.object(forKey: "watcherIdleTimeout") as? Int)
+            .flatMap(WatcherIdleTimeout.init(rawValue:)) ?? .ten
         self.watcherAnimationsEnabled = UserDefaults.standard.object(forKey: "watcherAnimationsEnabled") as? Bool ?? true
         self.overlayDisplayTarget = OverlayDisplayTarget(
             rawValue: UserDefaults.standard.string(forKey: "overlayDisplayTarget") ?? OverlayDisplayTarget.followMenuBar.rawValue

@@ -52,7 +52,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Monitor always starts regardless of overlay toggle (for hero live count)
         grokBotAgentSessionStore.startMonitoring()
         grokBotAgentSessionStore.setScanInterval(settingsStore.watcherScanInterval.seconds)
-        grokBotAgentSessionStore.setActivityWindow(settingsStore.watcherVisibility.seconds)
+        grokBotAgentSessionStore.setActivityWindow(settingsStore.watcherIdleTimeout.seconds)
         
         // Observe overlay toggle to start/stop monitoring
         settingsStore.overlay.$overlayEnabled
@@ -61,7 +61,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 if enabled {
                     store.startMonitoring()
                     store.setScanInterval(settings.watcherScanInterval.seconds)
-                    store.setActivityWindow(settings.watcherVisibility.seconds)
+                    store.setActivityWindow(settings.watcherIdleTimeout.seconds)
                 } else {
                     // Keep monitoring for hero count even when overlay is off
                     // Just the overlay window hides; session data still updates
@@ -80,6 +80,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         settingsStore.overlay.$watcherVisibility
             .sink { [weak grokBotAgentSessionStore] visibility in
                 grokBotAgentSessionStore?.setActivityWindow(visibility.seconds)
+            }
+            .store(in: &cancellables)
+        
+        // Observe idle timeout changes
+        settingsStore.overlay.$watcherIdleTimeout
+            .sink { [weak grokBotAgentSessionStore] timeout in
+                grokBotAgentSessionStore?.setActivityWindow(timeout.seconds)
             }
             .store(in: &cancellables)
         

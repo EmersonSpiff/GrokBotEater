@@ -136,6 +136,21 @@ struct AgentWatchersSectionView: View {
                     }
                 }
 
+                // Idle timeout -> chips (how long before cards disappear)
+                groupLabel("settings.watchers.idletimeout")
+                    .padding(.top, 4)
+                HStack(spacing: 6) {
+                    ForEach(WatcherIdleTimeout.allCases, id: \.self) { timeout in
+                        BinaryChoiceChip(
+                            label: timeout.label,
+                            icon: "clock",
+                            isActive: settingsStore.watcherIdleTimeout == timeout
+                        ) {
+                            settingsStore.watcherIdleTimeout = timeout
+                        }
+                    }
+                }
+
                 // Display selection
                 groupLabel("Display")
                     .padding(.top, 4)
@@ -443,6 +458,7 @@ struct AgentWatchersSectionView: View {
         settingsStore.watcherDisplayMode = .branchPriority
         settingsStore.watcherScanInterval = .twoSeconds
         settingsStore.watcherVisibility = .thirtyMinutes
+        settingsStore.watcherIdleTimeout = .ten
         settingsStore.watcherAnimationsEnabled = true
     }
 

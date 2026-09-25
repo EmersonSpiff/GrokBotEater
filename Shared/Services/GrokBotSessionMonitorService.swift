@@ -29,7 +29,7 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
     
     init(
         scanInterval: TimeInterval = 3.0,
-        activityWindowSeconds: TimeInterval = 180,
+        activityWindowSeconds: TimeInterval = 600,
         grokBotSupportDirOverride: URL? = nil
     ) {
         self.scanInterval = scanInterval
@@ -93,9 +93,6 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
             return
         }
         
-        // Get local work process count
-        let localWorkCount = countLocalWorkProcesses()
-        
         // Build sessions
         let now = Date()
         logger.info("Grok Bot scan: roster has \(roster.count) entries, \(roster.filter { !$0.isGroup && !$0.isHiddenFromSidebar }.count) non-group visible entries")
@@ -121,9 +118,14 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
                     state = .working
                 } else if isWaitingOnUser {
                     state = .waitingOnUser
-                } else if localWorkCount > 0 {
-                    state = .runningLocally
                 } else {
+                    // Note: .runningLocally requires per-agent evidence of local work (e.g.,
+                    // tool call to machine, in-flight shell command). No reliable per-agent
+                    // signal exists in GrokBotRosterEntry or transcript entries, so we don't
+                    // mark bots as runningLocally based on global process counts. This prevents
+                    // every recently-active bot from incorrectly showing runningLocally when
+                    // any MCP server/connector is running.
+                    
                     // Idle, but check if it's "done" (recently finished with unread output)
                     let hasUnread = entry.unreadCount > 0
                     let recentlyActive = Date().timeIntervalSince(lastActivity) < 600 // 10 minutes
@@ -148,7 +150,7 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
                     unreadCount: entry.unreadCount,
                     isHiddenFromSidebar: entry.isHiddenFromSidebar,
                     isStreaming: isStreaming,
-                    hasLocalWork: localWorkCount > 0,
+                    hasLocalWork: false,
                     lastTranscriptTimestamp: lastTranscriptTimestamp
                 )
             }
