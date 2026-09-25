@@ -660,7 +660,9 @@ final class NotificationService: NotificationServiceProtocol {
             logger.info("Daily budget alert: \(previous.rawValue)→\(current.rawValue), sending notification")
             let content = UNMutableNotificationContent()
             content.sound = .default
-            content.title = String(localized: "notif.title.grokBot.daily.\(current == .red ? "red" : "orange")")
+            content.title = current == .red
+                ? String(localized: "notif.title.grokBot.daily.red")
+                : String(localized: "notif.title.grokBot.daily.orange")
             content.body = String(format: NSLocalizedString("notif.body.grokBot.daily", comment: ""),
                                   String(format: "%.1f", todayShareUsedPercent),
                                   String(format: "%.1f", todayConsumptionPercent),
