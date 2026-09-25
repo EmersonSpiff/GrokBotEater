@@ -88,11 +88,23 @@ struct GrokBotAgentCard: View {
                 
                 if proximity > 0.3 {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(session.displayName)
-                            .font(.system(size: 12 * scale, weight: .semibold))
-                            .foregroundStyle(.white)
-                            .lineLimit(1)
+                        // Line 1: Name in bold, followed by role label in smaller font
+                        HStack(spacing: 4) {
+                            Text(session.displayName)
+                                .font(.system(size: 12 * scale, weight: .semibold))
+                                .foregroundStyle(.white)
+                                .lineLimit(1)
+                            
+                            if let role = session.roleLabel, role != session.displayName, !role.isEmpty {
+                                Text(role)
+                                    .font(.system(size: 10 * scale, weight: .regular))
+                                    .foregroundStyle(.white.opacity(0.6))
+                                    .lineLimit(1)
+                                    .truncationMode(.tail)
+                            }
+                        }
                         
+                        // Line 2: Status and time info
                         HStack(spacing: 6) {
                             Text(stateLabel)
                                 .font(.system(size: 9 * scale, weight: .medium))

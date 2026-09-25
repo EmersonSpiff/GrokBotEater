@@ -12,7 +12,8 @@ struct GrokBotSession: Identifiable, Sendable {
     let id: String
     let name: String
     let title: String?
-    var displayName: String { title ?? name }
+    var displayName: String { name }
+    var roleLabel: String? { title }
     
     var state: GrokBotSessionState
     var lastActivityAt: Date
