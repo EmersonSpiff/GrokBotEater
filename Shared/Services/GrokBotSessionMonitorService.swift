@@ -257,7 +257,18 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
     
     private func isLastEntryUserMessage(_ transcript: GrokBotTranscriptReplica) -> Bool {
         guard let last = transcript.entries.last else { return false }
-        return last.kind == "send-message" && last.role != "assistant"
+        
+        // User messages have kind "message" with role "user"
+        // Assistant replies have kind "send-message" with no role field (nil)
+        guard last.kind == "message" && last.role == "user" else {
+            return false
+        }
+        
+        // Only treat as pending/working if recent (within 15 minutes)
+        // Older user messages indicate stale transcripts, don't pin Working state
+        let messageTime = Date(timeIntervalSince1970: Double(last.timestampMs) / 1000.0)
+        let age = Date().timeIntervalSince(messageTime)
+        return age < 900 // 15 minutes
     }
     
     private func countLocalWorkProcesses() -> Int {
