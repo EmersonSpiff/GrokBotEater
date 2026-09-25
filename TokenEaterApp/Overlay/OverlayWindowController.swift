@@ -328,17 +328,35 @@ final class OverlayWindowController {
             overlayState.activationZone = exitZone
         }
 
-        let scale = CGFloat(settingsStore.overlayScale)
-        let itemHeight: CGFloat = 40 * scale
-        let itemSpacing: CGFloat = 6 * scale
-        let count = sessionStore.overlaySessions.count
-        let totalHeight = CGFloat(count) * itemHeight + CGFloat(max(0, count - 1)) * itemSpacing
-        let startY = (overlayState.windowHeight - totalHeight) / 2 + overlayState.contentOffset
-
-        panel.ignoresMouseEvents = !OverlayHitTest.isCursorNearSessions(
+        // Use the new shouldCapture API from upstream c738ce8
+        let distanceFromEdge = settingsStore.overlayLeftSide ? localX : (frame.width - localX)
+        let sessionCount = grokBotAgentSessionStore.overlaySessions.count
+        
+        let shouldTakeMouse = OverlayHitTest.shouldCapture(
+            distanceFromEdge: distanceFromEdge,
             cursorY: localY,
-            sessionsMinY: startY,
-            sessionsMaxY: startY + totalHeight
+            isOpen: isPanelActive,
+            sessionCount: sessionCount,
+            scale: CGFloat(settingsStore.overlayScale),
+            windowHeight: overlayState.windowHeight,
+            contentOffset: overlayState.contentOffset,
+            enterWidth: enterZone,
+            exitWidth: exitZone
         )
+        
+        // Update panel state based on hover
+        if shouldTakeMouse {
+            if !isPanelActive {
+                isPanelActive = true
+                overlayState.activationZone = exitZone
+            }
+        } else {
+            if isPanelActive {
+                isPanelActive = false
+                overlayState.activationZone = enterZone
+            }
+        }
+        
+        panel.ignoresMouseEvents = !shouldTakeMouse
     }
 }
