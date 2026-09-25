@@ -248,17 +248,11 @@ struct AgentWatchersSectionView: View {
 
                 Divider().opacity(0.12)
 
-                if settingsStore.watchersDetailedMode {
-                    statusRow(color: Color(red: 0.3, green: 0.78, blue: 0.52), label: String(localized: "settings.watchers.idle"))
-                    statusRow(color: Color(red: 0.95, green: 0.62, blue: 0.22), label: String(localized: "settings.watchers.thinking"))
-                    statusRow(color: Color(red: 0.38, green: 0.58, blue: 0.95), label: String(localized: "settings.watchers.executing"))
-                    statusRow(color: Color(red: 0.7, green: 0.45, blue: 0.95), label: String(localized: "settings.watchers.waiting"))
-                    statusRow(color: Color(red: 0.25, green: 0.85, blue: 0.85), label: String(localized: "settings.watchers.subagent"))
-                    statusRow(color: Color(red: 0.55, green: 0.55, blue: 0.60), label: String(localized: "settings.watchers.compacting"))
-                } else {
-                    statusRow(color: Color(red: 0.3, green: 0.78, blue: 0.52), label: String(localized: "settings.watchers.simple.idle"))
-                    statusRow(color: Color(red: 0.95, green: 0.62, blue: 0.22), label: String(localized: "settings.watchers.simple.working"))
-                }
+                grokBotStatusRow(symbol: "sparkles", color: Color(red: 0.3, green: 0.7, blue: 1.0), label: "Working", description: "Agent is generating a response")
+                grokBotStatusRow(symbol: "person.bubble", color: .orange, label: "Waiting on you", description: "Agent needs your input")
+                grokBotStatusRow(symbol: "desktopcomputer.and.macbook", color: .purple, label: "Running locally", description: "Local command in progress")
+                grokBotStatusRow(symbol: "moon.stars", color: .gray, label: "Idle", description: "No activity")
+                grokBotStatusRow(symbol: "checkmark.square", color: .green, label: "Done", description: "Finished with new output")
             }
             .animation(.spring(response: 0.32, dampingFraction: 0.85), value: settingsStore.watchersDetailedMode)
         }
@@ -622,5 +616,23 @@ private struct TerminalSetupSheet: View {
         case .wezterm: return "settings.watchers.wezterm.hint"
         case .kitty:   return "settings.watchers.kitty.hint"
         }
+    }
+    
+    private func grokBotStatusRow(symbol: String, color: Color, label: String, description: String) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: symbol)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(color)
+                .frame(width: 20)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(label)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(DS.Palette.textPrimary)
+                Text(description)
+                    .font(.system(size: 10))
+                    .foregroundStyle(DS.Palette.textTertiary)
+            }
+        }
+        .padding(.vertical, 4)
     }
 }

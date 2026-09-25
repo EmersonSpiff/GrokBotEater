@@ -124,7 +124,14 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
                 } else if localWorkCount > 0 {
                     state = .runningLocally
                 } else {
-                    state = .idle
+                    // Idle, but check if it's "done" (recently finished with unread output)
+                    let hasUnread = entry.unreadCount > 0
+                    let recentlyActive = Date().timeIntervalSince(lastActivity) < 600 // 10 minutes
+                    if hasUnread && recentlyActive {
+                        state = .done
+                    } else {
+                        state = .idle
+                    }
                 }
                 
                 let lastTranscriptTimestamp = transcript?.entries.last.map { entry in

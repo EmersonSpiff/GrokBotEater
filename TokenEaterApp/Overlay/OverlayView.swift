@@ -27,7 +27,15 @@ struct OverlayView: View {
             ForEach(Array(displayedGrokBotSessions.enumerated()), id: \.element.id) { index, session in
                 let prox = proximity(for: index, in: displayedGrokBotSessions.count)
 
-                GrokBotAgentCard(session: session, proximity: prox, scale: scale, leftSide: leftSide)
+                GrokBotAgentCard(
+                    session: session,
+                    proximity: prox,
+                    scale: scale,
+                    leftSide: leftSide,
+                    animationsEnabled: settingsStore.watcherAnimationsEnabled,
+                    style: settingsStore.overlay.watcherStyle,
+                    onTap: { togglePinnedCard(id: session.id) }
+                )
                 .animation(
                     .interactiveSpring(response: 0.18, dampingFraction: 0.78),
                     value: prox
@@ -69,13 +77,20 @@ struct OverlayView: View {
     // MARK: - Dock-like proximity
 
     private func proximity(for index: Int, in count: Int) -> CGFloat {
+        let sessions = displayedGrokBotSessions
+        guard index < sessions.count else { return 0.75 }
+        let sessionId = sessions[index].id
+        
+        // Pinned card -> keep it fully expanded
+        if let pinnedId = overlayState.pinnedCardId, pinnedId == sessionId {
+            return 1.0
+        }
+        
         // Menu open -> hover state is pinned: the card that owns the menu
         // stays fully expanded, its neighbours hold the base hover expansion,
         // regardless of where the cursor travels (it is on the menu).
-        if overlayState.contextMenuSessionId != nil {
-            let sessions = displayedGrokBotSessions
-            guard index < sessions.count else { return 0.75 }
-            return sessions[index].id == overlayState.contextMenuSessionId ? 1.0 : 0.75
+        if let menuId = overlayState.contextMenuSessionId {
+            return sessionId == menuId ? 1.0 : 0.75
         }
 
         guard let cursor = overlayState.cursorInWindow else { return 0 }
@@ -133,5 +148,13 @@ struct OverlayView: View {
         guard overlayState.contextMenuSessionId != nil else { return }
         overlayState.frozenGrokBotSessions = nil
         overlayState.contextMenuSessionId = nil
+    }
+    
+    private func togglePinnedCard(id: String) {
+        if overlayState.pinnedCardId == id {
+            overlayState.pinnedCardId = nil
+        } else {
+            overlayState.pinnedCardId = id
+        }
     }
 }

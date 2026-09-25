@@ -5,6 +5,7 @@ enum GrokBotSessionState: String, Sendable {
     case working
     case waitingOnUser
     case runningLocally
+    case done
 }
 
 struct GrokBotSession: Identifiable, Sendable {

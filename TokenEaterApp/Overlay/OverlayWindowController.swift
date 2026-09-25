@@ -23,6 +23,10 @@ final class OverlayState: ObservableObject {
     /// collapsing the cards (the cursor is on the menu, outside the panel)
     /// and the panel stays interactive.
     @Published var contextMenuSessionId: String? = nil
+    
+    /// Id of the session that is pinned expanded by click, nil otherwise.
+    /// When non-nil, that card stays fully expanded regardless of cursor position.
+    @Published var pinnedCardId: String? = nil
 
     /// Snapshot of the rendered sessions taken when a context menu opens,
     /// released on close. Rendering from the snapshot pins the rows while the
@@ -295,6 +299,7 @@ final class OverlayWindowController {
             // Only fire objectWillChange if it was non-nil
             if overlayState.cursorInWindow != nil {
                 overlayState.cursorInWindow = nil
+                overlayState.pinnedCardId = nil
             }
             panel.ignoresMouseEvents = true
             return

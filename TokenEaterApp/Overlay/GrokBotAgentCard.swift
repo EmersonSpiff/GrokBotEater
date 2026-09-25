@@ -5,6 +5,9 @@ struct GrokBotAgentCard: View {
     let proximity: CGFloat
     let scale: CGFloat
     let leftSide: Bool
+    let animationsEnabled: Bool
+    let style: WatcherStyle
+    let onTap: () -> Void
     
     private var baseWidth: CGFloat { 30 * scale }
     private var expandedWidth: CGFloat { 185 * scale }
@@ -20,15 +23,17 @@ struct GrokBotAgentCard: View {
         case .waitingOnUser: return .orange
         case .runningLocally: return .purple
         case .idle: return .gray
+        case .done: return .green
         }
     }
     
     private var stateGlyph: String {
         switch session.state {
-        case .working: return "brain.head.profile"
-        case .waitingOnUser: return "hand.raised.fill"
-        case .runningLocally: return "terminal.fill"
-        case .idle: return "clock.fill"
+        case .working: return "sparkles"
+        case .waitingOnUser: return "person.bubble"
+        case .runningLocally: return "desktopcomputer.and.macbook"
+        case .idle: return "moon.stars"
+        case .done: return "checkmark.square"
         }
     }
     
@@ -38,6 +43,7 @@ struct GrokBotAgentCard: View {
         case .waitingOnUser: return "Waiting"
         case .runningLocally: return "Local"
         case .idle: return "Idle"
+        case .done: return "Done"
         }
     }
     
@@ -49,15 +55,7 @@ struct GrokBotAgentCard: View {
             
             HStack(spacing: 8 * scale) {
                 // State indicator
-                ZStack {
-                    Circle()
-                        .fill(stateColor.opacity(0.3))
-                        .frame(width: 28 * scale, height: 28 * scale)
-                    
-                    Image(systemName: stateGlyph)
-                        .font(.system(size: 13 * scale, weight: .semibold))
-                        .foregroundStyle(stateColor)
-                }
+                stateIcon
                 
                 if proximity > 0.3 {
                     VStack(alignment: .leading, spacing: 2) {
@@ -97,20 +95,63 @@ struct GrokBotAgentCard: View {
             .padding(.horizontal, 8 * scale)
             .padding(.vertical, 6 * scale)
             .frame(width: actualWidth, height: height)
-            .background(
-                RoundedRectangle(cornerRadius: 8 * scale, style: .continuous)
-                    .fill(.black.opacity(0.75))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8 * scale, style: .continuous)
-                            .stroke(stateColor.opacity(0.3), lineWidth: 1)
-                    )
-                    .shadow(color: .black.opacity(0.3), radius: 4 * scale, x: 0, y: 2 * scale)
-            )
+            .background(cardBackground)
+            .onTapGesture {
+                onTap()
+            }
             
             if leftSide {
                 Spacer(minLength: 0)
             }
         }
+    }
+    
+    @ViewBuilder
+    private var cardBackground: some View {
+        let cornerRadius = 8.0 * scale
+        
+        Group {
+            if style == .frost {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(.ultraThinMaterial)
+            } else {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(.black.opacity(0.75))
+            }
+        }
+        .overlay(
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .stroke(stateColor.opacity(0.3), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.3), radius: 4 * scale, x: 0, y: 2 * scale)
+    }
+    
+    @ViewBuilder
+    private var stateIcon: some View {
+        let iconSize = 13.0 * scale
+        let circleSize = 28.0 * scale
+        
+        ZStack {
+            Circle()
+                .fill(stateColor.opacity(0.3))
+                .frame(width: circleSize, height: circleSize)
+            
+            stateIconImage
+                .font(.system(size: iconSize, weight: .semibold))
+                .foregroundStyle(stateColor)
+        }
+    }
+    
+    @ViewBuilder
+    private var stateIconImage: some View {
+        let baseImage = Image(systemName: stateGlyph)
+        
+        if session.state == .runningLocally {
+            baseImage.symbolRenderingMode(.multicolor)
+        } else {
+            baseImage
+        }
+        .modifier(StateSymbolEffect(state: session.state, animationsEnabled: animationsEnabled))
     }
 }
 
@@ -138,5 +179,37 @@ struct GrokBotAgentContextMenu: View {
                         onMenuOpen()
                     }
             )
+    }
+}
+
+private struct StateSymbolEffect: ViewModifier {
+    let state: GrokBotSessionState
+    let animationsEnabled: Bool
+    
+    func body(content: Content) -> some View {
+        if animationsEnabled {
+            switch state {
+            case .working:
+                content.symbolEffect(.bounce, options: .repeating)
+            case .waitingOnUser:
+                if #available(macOS 15, *) {
+                    content.symbolEffect(.wiggle, options: .repeating)
+                } else {
+                    content.symbolEffect(.pulse, options: .repeating)
+                }
+            case .runningLocally:
+                if #available(macOS 15, *) {
+                    content.symbolEffect(.breathe)
+                } else {
+                    content.symbolEffect(.pulse)
+                }
+            case .done:
+                content.symbolEffect(.scale)
+            case .idle:
+                content
+            }
+        } else {
+            content
+        }
     }
 }
