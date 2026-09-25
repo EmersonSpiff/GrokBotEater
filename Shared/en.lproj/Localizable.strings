@@ -7,7 +7,7 @@
 "menubar.updated" = "Updated %@";
 
 /* Metrics */
-"metric.session" = "5h";
+"metric.session" = "Weekly";
 "metric.serviceStatus" = "Service status";
 
 /* Extra usage (paid credits pool) */
@@ -19,21 +19,21 @@
 "metric.grokBot" = "Grok Bot";
 "metric.sessionReset" = "Session reset countdown";
 "settings.pacing.style" = "Pacing style";
-"settings.group.session" = "Session (5h)";
+"settings.group.session" = "Weekly Usage";
 "settings.group.weekly" = "Weekly";
-"settings.group.sonnet" = "Sonnet";
+"settings.group.sonnet" = "Daily Usage";
 "metric.weekly" = "Weekly";
-"metric.sonnet" = "Sonnet";
+"metric.sonnet" = "Today";
 "metric.reset" = "Resets in %@";
 
 /* Widget */
-"widget.session" = "Session";
+"widget.session" = "Weekly";
 "widget.weekly" = "Weekly";
-"widget.sonnet" = "Sonnet";
-"widget.session.subtitle" = "5h sliding window";
+"widget.sonnet" = "Daily";
+"widget.session.subtitle" = "Grok Bot weekly usage";
 "widget.weekly.full" = "Weekly";
-"widget.weekly.subtitle" = "Opus + Sonnet + Haiku";
-"widget.sonnet.subtitle" = "Dedicated limit";
+"widget.weekly.subtitle" = "Grok Bot usage";
+"widget.sonnet.subtitle" = "Daily usage";
 "widget.offline" = "Offline";
 "widget.loading" = "Loading...";
 "widget.reset" = "Reset %@";
@@ -41,10 +41,10 @@
 "widget.updated" = "Upd. %@";
 "widget.refresh.interval" = "15 min";
 "widget.refresh.button" = "Refresh";
-"widget.description.usage" = "Monitor your Claude usage in real time";
-"widget.description.pacing" = "Your Claude usage pace";
+"widget.description.usage" = "Monitor your Grok Bot usage in real time";
+"widget.description.pacing" = "Your Grok Bot usage pace";
 "widget.title.sessionRing" = "Session Ring";
-"widget.description.sessionRing" = "Big ring gauge for your 5h session window with Smart Color";
+"widget.description.sessionRing" = "Big ring gauge for your weekly Grok Bot usage with Smart Color";
 "widget.title.pacingGraph" = "Pacing Graph";
 "widget.description.pacingGraph" = "See your pace versus the ideal trajectory in one glance";
 "widget.title.historySparkline" = "Tokens History";
@@ -52,7 +52,7 @@
 "widget.title.usage" = "Overview";
 "widget.title.pacingGlance" = "Pacing Glance";
 "widget.pacing.title" = "Weekly Pace";
-"widget.pacing.session" = "5h";
+"widget.pacing.session" = "Weekly";
 "widget.pacing.weekly" = "7d";
 "widget.extra" = "Extra Credits";
 "widget.title.extraCredits" = "Extra Credits";
@@ -67,7 +67,7 @@
 "widget.history.empty.body" = "Open GrokBotEater so it can index your sessions";
 
 /* Settings */
-"settings.subtitle" = "Monitor your Claude usage";
+"settings.subtitle" = "Monitor your Grok Bot usage";
 "settings.test" = "Test";
 "settings.refresh" = "Refresh";
 "settings.refresh.title" = "Refresh";
@@ -95,10 +95,10 @@
 "settings.session.reset" = "Show reset countdown";
 "pacing.session.label" = "Session pacing";
 "pacing.weekly.label" = "Weekly pacing";
-"pacing.fable.label" = "Fable pacing";
+"pacing.fable.label" = "Daily pacing";
 "pacing.cooldown" = "back to 0%% in %@";
-"pacing.sonnet.label" = "Sonnet pacing";
-"settings.display.sonnet" = "Display Sonnet";
+"pacing.sonnet.label" = "Daily pacing";
+"settings.display.sonnet" = "Display Daily";
 "settings.metrics.pinned" = "Pinned metrics";
 "settings.metrics.pinned.footer" = "Choose which metrics appear in the menu bar.";
 "settings.pacing.display" = "Pacing display";
@@ -139,9 +139,9 @@
 
 /* Guide */
 "guide.title" = "Setup Guide";
-"guide.oauth.title" = "Claude Code";
+"guide.oauth.title" = "Cursor";
 "guide.oauth.badge" = "Recommended";
-"guide.oauth.step1" = "Install **Claude Code** (Anthropic's CLI)";
+"guide.oauth.step1" = "Install **Grok Bot**";
 "guide.oauth.step2" = "Open GrokBotEater and click **Connect**";
 "guide.oauth.step3" = "Done - token refreshes automatically";
 "guide.widget" = "Add the widget";
@@ -149,7 +149,7 @@
 
 /* Errors - API */
 "error.notoken" = "Cursor session not found. Open GrokBotEater and Connect.";
-"error.tokenexpired" = "OAuth token expired - relaunch Claude Code to refresh it";
+"error.tokenexpired" = "OAuth token expired - restart Grok Bot to refresh it";
 "error.invalidurl" = "Invalid URL";
 "error.invalidresponse" = "Invalid server response";
 "error.http" = "HTTP error %d";
@@ -158,16 +158,16 @@
 "error.network.generic" = "Network error - couldn't reach the usage API. Check your connection.";
 "error.invalidresponse.short" = "Invalid response";
 "error.keychainlocked" = "Keychain locked - will retry automatically";
-"error.unsupportedplan" = "Usage data not available - Claude Pro or Team plan required";
+"error.unsupportedplan" = "Usage data not available - Grok Bot plan required";
 "error.banner.keychain" = "Keychain locked";
 "error.banner.keychain.hint" = "Will retry automatically - or open Settings to re-authorize";
 "error.banner.reauth" = "Authorization needed";
 "error.banner.reauth.hint" = "Token expired and automatic recovery failed";
 "error.banner.reauth.button" = "Re-authorize";
-"error.banner.waiting" = "Waiting for Claude Code to refresh";
-"error.banner.apiunavailable" = "Usage API throttled by Anthropic";
-"error.banner.apiunavailable.hint" = "This is a rate limit on Anthropic's usage API, not your token or setup. Nothing for you to fix - GrokBotEater keeps retrying and refreshes as soon as the limit clears (known issue: anthropics/claude-code#31637).";
-"error.banner.apiunavailable.settings" = "This is on Anthropic's side (their usage API), not your token or setup. GrokBotEater retries automatically and recovers when the limit clears.";
+"error.banner.waiting" = "Waiting for Grok Bot to refresh";
+"error.banner.apiunavailable" = "Usage API rate limited";
+"error.banner.apiunavailable.hint" = "This is a rate limit on Grok Bot's usage API, not your token or setup. Nothing for you to fix - GrokBotEater keeps retrying and refreshes as soon as the limit clears.";
+"error.banner.apiunavailable.settings" = "This is on Grok Bot's side (their usage API), not your token or setup. GrokBotEater retries automatically and recovers when the limit clears.";
 "error.banner.apiunavailable.learnmore" = "Learn more";
 "error.banner.lastupdate" = "Last successful update: %@";
 "error.banner.retry.button" = "Retry now";
@@ -180,17 +180,17 @@
 "test.ratelimited" = "Connected - rate limited, will retry shortly";
 "test.http" = "HTTP error %d";
 
-/* Pacing - 5h session (sprint feel) */
-"pacing.session.chill.1" = "Cool 5h";
+/* Pacing - Weekly usage (sprint feel) */
+"pacing.session.chill.1" = "Cool weekly pace";
 "pacing.session.chill.2" = "Time to spare";
 "pacing.session.chill.3" = "Easy session";
 "pacing.session.ontrack.1" = "Locked in";
 "pacing.session.ontrack.2" = "Session rhythm";
 "pacing.session.ontrack.3" = "Right on the hour";
 "pacing.session.warning.1" = "Session warming";
-"pacing.session.warning.2" = "5h edging up";
+"pacing.session.warning.2" = "Weekly edging up";
 "pacing.session.warning.3" = "Tempo creeping";
-"pacing.session.hot.1" = "5h on fire";
+"pacing.session.hot.1" = "Weekly on fire";
 "pacing.session.hot.2" = "Session blazing";
 "pacing.session.hot.3" = "Burning the hour";
 
@@ -216,7 +216,7 @@
 "settings.pacing.margin.value" = "Margin";
 "settings.pacing.margin.hint" = "Tolerance band around the ideal pace. On track stays within ±margin, warning fires once you drift further, hot kicks in beyond 2x the margin.";
 "settings.pacing.workweek" = "Workweek pacing";
-"settings.pacing.workweek.hint" = "Pace only counts your active days, so off-days don't make you look ahead of pace. Applies to the weekly and Sonnet gauges, not the 5h session.";
+"settings.pacing.workweek.hint" = "Pace only counts your active days, so off-days don't make you look ahead of pace. Applies to the weekly Grok Bot gauge.";
 "settings.pacing.workweek.hours" = "Active hours";
 "pacing.workweek.badge.active" = "Workweek pacing on";
 "pacing.workweek.badge.offday" = "Off day, pacing resting until reset";
@@ -226,8 +226,8 @@
 "settings.workweek.popover.point1.desc" = "Only the hours on the days you select count toward the ideal pace line.";
 "settings.workweek.popover.point2.title" = "Off-days freeze the pace";
 "settings.workweek.popover.point2.desc" = "On excluded days the expected pace pauses and your full quota stays available until the reset.";
-"settings.workweek.popover.point3.title" = "Weekly and Sonnet only";
-"settings.workweek.popover.point3.desc" = "Applies to the 7-day gauges. The 5h session is intraday, so it's never schedule-adjusted.";
+"settings.workweek.popover.point3.title" = "Weekly Grok Bot usage";
+"settings.workweek.popover.point3.desc" = "Applies to the 7-day Grok Bot usage gauge.";
 "settings.workweek.popover.footer" = "Works whatever your reset day is, since any 7-day window holds the same set of active days.";
 
 /* Notifications - test + token + pacing + reset reminders */
@@ -249,13 +249,13 @@
 "notif.duration.minutes" = "%d min";
 "notif.duration.hours" = "%d h";
 
-/* Notifications - 5h session */
+/* Notifications - Weekly usage */
 "notif.title.fivehour.orange.chill" = "Pace check";
 "notif.title.fivehour.orange.ontrack" = "Session getting heavy";
-"notif.title.fivehour.orange.warning" = "Drifting on the 5h";
-"notif.title.fivehour.orange.hot" = "Burning the 5h";
-"notif.title.fivehour.red" = "5h almost capped";
-"notif.title.fivehour.green" = "5h cleared";
+"notif.title.fivehour.orange.warning" = "Drifting on weekly usage";
+"notif.title.fivehour.orange.hot" = "Burning weekly usage";
+"notif.title.fivehour.red" = "Weekly almost capped";
+"notif.title.fivehour.green" = "Weekly reset";
 
 "notif.body.fivehour.orange.chill" = "Pace is fine, resets in %@";
 "notif.body.fivehour.orange.ontrack" = "On track, resets in %@";
@@ -272,9 +272,9 @@
 "notif.title.weekly.red" = "Weekly almost capped";
 "notif.title.weekly.green" = "Weekly reset";
 "notif.title.weekly.pace" = "Ahead of weekly pace";
-"notif.title.sonnet.pace" = "Ahead of Sonnet pace";
+"notif.title.sonnet.pace" = "Ahead of today's pace";
 "notif.body.weekly.pace" = "You're ahead of an even weekly burn rate, not near the cap. Fine if intentional.";
-"notif.body.sonnet.pace" = "You're ahead of an even Sonnet burn rate, not near the cap. Fine if intentional.";
+"notif.body.sonnet.pace" = "You're ahead of an even burn rate for today, not near the cap. Fine if intentional.";
 "notif.body.weekly.orange" = "Resets %@";
 "notif.body.weekly.orange.fallback" = "Past the weekly warning";
 "notif.body.weekly.red" = "Take it slow until %@";
@@ -282,24 +282,24 @@
 "notif.body.weekly.green" = "New cycle, you're back at %@";
 "notif.body.weekly.green.fallback" = "New cycle, you're back";
 
-/* Notifications - Sonnet weekly */
-"notif.title.sonnet.orange" = "Sonnet pool heavy";
-"notif.title.sonnet.red" = "Sonnet almost gone";
-"notif.title.sonnet.green" = "Sonnet reset";
+/* Notifications - Today usage */
+"notif.title.sonnet.orange" = "Today's usage heavy";
+"notif.title.sonnet.red" = "Today almost capped";
+"notif.title.sonnet.green" = "Today reset";
 "notif.body.sonnet.orange" = "Resets %@";
-"notif.body.sonnet.orange.fallback" = "Past the Sonnet warning";
+"notif.body.sonnet.orange.fallback" = "Past today's warning";
 "notif.body.sonnet.red" = "Ease off until %@";
-"notif.body.sonnet.red.fallback" = "Sonnet pool almost out";
-"notif.body.sonnet.green" = "Sonnet refilled at %@";
-"notif.body.sonnet.green.fallback" = "Sonnet refilled, you're back";
+"notif.body.sonnet.red.fallback" = "Today's usage almost maxed";
+"notif.body.sonnet.green" = "Usage refilled at %@";
+"notif.body.sonnet.green.fallback" = "Usage refilled, you're back";
 
 /* Notifications - Grok Bot weekly */
 "notif.title.grokBot.orange" = "Grok Bot filling up";
 "notif.title.grokBot.red" = "Grok Bot almost capped";
 "notif.title.grokBot.green" = "Grok Bot reset";
-"notif.body.grokBot.orange" = "Resets %@";
-"notif.body.grokBot.orange.fallback" = "Past the Grok Bot warning";
-"notif.body.grokBot.red" = "Take it slow until %@";
+"notif.body.grokBot.orange" = "You've used %d%% of this week's Grok Bot usage. Resets %@.";
+"notif.body.grokBot.orange.fallback" = "Past the Grok Bot warning threshold";
+"notif.body.grokBot.red" = "You've used %d%% of this week's Grok Bot usage. Resets %@.";
 "notif.body.grokBot.red.fallback" = "Grok Bot limit almost reached";
 "notif.body.grokBot.green" = "New cycle, you're back at %@";
 "notif.body.grokBot.green.fallback" = "New cycle, you're back";
@@ -313,12 +313,12 @@
 "notif.body.extra.green" = "Pool back in the green";
 
 /* Notifications - Vendor status */
-"notif.title.status.claude.degraded" = "Claude is degraded";
-"notif.body.status.claude.degraded" = "Anthropic reports a service issue";
-"notif.title.status.claude.down" = "Claude is down";
-"notif.body.status.claude.down" = "Anthropic reports a major outage";
-"notif.title.status.claude.restored" = "Claude is back";
-"notif.body.status.claude.restored" = "Service restored";
+"notif.title.status.claude.degraded" = "Cursor is degraded";
+"notif.body.status.claude.degraded" = "Cursor reports a service issue";
+"notif.title.status.claude.down" = "Cursor is down";
+"notif.body.status.claude.down" = "Cursor reports a major outage";
+"notif.title.status.claude.restored" = "Cursor is back";
+"notif.body.status.claude.restored" = "Cursor services restored";
 "settings.notifications.title" = "Notifications";
 "settings.notifications.status" = "Status";
 "settings.notifications.on" = "Enabled";
@@ -332,9 +332,9 @@
 "settings.notifications.master" = "Notifications enabled";
 "settings.notifications.group.usage" = "Usage thresholds";
 "settings.notifications.group.usage.hint" = "Fires when a tracked metric crosses its warning or critical level.";
-"settings.notifications.track.fivehour" = "Track 5h session";
+"settings.notifications.track.fivehour" = "Track weekly usage";
 "settings.notifications.track.weekly" = "Track 7d weekly";
-"settings.notifications.track.sonnet" = "Track Sonnet weekly";
+"settings.notifications.track.sonnet" = "Track daily usage";
 "settings.notifications.recovery" = "Send recovery notifications";
 "settings.notifications.recovery.hint" = "When OFF, only escalations fire (no \"you're back\" message).";
 "settings.notifications.group.pacing" = "Pacing";
@@ -349,7 +349,7 @@
 "settings.notifications.reset.offset.minutes" = "%d min before";
 "settings.notifications.reset.offset.hours" = "%d h before";
 "settings.notifications.group.extra" = "Extra credits";
-"settings.notifications.group.extra.hint" = "Only fires if the paid pool is enabled in your Anthropic plan.";
+"settings.notifications.group.extra.hint" = "Only fires if the paid pool is enabled in your Cursor plan.";
 "settings.notifications.extra" = "Pool warning / critical";
 "settings.notifications.group.health" = "Health";
 "settings.notifications.group.health.hint" = "Connection issues that might block tracking.";
@@ -362,7 +362,7 @@
 "sidebar.serviceStatus.subtitle" = "Service outage monitoring (disabled for GrokBotEater)";
 "settings.status.master" = "Monitoring";
 "settings.status.group.polling" = "Polling";
-"settings.status.group.polling.hint" = "How often to check Claude's status. Checks speed up automatically during an outage.";
+"settings.status.group.polling.hint" = "How often to check Cursor's status. Checks speed up automatically during an outage.";
 "settings.status.interval.label" = "Check every";
 "settings.status.interval.minutes" = "%d min";
 "settings.status.group.display" = "Display";
@@ -420,7 +420,7 @@
 "dashboard.org" = "Organization";
 "dashboard.pacing.reset.days" = "Resets in %dd %dh";
 "dashboard.pacing.reset.hours" = "Resets in %dh";
-"dashboard.hero.session.label" = "Session · 5h window";
+"dashboard.hero.session.label" = "Weekly usage";
 "dashboard.hero.resetsIn" = "Resets in";
 "dashboard.hero.grokbot.label" = "Weekly";
 "pacing.zone.chill" = "Chill";
@@ -447,7 +447,7 @@
 "settings.reset.format.absolute" = "Absolute (20:30)";
 "settings.reset.format.both" = "Both";
 "settings.reset.color" = "Reset countdown";
-"settings.session.periodcolor" = "Period label (5h / 7d)";
+"settings.session.periodcolor" = "Period label (Weekly / Daily)";
 "settings.theme.menubar" = "Menu bar text";
 "settings.theme.menubar.hint" = "Customize the color of the reset countdown and period labels in the menu bar. Leave on system defaults if you want GrokBotEater to match your menu bar styling.";
 "settings.theme.menubar.resetColor" = "Revert to system default";
@@ -527,7 +527,7 @@
 "settings.overlay.toggle" = "Show session overlay";
 
 /* Agent Watchers */
-"settings.watchers.description" = "A floating overlay showing your active Claude Code sessions. Hover to expand, click to jump to a session.";
+"settings.watchers.description" = "A floating overlay showing your active Grok Bot agents. Hover to expand.";
 "settings.watchers.trigger" = "Hover zone";
 "settings.watchers.trigger.minimal" = "Minimal";
 "settings.watchers.trigger.narrow" = "Narrow";
@@ -552,7 +552,7 @@
 "settings.watchers.compacting" = "Compacting - compressing context";
 "settings.watchers.detailed" = "Detailed status mode";
 "settings.watchers.simple.idle" = "Idle - waiting for input";
-"settings.watchers.simple.working" = "Working - Claude is busy";
+"settings.watchers.simple.working" = "Working - Agent is busy";
 "settings.watchers.behavior" = "Behavior";
 
 /* Watcher card context menu (right-click on an overlay card) */
@@ -584,6 +584,12 @@
 "settings.watchers.display.projectAndBranch" = "Project + Branch";
 "settings.watchers.scanrate" = "Scan rate";
 "settings.watchers.visibility" = "Visibility";
+"settings.watchers.idletimeout" = "Idle timeout";
+"settings.watchers.idletimeout.3min" = "3 min";
+"settings.watchers.idletimeout.5min" = "5 min";
+"settings.watchers.idletimeout.10min" = "10 min";
+"settings.watchers.idletimeout.15min" = "15 min";
+"settings.watchers.idletimeout.30min" = "30 min";
 "settings.watchers.display.branchPriority.hint" = "Shows the git branch as the title when on a non-default branch, otherwise the project name.";
 "settings.watchers.display.projectAndBranch.hint" = "Always shows the project name as the title, with the branch displayed next to the status.";
 
@@ -605,7 +611,7 @@
 "sidebar.history" = "History";
 "sidebar.general" = "General";
 "history.placeholder.title" = "History coming soon";
-"history.placeholder.subtitle" = "Your Claude Code session history will live here -> per-model token breakdown, daily charts, and usage patterns across your local JSONL files.";
+"history.placeholder.subtitle" = "Your Grok Bot usage history will live here — daily charts and usage patterns when that data becomes available.";
 
 /* History view */
 "history.sessions.label" = "sessions";
@@ -625,10 +631,10 @@
 "history.coming.title" = "History";
 "history.coming.subtitle" = "Grok Bot usage over time";
 "history.coming.badge" = "Coming soon";
-"history.coming.body" = "This tab used to show Claude Code session tokens (Sonnet / Opus / Haiku). Grok Bot history isn’t wired yet — we’ll put sand-usage trends here when that API is ready.";
+"history.coming.body" = "Grok Bot usage history isn't available yet — we'll display usage trends here when that API is ready.";
 
 "history.empty.title" = "No sessions yet";
-"history.empty.subtitle" = "Run Claude Code to populate your history. Each session writes a JSONL file under ~/.claude/projects/ which GrokBotEater aggregates here.";
+"history.empty.subtitle" = "Grok Bot agents will appear here when active.";
 "history.empty.filter.all" = "Nothing logged in the last %@";
 "history.empty.filter.model" = "No %@ usage in the last %@";
 "history.chip.cacheHit" = "Cache hit";
@@ -709,7 +715,7 @@
 /* Section subtitles */
 "sidebar.display.subtitle" = "Choose which metrics appear in the menu bar and how they look.";
 "sidebar.themes.subtitle" = "Colours and visual style.";
-"sidebar.agentWatchers.subtitle" = "Floating overlay for your live Claude Code sessions.";
+"sidebar.agentWatchers.subtitle" = "Floating overlay for your live Grok Bot agents.";
 "sidebar.performance.subtitle" = "Fine-tune CPU usage by disabling features you don't need.";
 "sidebar.settings.subtitle" = "Proxy, refresh interval, and other global preferences.";
 "popover.settings.preview" = "Preview";
@@ -738,15 +744,15 @@
 "popover.empty" = "Nothing to show right now";
 "popover.empty.hint" = "Add elements in Settings > Popover";
 
-"popoverElement.session" = "Session (5h)";
+"popoverElement.session" = "Weekly Usage";
 "popoverElement.weekly" = "Weekly";
-"popoverElement.sonnet" = "Sonnet";
-"popoverElement.fable" = "Fable";
+"popoverElement.sonnet" = "Daily";
+"popoverElement.fable" = "Daily Grok Bot";
 "popoverElement.extraCredits" = "Extra Credits";
 "popoverElement.grokBot" = "Grok Bot";
 "popoverElement.sessionPacing" = "Session pacing";
 "popoverElement.weeklyPacing" = "Weekly pacing";
-"popoverElement.fablePacing" = "Fable pacing";
+"popoverElement.fablePacing" = "Daily pacing";
 "popoverElement.watchers" = "Agent watchers";
 "popoverElement.timestamp" = "Updated timestamp";
 "popoverElement.openButton" = "Open GrokBotEater button";
@@ -774,7 +780,7 @@
 "popoverTemplate.compact" = "Compact";
 "popoverTemplate.focus" = "Focus";
 "popoverTemplate.minimalist" = "Minimalist";
-"popoverTemplate.fableFirst" = "Fable First";
+"popoverTemplate.fableFirst" = "Daily First";
 "popoverTemplate.complete" = "Complete";
 
 /* Composable menu bar editor */
@@ -797,19 +803,19 @@
 "menuBar.editor.empty" = "Empty - the menu bar shows the app icon";
 "menuBar.editor.emptyList" = "No segments. Add one, or the menu bar shows just the app icon.";
 
-"menuBarSegment.session" = "Session (5h)";
+"menuBarSegment.session" = "Weekly Usage";
 "menuBarSegment.weekly" = "Weekly";
-"menuBarSegment.sonnet" = "Sonnet";
-"menuBarSegment.fable" = "Fable";
+"menuBarSegment.sonnet" = "Daily";
+"menuBarSegment.fable" = "Daily Grok Bot";
 "menuBarSegment.extraCredits" = "Extra Credits";
 "menuBarSegment.grokBot" = "Grok Bot";
 "menuBarSegment.sessionPacing" = "Session pacing";
 "menuBarSegment.weeklyPacing" = "Weekly pacing";
-"menuBarSegment.fablePacing" = "Fable pacing";
+"menuBarSegment.fablePacing" = "Daily pacing";
 "menuBarSegment.sessionReset" = "Session reset countdown";
 "menuBarSegment.serviceStatus" = "Service status";
 
-"menuBarStyle.segment.labelValue" = "Label + value";
+"menuBarStyle.segment.labelValue" = "Icon + value";
 "menuBarStyle.segment.valueOnly" = "Value only";
 "menuBarStyle.segment.mono" = "Mono";
 "menuBarStyle.segment.pill" = "Pill";
@@ -850,7 +856,7 @@
 
 "pacing.session.label.short" = "Session";
 "pacing.weekly.label.short" = "Weekly";
-"pacing.fable.label.short" = "Fable";
+"pacing.fable.label.short" = "Daily";
 
 /* MARK: - Onboarding (Grok Bot session + Connect gates; Watchers omitted) */
 
@@ -912,30 +918,30 @@
 
 
 /* Vendor Status Banner */
-"status.banner.degraded" = "Claude is degraded";
-"status.banner.down" = "Claude is down";
+"status.banner.degraded" = "Cursor is degraded";
+"status.banner.down" = "Cursor is down";
 "status.banner.view" = "Status page";
 
 /* Vendor Status Dashboard Card */
-"dashboard.status.degraded" = "Claude is degraded";
-"dashboard.status.down" = "Claude is down";
+"dashboard.status.degraded" = "Cursor is degraded";
+"dashboard.status.down" = "Cursor is down";
 "dashboard.status.affected" = "Affected: %@";
 
-/* Fable (Claude Fable weekly limit) */
-"metric.fable" = "Fable";
-"widget.fable" = "Fable";
-"settings.notifications.track.fable" = "Track Claude Fable weekly";
-"notif.title.fable.pace" = "Ahead of Fable pace";
-"notif.body.fable.pace" = "You're ahead of an even Fable burn rate, not near the cap. Fine if intentional.";
-"notif.title.fable.orange" = "Fable pool heavy";
-"notif.title.fable.red" = "Fable almost gone";
-"notif.title.fable.green" = "Fable reset";
+/* Fable (Daily Grok Bot usage) */
+"metric.fable" = "Daily pace";
+"widget.fable" = "Daily";
+"settings.notifications.track.fable" = "Track daily usage";
+"notif.title.fable.pace" = "Ahead of daily pace";
+"notif.body.fable.pace" = "You're ahead of an even daily burn rate, not near the cap. Fine if intentional.";
+"notif.title.fable.orange" = "Daily pace heavy";
+"notif.title.fable.red" = "Daily pace almost maxed";
+"notif.title.fable.green" = "Daily pace reset";
 "notif.body.fable.orange" = "Resets %@";
-"notif.body.fable.orange.fallback" = "Past the Fable warning";
+"notif.body.fable.orange.fallback" = "Past the daily pace warning";
 "notif.body.fable.red" = "Ease off until %@";
-"notif.body.fable.red.fallback" = "Fable pool almost out";
-"notif.body.fable.green" = "Fable refilled at %@";
-"notif.body.fable.green.fallback" = "Fable refilled, you're back";
+"notif.body.fable.red.fallback" = "Daily pace almost maxed";
+"notif.body.fable.green" = "Daily pace refilled at %@";
+"notif.body.fable.green.fallback" = "Daily pace refilled, you're back";
 
 /* Grok Bot widget */
 "widget.grokBot" = "Grok Bot Eater";
@@ -948,11 +954,11 @@
 "widget.grokBot.empty" = "Open GrokBotEater and connect to load usage";
 "widget.grokBot.unavailable" = "Grok Bot usage is not available for this plan";
 "widget.title.grokBot" = "Grok Bot";
-"widget.description.grokBot" = "Weekly Grok Bot usage from your Cursor session";
+"widget.description.grokBot" = "Weekly Grok Bot usage from your Grok Bot account";
 
 
 "widget.grokBot.title" = "Grok Bot Eater";
-"widget.grokBot.description" = "Track daily pacing and weekly Grok Bot sand-usage from your Cursor plan.";
+"widget.grokBot.description" = "Track daily pacing and weekly Grok Bot usage from your Grok Bot plan.";
 
 /* Grok Bot pacing messages */
 "pacing.grokBot.chill.1" = "Plenty left";
@@ -967,3 +973,23 @@
 "pacing.grokBot.hot.1" = "Will empty early";
 "pacing.grokBot.hot.2" = "Emptying today";
 "pacing.grokBot.hot.3" = "Upgrade or slow";
+
+/* Daily Budget Alerts */
+"notif.title.grokBot.daily.orange" = "Today's budget at 60%";
+"notif.title.grokBot.daily.red" = "Today's budget almost used";
+"notif.title.grokBot.daily.green" = "Today's budget refilled";
+"notif.body.grokBot.daily" = "You've used %@%% of today's budget (%@%% of your weekly limit; today's share is %@%%). Weekly: %d%%, resets %@.";
+"notif.body.grokBot.daily.green" = "Fresh daily budget at %@";
+"notif.body.grokBot.daily.green.fallback" = "Fresh daily budget, you're back";
+
+/* Pace Alerts */
+"notif.title.grokBot.pace" = "Ahead of pace";
+"notif.body.grokBot.pace" = "You're using Grok Bot at %.2fx your normal pace. Weekly: %d%%, resets %@.";
+
+/* Settings - Daily Budget */
+"settings.notifications.track.grokBotDailyBudget" = "Daily budget alerts";
+"settings.notifications.track.grokBotPace" = "Pace alerts";
+
+/* Settings - Pacing */
+"settings.pacing.paceThreshold" = "Pace alert threshold";
+"settings.pacing.paceThreshold.hint" = "Fire when weekly usage pace (used% / elapsed%) exceeds this multiplier. Range: 1.1x - 2.0x.";

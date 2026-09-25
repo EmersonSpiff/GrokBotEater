@@ -1,5 +1,7 @@
 import Foundation
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
+#endif
 import Darwin
 
 struct ClaudeProcessInfo: Sendable {
@@ -7,6 +9,13 @@ struct ClaudeProcessInfo: Sendable {
     let parentPid: Int32
     let cwd: String
     let sourceKind: SessionSourceKind
+}
+
+struct GrokBotProcessInfo: Sendable {
+    let pid: Int32
+    let parentPid: Int32
+    let args: String
+    let isMainGrokBot: Bool
 }
 
 enum ProcessResolver {
@@ -438,6 +447,7 @@ enum ProcessResolver {
     /// Also detects non-GUI service processes (e.g. iTermServer) and maps them
     /// to their parent GUI app.
     private static func resolveHostApp(startingFrom pid: Int32) -> NSRunningApplication? {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let runningApps = NSWorkspace.shared.runningApplications
         var currentPid = pid
 
@@ -472,6 +482,9 @@ enum ProcessResolver {
             }
         }
         return nil
+        #else
+        return nil
+        #endif
     }
 
     // MARK: - Smart Tab Focus
@@ -631,6 +644,7 @@ enum ProcessResolver {
 
     /// Activate via LaunchServices - reliably switches spaces/fullscreen.
     private static func activateApp(_ app: NSRunningApplication) {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let url = app.bundleURL else {
             DispatchQueue.main.async { app.activate() }
             return
@@ -638,5 +652,86 @@ enum ProcessResolver {
         let config = NSWorkspace.OpenConfiguration()
         config.activates = true
         NSWorkspace.shared.openApplication(at: url, configuration: config, completionHandler: nil)
+        #endif
+    }
+    
+    // MARK: - Grok Bot Process Detection
+    
+    /// Find Grok Bot (bundle com.anysphere.sand) processes
+    static func findGrokBotProcesses() -> [GrokBotProcessInfo] {
+        let allProcs = listAllProcesses()
+        guard !allProcs.isEmpty else { return [] }
+        
+        return allProcs.compactMap { proc in
+            var pathBuffer = [CChar](repeating: 0, count: Int(MAXPATHLEN))
+            let ret = proc_pidpath(proc.pid, &pathBuffer, UInt32(MAXPATHLEN))
+            guard ret > 0 else { return nil }
+            let path = String(cString: pathBuffer)
+            
+            // Main Grok Bot.app executable
+            let isMain = path.contains("/Grok Bot.app/Contents/MacOS/Grok Bot")
+            
+            // Electron helper or any child
+            let isRelated = path.contains("/Grok Bot.app/") || isMain
+            
+            guard isRelated else { return nil }
+            
+            let args = getProcessArguments(pid: proc.pid)
+            
+            return GrokBotProcessInfo(
+                pid: proc.pid,
+                parentPid: proc.parentPid,
+                args: args,
+                isMainGrokBot: isMain
+            )
+        }
+    }
+    
+    private static func getProcessArguments(pid: Int32) -> String {
+        var mib: [Int32] = [CTL_KERN, KERN_PROCARGS2, pid]
+        var size: Int = 0
+        
+        guard sysctl(&mib, UInt32(mib.count), nil, &size, nil, 0) == 0, size > 0 else {
+            return ""
+        }
+        
+        var buffer = [UInt8](repeating: 0, count: size)
+        guard sysctl(&mib, UInt32(mib.count), &buffer, &size, nil, 0) == 0 else {
+            return ""
+        }
+        
+        // Parse the buffer: first Int32 is argc, followed by exe path and args (null-separated)
+        guard size > MemoryLayout<Int32>.size else { return "" }
+        
+        var offset = MemoryLayout<Int32>.size
+        // Skip over the executable path
+        while offset < buffer.count, buffer[offset] != 0 { offset += 1 }
+        while offset < buffer.count, buffer[offset] == 0 { offset += 1 }
+        
+        // Collect arguments
+        var args: [String] = []
+        var currentArg = Data()
+        
+        while offset < buffer.count {
+            if buffer[offset] == 0 {
+                if !currentArg.isEmpty, let arg = String(data: currentArg, encoding: .utf8) {
+                    args.append(arg)
+                    currentArg = Data()
+                }
+                if offset + 1 < buffer.count, buffer[offset + 1] == 0 {
+                    break
+                }
+            } else {
+                currentArg.append(buffer[offset])
+            }
+            offset += 1
+        }
+        
+        return args.joined(separator: " ")
+    }
+    
+    /// Check if a process is alive
+    static func isProcessAlive(pid: Int32) -> Bool {
+        kill(pid, 0) == 0
     }
 }

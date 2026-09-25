@@ -9,6 +9,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     var settingsStore: SettingsStore!
     var updateStore: UpdateStore!
     var sessionStore: SessionStore!
+    var grokBotAgentSessionStore: GrokBotAgentSessionStore!
     var vendorStatusStore: VendorStatusStore!
 
     private var statusBarController: StatusBarController?
@@ -44,14 +45,57 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             settingsStore: settingsStore,
             updateStore: updateStore,
             sessionStore: sessionStore,
+            grokBotAgentSessionStore: grokBotAgentSessionStore,
             vendorStatusStore: vendorStatusStore
         )
-        // GrokBotEater does not monitor Claude Code sessions. Keep overlay off
-        // until a Cursor/Grok Bot agent watcher exists.
-        settingsStore.overlayEnabled = false
+        
+        // Monitor always starts regardless of overlay toggle (for hero live count)
+        grokBotAgentSessionStore.startMonitoring()
+        grokBotAgentSessionStore.setScanInterval(settingsStore.watcherScanInterval.seconds)
+        grokBotAgentSessionStore.setActivityWindow(settingsStore.watcherIdleTimeout.seconds)
+        
+        // Observe overlay toggle to start/stop monitoring
+        settingsStore.overlay.$overlayEnabled
+            .sink { [weak grokBotAgentSessionStore, weak settingsStore] enabled in
+                guard let store = grokBotAgentSessionStore, let settings = settingsStore else { return }
+                if enabled {
+                    store.startMonitoring()
+                    store.setScanInterval(settings.watcherScanInterval.seconds)
+                    store.setActivityWindow(settings.watcherIdleTimeout.seconds)
+                } else {
+                    // Keep monitoring for hero count even when overlay is off
+                    // Just the overlay window hides; session data still updates
+                }
+            }
+            .store(in: &cancellables)
+        
+        // Observe scan interval changes
+        settingsStore.overlay.$watcherScanInterval
+            .sink { [weak grokBotAgentSessionStore] interval in
+                grokBotAgentSessionStore?.setScanInterval(interval.seconds)
+            }
+            .store(in: &cancellables)
+        
+        // Observe visibility window changes
+        settingsStore.overlay.$watcherVisibility
+            .sink { [weak grokBotAgentSessionStore] visibility in
+                grokBotAgentSessionStore?.setActivityWindow(visibility.seconds)
+            }
+            .store(in: &cancellables)
+        
+        // Observe idle timeout changes
+        settingsStore.overlay.$watcherIdleTimeout
+            .sink { [weak grokBotAgentSessionStore] timeout in
+                grokBotAgentSessionStore?.setActivityWindow(timeout.seconds)
+            }
+            .store(in: &cancellables)
+        
+        // Stop Claude monitoring
         sessionStore.stopMonitoring()
+        
         overlayWindowController = OverlayWindowController(
             sessionStore: sessionStore,
+            grokBotAgentSessionStore: grokBotAgentSessionStore,
             settingsStore: settingsStore
         )
 
@@ -70,6 +114,7 @@ struct TokenEaterApp: App {
     private let settingsStore: SettingsStore
     private let updateStore: UpdateStore
     private let sessionStore: SessionStore
+    private let grokBotAgentSessionStore: GrokBotAgentSessionStore
     private let vendorStatusStore: VendorStatusStore
 
     init() {
@@ -96,6 +141,7 @@ struct TokenEaterApp: App {
         self.settingsStore = SettingsStore()
         self.updateStore = UpdateStore()
         self.sessionStore = SessionStore()
+        self.grokBotAgentSessionStore = GrokBotAgentSessionStore()
         self.vendorStatusStore = VendorStatusStore()
 
         NotificationService().setupDelegate()
@@ -105,6 +151,7 @@ struct TokenEaterApp: App {
         appDelegate.settingsStore = settingsStore
         appDelegate.updateStore = updateStore
         appDelegate.sessionStore = sessionStore
+        appDelegate.grokBotAgentSessionStore = grokBotAgentSessionStore
         appDelegate.vendorStatusStore = vendorStatusStore
     }
 

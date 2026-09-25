@@ -11,6 +11,12 @@ final class PacingSettingsStore: ObservableObject {
     @Published var margin: Int {
         didSet { UserDefaults.standard.set(margin, forKey: "pacingMargin") }
     }
+    /// Pace threshold for daily pace alerts (weekly used% / elapsed% of week).
+    /// When the pace exceeds this multiplier (e.g., 1.25x), a notification fires.
+    /// Range: 1.1x - 2.0x, default 1.25x.
+    @Published var paceThreshold: Double {
+        didSet { UserDefaults.standard.set(paceThreshold, forKey: "pacingPaceThreshold") }
+    }
     /// Workweek pacing: when on, the expected pace only advances over the user's
     /// active days, so off-days don't make them look ahead of pace.
     @Published var workweekEnabled: Bool {
@@ -82,6 +88,8 @@ final class PacingSettingsStore: ObservableObject {
         self.hoursEnabled = SettingsDefaults.bool(key: "pacingHoursEnabled", default: false)
         self.startHour = SettingsDefaults.int(key: "pacingStartHour", default: PacingSchedule.defaultStartHour)
         self.endHour = SettingsDefaults.int(key: "pacingEndHour", default: PacingSchedule.defaultEndHour)
+        let threshold = UserDefaults.standard.object(forKey: "pacingPaceThreshold") as? Double ?? 1.25
+        self.paceThreshold = min(2.0, max(1.1, threshold))
         // Mirror the resolved schedule to the shared file so the (sandboxed)
         // widget computes pacing identically on first paint.
         sharedFileService.updatePacingSchedule(

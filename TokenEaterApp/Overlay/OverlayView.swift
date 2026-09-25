@@ -3,6 +3,7 @@ import AppKit
 
 struct OverlayView: View {
     @EnvironmentObject var sessionStore: SessionStore
+    @EnvironmentObject var grokBotAgentSessionStore: GrokBotAgentSessionStore
     @EnvironmentObject var settingsStore: SettingsStore
     @EnvironmentObject var overlayState: OverlayState
 
@@ -17,29 +18,35 @@ struct OverlayView: View {
     /// While a context menu is open the overlay renders the snapshot taken at
     /// open time, so the 2s scan republish can't reshuffle the rows (or
     /// rebuild the menu) mid-tracking. Live data otherwise.
-    private var displayedSessions: [ClaudeSession] {
-        overlayState.frozenSessions ?? sessionStore.overlaySessions
+    private var displayedGrokBotSessions: [GrokBotSession] {
+        overlayState.frozenGrokBotSessions ?? grokBotAgentSessionStore.overlaySessions
     }
 
     var body: some View {
         VStack(alignment: leftSide ? .leading : .trailing, spacing: 4) {
-            ForEach(Array(displayedSessions.enumerated()), id: \.element.id) { index, session in
-                let prox = proximity(for: index, in: displayedSessions)
+            ForEach(Array(displayedGrokBotSessions.enumerated()), id: \.element.id) { index, session in
+                let prox = proximity(for: index, in: displayedGrokBotSessions.count)
 
-                SessionTraitView(session: session, proximity: prox, scale: scale, leftSide: leftSide) {
-                    teleportToSession(session)
-                }
+                GrokBotAgentCard(
+                    session: session,
+                    proximity: prox,
+                    scale: scale,
+                    leftSide: leftSide,
+                    animationsEnabled: settingsStore.watcherAnimationsEnabled,
+                    style: settingsStore.overlay.watcherStyle,
+                    detailedMode: settingsStore.overlay.watchersDetailedMode,
+                    onTap: { togglePinnedCard(id: session.id) }
+                )
                 .animation(
                     .interactiveSpring(response: 0.18, dampingFraction: 0.78),
                     value: prox
                 )
                 .overlay(
-                    WatcherContextMenuCatcher(
+                    GrokBotAgentContextMenu(
                         session: session,
-                        onJump: { teleportToSession(session) },
                         onHide: {
                             endMenuFreeze()
-                            sessionStore.hideSession(id: session.id)
+                            grokBotAgentSessionStore.hideSession(id: session.id)
                         },
                         onMenuOpen: { beginMenuFreeze(for: session) },
                         onMenuClose: { endMenuFreeze() }
@@ -70,18 +77,26 @@ struct OverlayView: View {
 
     // MARK: - Dock-like proximity
 
-    private func proximity(for index: Int, in sessions: [ClaudeSession]) -> CGFloat {
+    private func proximity(for index: Int, in count: Int) -> CGFloat {
+        let sessions = displayedGrokBotSessions
+        guard index < sessions.count else { return 0.75 }
+        let sessionId = sessions[index].id
+        
+        // Pinned card -> keep it fully expanded
+        if let pinnedId = overlayState.pinnedCardId, pinnedId == sessionId {
+            return 1.0
+        }
+        
         // Menu open -> hover state is pinned: the card that owns the menu
         // stays fully expanded, its neighbours hold the base hover expansion,
         // regardless of where the cursor travels (it is on the menu).
         if let menuId = overlayState.contextMenuSessionId {
-            return sessions[index].id == menuId ? 1.0 : 0.75
+            return sessionId == menuId ? 1.0 : 0.75
         }
 
         guard let cursor = overlayState.cursorInWindow else { return 0 }
 
         let wWidth = overlayState.windowWidth
-        let count = sessions.count
         let actualHeight = overlayState.windowHeight
         let totalHeight = CGFloat(count) * expandedHeight + CGFloat(max(0, count - 1)) * baseSpacing
         let startY = (actualHeight - totalHeight) / 2 + contentOffset + dragDelta
@@ -125,26 +140,27 @@ struct OverlayView: View {
 
     /// Pin the overlay while the menu tracks: snapshot the rendered sessions
     /// and record which card owns the menu so `proximity` keeps it expanded.
-    private func beginMenuFreeze(for session: ClaudeSession) {
-        overlayState.frozenSessions = sessionStore.overlaySessions
+    private func beginMenuFreeze(for session: GrokBotSession) {
+        overlayState.frozenGrokBotSessions = grokBotAgentSessionStore.overlaySessions
         overlayState.contextMenuSessionId = session.id
     }
 
     private func endMenuFreeze() {
         guard overlayState.contextMenuSessionId != nil else { return }
-        overlayState.frozenSessions = nil
+        overlayState.frozenGrokBotSessions = nil
         overlayState.contextMenuSessionId = nil
     }
-
-    // MARK: - Teleport
-
-    private func teleportToSession(_ session: ClaudeSession) {
-        guard let pid = session.processPid else { return }
-        DispatchQueue.global(qos: .userInitiated).async {
-            let processes = ProcessResolver.findClaudeProcesses()
-            if let process = processes.first(where: { $0.pid == pid }) {
-                ProcessResolver.activateTerminal(for: process)
-            }
+    
+    private func togglePinnedCard(id: String) {
+        let oldPinnedId = overlayState.pinnedCardId
+        let wasPinned = oldPinnedId == id
+        
+        if wasPinned {
+            overlayState.pinnedCardId = nil
+            print("[Overlay] Card clicked: unpinned '\(id)' (was pinned, now collapsed)")
+        } else {
+            overlayState.pinnedCardId = id
+            print("[Overlay] Card clicked: pinned '\(id)' (was \(oldPinnedId.map { "pinned '\($0)'" } ?? "none"), now expanded)")
         }
     }
 }

@@ -8,21 +8,20 @@ enum Vendor: String, Codable, CaseIterable, Identifiable, Sendable {
 
     var displayName: String {
         switch self {
-        case .claude: return "Claude"
+        case .claude: return "Cursor"
         }
     }
 
-    /// Atlassian Statuspage v2 API base. We hardcode `status.claude.com`
-    /// because `status.anthropic.com` 302-redirects here.
+    /// Atlassian Statuspage v2 API base. Monitor Cursor service status.
     var statusAPIBaseURL: URL {
         switch self {
-        case .claude: return URL(string: "https://status.claude.com/api/v2")!
+        case .claude: return URL(string: "https://status.cursor.com/api/v2")!
         }
     }
 
     var statusPageURL: URL {
         switch self {
-        case .claude: return URL(string: "https://status.claude.com")!
+        case .claude: return URL(string: "https://status.cursor.com")!
         }
     }
 
@@ -30,7 +29,7 @@ enum Vendor: String, Codable, CaseIterable, Identifiable, Sendable {
     /// vendor's health. Unrelated components (web app, console) are ignored.
     var relevantComponentMatches: [String] {
         switch self {
-        case .claude: return ["Claude Code", "api.anthropic.com"]
+        case .claude: return ["Cursor", "API", "Service"]
         }
     }
 }

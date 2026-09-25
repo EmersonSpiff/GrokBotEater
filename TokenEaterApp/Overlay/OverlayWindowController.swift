@@ -1,6 +1,9 @@
 import AppKit
 import SwiftUI
 import Combine
+import os.log
+
+private let logger = Logger(subsystem: "com.emersonspiff.grokboteater.app", category: "OverlayWindow")
 
 @MainActor
 final class OverlayState: ObservableObject {
@@ -20,12 +23,17 @@ final class OverlayState: ObservableObject {
     /// collapsing the cards (the cursor is on the menu, outside the panel)
     /// and the panel stays interactive.
     @Published var contextMenuSessionId: String? = nil
+    
+    /// Id of the session that is pinned expanded by click, nil otherwise.
+    /// When non-nil, that card stays fully expanded regardless of cursor position.
+    @Published var pinnedCardId: String? = nil
 
     /// Snapshot of the rendered sessions taken when a context menu opens,
     /// released on close. Rendering from the snapshot pins the rows while the
     /// menu tracks, so the 2s scan republish can't reshuffle or restyle the
     /// card under the open menu.
     @Published var frozenSessions: [ClaudeSession]? = nil
+    @Published var frozenGrokBotSessions: [GrokBotSession]? = nil
 }
 
 @MainActor
@@ -37,6 +45,7 @@ final class OverlayWindowController {
     private var screenObserver: NSObjectProtocol?
 
     private let sessionStore: SessionStore
+    private let grokBotAgentSessionStore: GrokBotAgentSessionStore
     private let settingsStore: SettingsStore
     let overlayState = OverlayState()
     private var lastCursorCheck: CFAbsoluteTime = 0
@@ -58,8 +67,9 @@ final class OverlayWindowController {
         min(windowWidth, settingsStore.overlayTriggerZone.exitWidth * CGFloat(settingsStore.overlayScale))
     }
 
-    init(sessionStore: SessionStore, settingsStore: SettingsStore) {
+    init(sessionStore: SessionStore, grokBotAgentSessionStore: GrokBotAgentSessionStore, settingsStore: SettingsStore) {
         self.sessionStore = sessionStore
+        self.grokBotAgentSessionStore = grokBotAgentSessionStore
         self.settingsStore = settingsStore
 
         observeSettings()
@@ -78,23 +88,22 @@ final class OverlayWindowController {
             }
             .store(in: &cancellables)
 
-        // Show/hide follows the sessions the overlay actually renders:
-        // active minus user-hidden (#247). Hiding the last visible watcher
-        // must drop the panel, and a purge of hidden ids must bring it back.
-        // An open context menu pins the panel: tearing it down would kill the
-        // menu mid-tracking; the close re-emits and settles the real state.
+        // Show/hide follows Grok Bot sessions
         Publishers.CombineLatest3(
-            sessionStore.$sessions,
-            sessionStore.$hiddenSessionIds,
+            grokBotAgentSessionStore.$sessions,
+            grokBotAgentSessionStore.$hiddenSessionIds,
             overlayState.$contextMenuSessionId
         )
             .map { sessions, hidden, openMenu in
-                openMenu != nil || sessions.contains { !$0.isDead && !hidden.contains($0.id) }
+                let visibleSessions = sessions.filter { !$0.isDead && !hidden.contains($0.id) }
+                logger.info("Overlay session check: \(sessions.count) total, \(visibleSessions.count) visible, menuOpen=\(openMenu != nil)")
+                return openMenu != nil || !visibleSessions.isEmpty
             }
             .removeDuplicates()
             .receive(on: RunLoop.main)
             .sink { [weak self] hasVisible in
                 guard let self, self.settingsStore.overlayEnabled else { return }
+                logger.info("Overlay visibility decision: hasVisible=\(hasVisible), enabled=\(self.settingsStore.overlayEnabled)")
                 if hasVisible {
                     self.showOverlay()
                 } else {
@@ -167,17 +176,21 @@ final class OverlayWindowController {
     }
 
     private func showOverlay() {
+        let sessionCount = grokBotAgentSessionStore.overlaySessions.count
+        logger.info("showOverlay called: \(sessionCount) Grok Bot agent sessions visible")
+        
         guard panel == nil else {
             panel?.orderFront(nil)
             return
         }
 
-        guard let screen = NSScreen.main else { return }
+        guard let screen = targetScreen() else { return }
         let screenFrame = screen.visibleFrame
         let panelHeight = screenFrame.height
 
         let overlayView = OverlayView()
             .environmentObject(sessionStore)
+            .environmentObject(grokBotAgentSessionStore)
             .environmentObject(settingsStore)
             .environmentObject(overlayState)
 
@@ -250,7 +263,7 @@ final class OverlayWindowController {
     }
 
     private func positionPanel(_ panel: NSPanel) {
-        guard let screen = NSScreen.main else { return }
+        guard let screen = targetScreen() else { return }
         let screenFrame = screen.visibleFrame
         let w = windowWidth
 
@@ -258,7 +271,34 @@ final class OverlayWindowController {
             ? screenFrame.minX
             : screenFrame.maxX - w
 
+        logger.info("Positioning overlay on screen: \(screen.localizedName, privacy: .public)")
         panel.setFrame(NSRect(x: x, y: screenFrame.minY, width: w, height: screenFrame.height), display: true)
+    }
+    
+    private func targetScreen() -> NSScreen? {
+        // If a specific display is set, try to find it
+        if let ref = settingsStore.overlaySpecificDisplay {
+            // Try to find by displayID first
+            if let screen = NSScreen.screens.first(where: { screen in
+                guard let screenNumber = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else {
+                    return false
+                }
+                return screenNumber.uint32Value == ref.displayID
+            }) {
+                return screen
+            }
+            
+            // Fallback to name matching
+            if let screen = NSScreen.screens.first(where: { $0.localizedName == ref.displayName }) {
+                return screen
+            }
+            
+            // Display disconnected, fall back to main
+            logger.info("Selected display '\(ref.displayName)' (ID \(ref.displayID)) not found, falling back to main display")
+        }
+        
+        // For followMenuBar and mainDisplay, or when specific display not found
+        return NSScreen.main
     }
 
     private func updateCursorTracking() {
@@ -286,6 +326,7 @@ final class OverlayWindowController {
             // Only fire objectWillChange if it was non-nil
             if overlayState.cursorInWindow != nil {
                 overlayState.cursorInWindow = nil
+                overlayState.pinnedCardId = nil
             }
             panel.ignoresMouseEvents = true
             return
@@ -310,35 +351,35 @@ final class OverlayWindowController {
             return
         }
 
-        // Horizontal zone: use the wider "exit" width once the panel is
-        // already active so the cursor can drift off the tight entry strip
-        // without the overlay snapping shut mid-hover.
+        // Use the new shouldCapture API from upstream c738ce8
         let distanceFromEdge = settingsStore.overlayLeftSide ? localX : (frame.width - localX)
-        let threshold = isPanelActive ? exitZone : enterZone
-        guard distanceFromEdge <= threshold else {
-            isPanelActive = false
-            if overlayState.activationZone != enterZone {
+        let sessionCount = grokBotAgentSessionStore.overlaySessions.count
+        
+        let shouldTakeMouse = OverlayHitTest.shouldCapture(
+            distanceFromEdge: distanceFromEdge,
+            cursorY: localY,
+            isOpen: isPanelActive,
+            sessionCount: sessionCount,
+            scale: CGFloat(settingsStore.overlayScale),
+            windowHeight: overlayState.windowHeight,
+            contentOffset: overlayState.contentOffset,
+            enterWidth: enterZone,
+            exitWidth: exitZone
+        )
+        
+        // Update panel state based on hover
+        if shouldTakeMouse {
+            if !isPanelActive {
+                isPanelActive = true
+                overlayState.activationZone = exitZone
+            }
+        } else {
+            if isPanelActive {
+                isPanelActive = false
                 overlayState.activationZone = enterZone
             }
-            panel.ignoresMouseEvents = true
-            return
         }
-        isPanelActive = true
-        if overlayState.activationZone != exitZone {
-            overlayState.activationZone = exitZone
-        }
-
-        let scale = CGFloat(settingsStore.overlayScale)
-        let itemHeight: CGFloat = 40 * scale
-        let itemSpacing: CGFloat = 6 * scale
-        let count = sessionStore.overlaySessions.count
-        let totalHeight = CGFloat(count) * itemHeight + CGFloat(max(0, count - 1)) * itemSpacing
-        let startY = (overlayState.windowHeight - totalHeight) / 2 + overlayState.contentOffset
-
-        panel.ignoresMouseEvents = !OverlayHitTest.isCursorNearSessions(
-            cursorY: localY,
-            sessionsMinY: startY,
-            sessionsMaxY: startY + totalHeight
-        )
+        
+        panel.ignoresMouseEvents = !shouldTakeMouse
     }
 }

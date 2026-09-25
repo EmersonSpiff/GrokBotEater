@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct AgentWatchersSectionView: View {
     @EnvironmentObject private var settingsStore: SettingsStore
@@ -10,41 +11,58 @@ struct AgentWatchersSectionView: View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(alignment: .leading, spacing: 18) {
                 sectionTitle(
-                    String(localized: "sidebar.agentWatchers"),
-                    subtitle: String(localized: "sidebar.agentWatchers.subtitle")
+                    "Grok Bot Agent Watchers",
+                    subtitle: "Floating overlay for your live Grok Bot agents"
                 )
 
-                grokBotWatchersComingSoon
+                enableToggleCard
+                styleGroup
+                behaviorGroup
+                legendGroup
+
+                ResetSectionButton(
+                    confirmTitle: String(localized: "settings.watchers.reset.confirm"),
+                    onReset: resetWatcherDefaults
+                )
 
                 Spacer(minLength: 0)
             }
             .padding(24)
         }
+        .sheet(isPresented: $showTerminalSetup) {
+            TerminalSetupSheet(isPresented: $showTerminalSetup)
+        }
     }
 
-    private var grokBotWatchersComingSoon: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 10) {
-                Image(systemName: "waveform.path.ecg")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(DS.Palette.brandPrimary)
-                Text(String(localized: "settings.watchers.coming.title"))
-                    .font(.system(size: 13, weight: .semibold))
+    private var enableToggleCard: some View {
+        HStack(alignment: .center, spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Grok Bot Agent Watchers")
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(DS.Palette.textPrimary)
+                Text("Track live Grok Bot agents in a floating overlay")
+                    .font(.system(size: 11))
+                    .foregroundStyle(DS.Palette.textSecondary)
             }
-            Text(String(localized: "settings.watchers.coming.body"))
-                .font(.system(size: 12))
-                .foregroundStyle(DS.Palette.textSecondary)
-                .fixedSize(horizontal: false, vertical: true)
+            Spacer()
+            ClickChip(
+                label: settingsStore.overlayEnabled ? "On" : "Off",
+                icon: settingsStore.overlayEnabled ? "checkmark" : "eye.slash",
+                isActive: settingsStore.overlayEnabled,
+                accent: .blue,
+                style: .compact
+            ) {
+                settingsStore.overlayEnabled.toggle()
+            }
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(DS.Palette.brandPrimary.opacity(0.08))
+                .fill(DS.Palette.bgElevated.opacity(0.5))
                 .overlay(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .stroke(DS.Palette.brandPrimary.opacity(0.25), lineWidth: 1)
+                        .stroke(DS.Palette.glassBorderLo, lineWidth: 1)
                 )
         )
     }
@@ -66,12 +84,12 @@ struct AgentWatchersSectionView: View {
         groupSection(title: "settings.watchers.behavior", subtitle: "settings.watchers.behavior.hint") {
             VStack(alignment: .leading, spacing: 14) {
                 // Display mode -> chip pair
-                groupLabel("settings.watchers.display")
+                groupLabel("Agent sort order")
                 HStack(spacing: 8) {
                     ForEach(WatcherDisplayMode.allCases, id: \.self) { mode in
                         BinaryChoiceChip(
                             label: mode.label,
-                            icon: mode == .branchPriority ? "arrow.triangle.branch" : "folder.fill",
+                            icon: mode.icon,
                             isActive: settingsStore.watcherDisplayMode == mode
                         ) {
                             settingsStore.watcherDisplayMode = mode
@@ -84,13 +102,7 @@ struct AgentWatchersSectionView: View {
                     .padding(.top, 4)
                 HStack(spacing: 6) {
                     ForEach(OverlayTriggerZone.allCases) { zone in
-                        BinaryChoiceChip(
-                            label: zone.localizedLabel,
-                            icon: triggerIcon(zone),
-                            isActive: settingsStore.overlayTriggerZone == zone
-                        ) {
-                            settingsStore.overlayTriggerZone = zone
-                        }
+                        triggerZoneChip(zone)
                     }
                 }
 
@@ -123,6 +135,27 @@ struct AgentWatchersSectionView: View {
                         }
                     }
                 }
+
+                // Idle timeout -> chips (how long before cards disappear)
+                groupLabel("settings.watchers.idletimeout")
+                    .padding(.top, 4)
+                HStack(spacing: 6) {
+                    ForEach(WatcherIdleTimeout.allCases, id: \.self) { timeout in
+                        BinaryChoiceChip(
+                            label: timeout.label,
+                            icon: "clock",
+                            isActive: settingsStore.watcherIdleTimeout == timeout
+                        ) {
+                            settingsStore.watcherIdleTimeout = timeout
+                        }
+                    }
+                }
+
+                // Display selection
+                groupLabel("Display")
+                    .padding(.top, 4)
+                displayPicker
+                    .padding(.top, 2)
 
                 // Side + dock effect + animations -> chip row
                 HStack(spacing: 8) {
@@ -199,6 +232,108 @@ struct AgentWatchersSectionView: View {
         case .wide:    return "rectangle.expand.vertical"
         }
     }
+    
+    @ViewBuilder
+    private func triggerZoneChip(_ zone: OverlayTriggerZone) -> some View {
+        let needsRotation = zone == .minimal || zone == .wide
+        BinaryChoiceChip(
+            label: zone.localizedLabel,
+            icon: triggerIcon(zone),
+            isActive: settingsStore.overlayTriggerZone == zone,
+            iconRotation: needsRotation ? 90 : 0
+        ) {
+            settingsStore.overlayTriggerZone = zone
+        }
+    }
+
+    // MARK: - Display picker
+    
+    private var displayPicker: some View {
+        Menu {
+            Button {
+                settingsStore.overlayDisplayTarget = .followMenuBar
+                settingsStore.overlaySpecificDisplay = nil
+            } label: {
+                HStack {
+                    Text(OverlayDisplayTarget.followMenuBar.label)
+                    if settingsStore.overlayDisplayTarget == .followMenuBar && settingsStore.overlaySpecificDisplay == nil {
+                        Image(systemName: "checkmark")
+                    }
+                }
+            }
+            
+            Button {
+                settingsStore.overlayDisplayTarget = .mainDisplay
+                settingsStore.overlaySpecificDisplay = nil
+            } label: {
+                HStack {
+                    Text(OverlayDisplayTarget.mainDisplay.label)
+                    if settingsStore.overlayDisplayTarget == .mainDisplay && settingsStore.overlaySpecificDisplay == nil {
+                        Image(systemName: "checkmark")
+                    }
+                }
+            }
+            
+            if NSScreen.screens.count > 1 {
+                Divider()
+                ForEach(NSScreen.screens, id: \.self) { screen in
+                    Button {
+                        if let screenNumber = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber {
+                            let displayID = screenNumber.uint32Value
+                            let displayName = screen.localizedName
+                            settingsStore.overlayDisplayTarget = .followMenuBar
+                            settingsStore.overlaySpecificDisplay = OverlayDisplayReference(
+                                displayID: displayID,
+                                displayName: displayName
+                            )
+                        }
+                    } label: {
+                        HStack {
+                            Text(screen.localizedName)
+                            if let ref = settingsStore.overlaySpecificDisplay,
+                               let screenNumber = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber,
+                               screenNumber.uint32Value == ref.displayID {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "display")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(DS.Palette.textSecondary)
+                
+                Text(displayPickerLabel)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(DS.Palette.textPrimary)
+                
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(DS.Palette.textTertiary)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(DS.Palette.bgElevated)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .stroke(DS.Palette.glassBorderLo, lineWidth: 1)
+                    )
+            )
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+    }
+    
+    private var displayPickerLabel: String {
+        if let ref = settingsStore.overlaySpecificDisplay {
+            return ref.displayName
+        }
+        return settingsStore.overlayDisplayTarget.label
+    }
 
     // MARK: - Legend group
 
@@ -225,15 +360,14 @@ struct AgentWatchersSectionView: View {
                 Divider().opacity(0.12)
 
                 if settingsStore.watchersDetailedMode {
-                    statusRow(color: Color(red: 0.3, green: 0.78, blue: 0.52), label: String(localized: "settings.watchers.idle"))
-                    statusRow(color: Color(red: 0.95, green: 0.62, blue: 0.22), label: String(localized: "settings.watchers.thinking"))
-                    statusRow(color: Color(red: 0.38, green: 0.58, blue: 0.95), label: String(localized: "settings.watchers.executing"))
-                    statusRow(color: Color(red: 0.7, green: 0.45, blue: 0.95), label: String(localized: "settings.watchers.waiting"))
-                    statusRow(color: Color(red: 0.25, green: 0.85, blue: 0.85), label: String(localized: "settings.watchers.subagent"))
-                    statusRow(color: Color(red: 0.55, green: 0.55, blue: 0.60), label: String(localized: "settings.watchers.compacting"))
+                    grokBotStatusRow(symbol: "sparkles", color: Color(red: 0.3, green: 0.7, blue: 1.0), label: "Working", description: "Agent is generating a response")
+                    grokBotStatusRow(symbol: "person.bubble", color: .orange, label: "Waiting on you", description: "Agent needs your input")
+                    grokBotStatusRow(symbol: "desktopcomputer.and.macbook", color: .purple, label: "Running locally", description: "Local command in progress")
+                    grokBotStatusRow(symbol: "moon.stars", color: .gray, label: "Idle", description: "No activity")
+                    grokBotStatusRow(symbol: "checkmark.square", color: .green, label: "Done", description: "Finished with new output")
                 } else {
-                    statusRow(color: Color(red: 0.3, green: 0.78, blue: 0.52), label: String(localized: "settings.watchers.simple.idle"))
-                    statusRow(color: Color(red: 0.95, green: 0.62, blue: 0.22), label: String(localized: "settings.watchers.simple.working"))
+                    grokBotStatusRow(symbol: "sparkles", color: Color(red: 0.95, green: 0.62, blue: 0.22), label: "Working", description: "Agent is active (working, running locally)")
+                    grokBotStatusRow(symbol: "moon.stars", color: Color(red: 0.3, green: 0.78, blue: 0.52), label: "Idle", description: "Agent needs you, idle, or done")
                 }
             }
             .animation(.spring(response: 0.32, dampingFraction: 0.85), value: settingsStore.watchersDetailedMode)
@@ -324,16 +458,17 @@ struct AgentWatchersSectionView: View {
         settingsStore.watcherDisplayMode = .branchPriority
         settingsStore.watcherScanInterval = .twoSeconds
         settingsStore.watcherVisibility = .thirtyMinutes
+        settingsStore.watcherIdleTimeout = .ten
         settingsStore.watcherAnimationsEnabled = true
     }
 
     // MARK: - Style preview cards
 
-    /// Renders the actual `SessionTraitView` (the same component that drives
+    /// Renders the actual `GrokBotAgentCard` (the same component that drives
     /// the live overlay) at proximity 1.0 with a forced style override. This
     /// guarantees pixel-parity with what the user sees on screen, AND the
     /// preview reactively updates when the user flips Display mode / Legend
-    /// detail / animations - because SessionTraitView reads those from
+    /// detail / animations - because GrokBotAgentCard reads those from
     /// settingsStore directly.
     private func stylePreviewCard(_ style: WatcherStyle) -> some View {
         let isSelected = settingsStore.watcherStyle == style
@@ -343,11 +478,15 @@ struct AgentWatchersSectionView: View {
             }
         } label: {
             VStack(alignment: .leading, spacing: 8) {
-                SessionTraitView(
-                    session: previewSession,
+                GrokBotAgentCard(
+                    session: previewGrokBotSession,
                     proximity: 1.0,
                     scale: 0.92,
-                    forcedStyle: style
+                    leftSide: false,
+                    animationsEnabled: settingsStore.watcherAnimationsEnabled,
+                    style: style,
+                    detailedMode: settingsStore.overlay.watchersDetailedMode,
+                    onTap: {}
                 )
                 .frame(maxWidth: .infinity, alignment: .trailing)
                 .allowsHitTesting(false)
@@ -377,24 +516,21 @@ struct AgentWatchersSectionView: View {
         .buttonStyle(.plain)
     }
 
-    /// Synthetic session driving the style preview tiles. Mirrors the
-    /// onboarding mocks so users see the same realistic example. `lastUpdate`
-    /// uses `Date()` per render so the freshness check inside SessionTraitView
-    /// keeps the tile rendering "live" rather than going stale-faded.
-    private var previewSession: ClaudeSession {
+    /// Synthetic Grok Bot session driving the style preview tiles.
+    private var previewGrokBotSession: GrokBotSession {
         let now = Date()
-        return ClaudeSession(
+        return GrokBotSession(
             id: "settings-watcher-preview",
-            projectPath: "/Users/dev/tokeneater",
-            gitBranch: "feat/menu-bar",
-            model: "claude-sonnet-4-6",
-            state: .thinking,
-            lastUpdate: now,
-            startedAt: now.addingTimeInterval(-300),
-            processPid: 1,
-            sourceKind: .terminal,
-            contextTokens: 70_000,
-            contextMax: 200_000
+            name: "grok-bot-agent",
+            title: nil,
+            state: .working,
+            lastActivityAt: now,
+            awaitingUserResponse: false,
+            unreadCount: 0,
+            isHiddenFromSidebar: false,
+            isStreaming: true,
+            hasLocalWork: false,
+            lastTranscriptTimestamp: now
         )
     }
 
@@ -427,6 +563,32 @@ struct AgentWatchersSectionView: View {
                 )
                 .shadow(color: neonVariant.opacity(0.4), radius: 3)
         }
+    }
+    
+    private func grokBotStatusRow(symbol: String, color: Color, label: String, description: String) -> some View {
+        HStack(spacing: 10) {
+            Group {
+                if symbol == "desktopcomputer.and.macbook" {
+                    Image(systemName: symbol)
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(Color.secondary, color)
+                } else {
+                    Image(systemName: symbol)
+                        .foregroundStyle(color)
+                }
+            }
+            .font(.system(size: 12, weight: .semibold))
+            .frame(width: 20)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(label)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(DS.Palette.textPrimary)
+                Text(description)
+                    .font(.system(size: 10))
+                    .foregroundStyle(DS.Palette.textTertiary)
+            }
+        }
+        .padding(.vertical, 4)
     }
 }
 

@@ -58,8 +58,30 @@ final class MockNotificationService: NotificationServiceProtocol {
     }
     
     var lastGrokBotEvaluation: (usagePercent: Int, resetDate: Date?, toggles: NotificationToggles)?
+    var lastGrokBotDailyBudgetEvaluation: (weeklyUsedPercent: Int, resetDate: Date?, now: Date, toggles: NotificationToggles)?
+    var lastGrokBotPaceEvaluation: (weeklyUsedPercent: Int, elapsedFraction: Double, resetDate: Date?, dailyUsageToReachPace: Double, now: Date, toggles: NotificationToggles)?
     
     func evaluateGrokBot(usagePercent: Int, resetDate: Date?, toggles: NotificationToggles) {
         lastGrokBotEvaluation = (usagePercent, resetDate, toggles)
+    }
+    
+    func evaluateGrokBotDailyBudget(
+        weeklyUsedPercent: Int,
+        resetDate: Date?,
+        now: Date,
+        toggles: NotificationToggles
+    ) {
+        lastGrokBotDailyBudgetEvaluation = (weeklyUsedPercent, resetDate, now, toggles)
+    }
+    
+    func evaluateGrokBotPace(
+        weeklyUsedPercent: Int,
+        elapsedFraction: Double,
+        resetDate: Date?,
+        dailyUsageToReachPace: Double,
+        now: Date,
+        toggles: NotificationToggles
+    ) {
+        lastGrokBotPaceEvaluation = (weeklyUsedPercent, elapsedFraction, resetDate, dailyUsageToReachPace, now, toggles)
     }
 }

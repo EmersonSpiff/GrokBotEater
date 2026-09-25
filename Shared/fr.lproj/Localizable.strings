@@ -7,7 +7,7 @@
 "menubar.updated" = "Mis à jour %@";
 
 /* Metrics */
-"metric.session" = "5h";
+"metric.session" = "Hebdo";
 "metric.serviceStatus" = "État du service";
 
 /* Extra usage (paid credits pool) */
@@ -23,7 +23,7 @@
 "settings.group.weekly" = "Weekly";
 "settings.group.sonnet" = "Sonnet";
 "metric.weekly" = "Hebdo";
-"metric.sonnet" = "Sonnet";
+"metric.sonnet" = "Quotidien";
 "metric.reset" = "Reset dans %@";
 
 /* Widget */
@@ -95,7 +95,7 @@
 "settings.session.reset" = "Afficher le compte à rebours";
 "pacing.session.label" = "Rythme session";
 "pacing.weekly.label" = "Rythme hebdomadaire";
-"pacing.fable.label" = "Rythme Fable";
+"pacing.fable.label" = "Rythme quotidien";
 "pacing.cooldown" = "retour à 0%% dans %@";
 "pacing.sonnet.label" = "Rythme Sonnet";
 "settings.display.sonnet" = "Afficher Sonnet";
@@ -139,7 +139,7 @@
 
 /* Guide */
 "guide.title" = "Configuration";
-"guide.oauth.title" = "Claude Code";
+"guide.oauth.title" = "Cursor";
 "guide.oauth.badge" = "Recommandé";
 "guide.oauth.step1" = "Installez **Claude Code** (le CLI d'Anthropic)";
 "guide.oauth.step2" = "Ouvrez GrokBotEater et cliquez sur **Connecter**";
@@ -165,9 +165,9 @@
 "error.banner.reauth.hint" = "Token expiré et la récupération automatique a échoué";
 "error.banner.reauth.button" = "Ré-autoriser";
 "error.banner.waiting" = "En attente du rafraîchissement par Claude Code";
-"error.banner.apiunavailable" = "API usage throttle par Anthropic";
-"error.banner.apiunavailable.hint" = "C'est une limite de débit côté Anthropic (leur API usage), pas votre token ni votre configuration. Rien à corriger de votre côté - GrokBotEater réessaie tout seul et se met à jour dès que la limite se lève (bug connu : anthropics/claude-code#31637).";
-"error.banner.apiunavailable.settings" = "C'est côté Anthropic (leur API usage), pas votre token ni votre configuration. GrokBotEater réessaie automatiquement et repart dès que la limite se lève.";
+"error.banner.apiunavailable" = "API usage throttle par Cursor";
+"error.banner.apiunavailable.hint" = "C'est une limite de débit côté Cursor (leur API usage), pas votre token ni votre configuration. Rien à corriger de votre côté - GrokBotEater réessaie tout seul et se met à jour dès que la limite se lève.";
+"error.banner.apiunavailable.settings" = "C'est côté Cursor (leur API usage), pas votre token ni votre configuration. GrokBotEater réessaie automatiquement et repart dès que la limite se lève.";
 "error.banner.apiunavailable.learnmore" = "En savoir plus";
 "error.banner.lastupdate" = "Dernière mise à jour réussie : %@";
 "error.banner.retry.button" = "Réessayer";
@@ -297,9 +297,9 @@
 "notif.title.grokBot.orange" = "Grok Bot qui se remplit";
 "notif.title.grokBot.red" = "Grok Bot presque plein";
 "notif.title.grokBot.green" = "Grok Bot relancé";
-"notif.body.grokBot.orange" = "Reset %@";
-"notif.body.grokBot.orange.fallback" = "Au-delà du seuil Grok Bot";
-"notif.body.grokBot.red" = "Tranquille jusqu'au %@";
+"notif.body.grokBot.orange" = "Vous avez utilisé %d%% de votre quota Grok Bot cette semaine. Reset %@.";
+"notif.body.grokBot.orange.fallback" = "Au-delà du seuil d'alerte Grok Bot";
+"notif.body.grokBot.red" = "Vous avez utilisé %d%% de votre quota Grok Bot cette semaine. Reset %@.";
 "notif.body.grokBot.red.fallback" = "Limite Grok Bot presque atteinte";
 "notif.body.grokBot.green" = "Nouveau cycle, t'es de retour le %@";
 "notif.body.grokBot.green.fallback" = "Nouveau cycle, t'es de retour";
@@ -314,9 +314,9 @@
 
 /* Notifications - Vendor status */
 "notif.title.status.claude.degraded" = "Claude est dégradé";
-"notif.body.status.claude.degraded" = "Anthropic signale un incident";
-"notif.title.status.claude.down" = "Claude est hors service";
-"notif.body.status.claude.down" = "Anthropic signale une panne majeure";
+"notif.body.status.claude.degraded" = "Cursor signale un incident";
+"notif.title.status.claude.down" = "Cursor est hors service";
+"notif.body.status.claude.down" = "Cursor signale une panne majeure";
 "notif.title.status.claude.restored" = "Claude est rétabli";
 "notif.body.status.claude.restored" = "Service rétabli";
 "settings.notifications.title" = "Notifications";
@@ -349,7 +349,7 @@
 "settings.notifications.reset.offset.minutes" = "%d min avant";
 "settings.notifications.reset.offset.hours" = "%dh avant";
 "settings.notifications.group.extra" = "Extra credits";
-"settings.notifications.group.extra.hint" = "Ne se déclenche que si le pool payant est activé sur ton plan Anthropic.";
+"settings.notifications.group.extra.hint" = "Ne se déclenche que si le pool payant est activé sur ton plan Cursor.";
 "settings.notifications.extra" = "Pool warning / critique";
 "settings.notifications.group.health" = "Santé";
 "settings.notifications.group.health.hint" = "Soucis de connexion qui peuvent bloquer le suivi.";
@@ -552,7 +552,7 @@
 "settings.watchers.compacting" = "Compacting - compresse le contexte";
 "settings.watchers.detailed" = "Mode détaillé";
 "settings.watchers.simple.idle" = "Idle - en attente d'une action";
-"settings.watchers.simple.working" = "Working - Claude travaille";
+"settings.watchers.simple.working" = "Working - Agent occupé";
 "settings.watchers.behavior" = "Comportement";
 
 /* Watcher card context menu (right-click on an overlay card) */
@@ -584,6 +584,12 @@
 "settings.watchers.display.projectAndBranch" = "Projet + Branche";
 "settings.watchers.scanrate" = "Fréquence de scan";
 "settings.watchers.visibility" = "Visibilité";
+"settings.watchers.idletimeout" = "Délai d'inactivité";
+"settings.watchers.idletimeout.3min" = "3 min";
+"settings.watchers.idletimeout.5min" = "5 min";
+"settings.watchers.idletimeout.10min" = "10 min";
+"settings.watchers.idletimeout.15min" = "15 min";
+"settings.watchers.idletimeout.30min" = "30 min";
 "settings.watchers.display.branchPriority.hint" = "Affiche la branche git en titre quand elle n'est pas par défaut, sinon le nom du projet.";
 "settings.watchers.display.projectAndBranch.hint" = "Affiche toujours le nom du projet en titre, avec la branche à côté du statut.";
 
@@ -703,7 +709,7 @@
 /* Section subtitles */
 "sidebar.display.subtitle" = "Choisissez les métriques qui s'affichent dans la barre de menus et leur apparence.";
 "sidebar.themes.subtitle" = "Couleurs et style visuel.";
-"sidebar.agentWatchers.subtitle" = "Overlay flottant pour vos sessions Claude Code actives.";
+"sidebar.agentWatchers.subtitle" = "Overlay flottant pour vos agents Grok Bot actifs.";
 "sidebar.performance.subtitle" = "Réglez la consommation CPU en désactivant ce dont vous n'avez pas besoin.";
 "sidebar.settings.subtitle" = "Proxy, intervalle de rafraîchissement et autres préférences globales.";
 "popover.settings.preview" = "Aperçu";
@@ -802,7 +808,7 @@
 "menuBarSegment.sessionReset" = "Compte à rebours session";
 "menuBarSegment.serviceStatus" = "Statut du service";
 
-"menuBarStyle.segment.labelValue" = "Label + valeur";
+"menuBarStyle.segment.labelValue" = "Icône + valeur";
 "menuBarStyle.segment.valueOnly" = "Valeur seule";
 "menuBarStyle.segment.mono" = "Mono";
 "menuBarStyle.segment.pill" = "Pill";
@@ -843,7 +849,7 @@
 
 "pacing.session.label.short" = "Session";
 "pacing.weekly.label.short" = "Hebdo";
-"pacing.fable.label.short" = "Fable";
+"pacing.fable.label.short" = "Quotidien";
 
 /* MARK: - Onboarding (rework 2026-04) */
 
@@ -915,7 +921,7 @@
 "dashboard.status.affected" = "Concerné : %@";
 
 /* Fable (limite hebdomadaire Claude Fable) */
-"metric.fable" = "Fable";
+"metric.fable" = "Quotidien";
 "widget.fable" = "Fable";
 "settings.notifications.track.fable" = "Suivre la semaine Claude Fable";
 "notif.title.fable.pace" = "En avance sur le rythme Fable";
@@ -960,3 +966,23 @@
 "pacing.grokBot.hot.1" = "Vide trop tôt";
 "pacing.grokBot.hot.2" = "Vide aujourd'hui";
 "pacing.grokBot.hot.3" = "Upgrade ou ralentis";
+
+/* Daily Budget Alerts */
+"notif.title.grokBot.daily.orange" = "Budget du jour à 60%";
+"notif.title.grokBot.daily.red" = "Budget du jour presque épuisé";
+"notif.title.grokBot.daily.green" = "Budget du jour rempli";
+"notif.body.grokBot.daily" = "Vous avez utilisé %@%% du budget d'aujourd'hui (%@%% de votre limite hebdomadaire; la part d'aujourd'hui est %@%%). Hebdo : %d%%, réinitialise %@.";
+"notif.body.grokBot.daily.green" = "Nouveau budget quotidien à %@";
+"notif.body.grokBot.daily.green.fallback" = "Nouveau budget quotidien, c'est reparti";
+
+/* Pace Alerts */
+"notif.title.grokBot.pace" = "Rythme en avance";
+"notif.body.grokBot.pace" = "Vous utilisez Grok Bot à %.2fx votre rythme normal. Hebdo : %d%%, réinitialise %@.";
+
+/* Settings - Daily Budget */
+"settings.notifications.track.grokBotDailyBudget" = "Alertes budget quotidien";
+"settings.notifications.track.grokBotPace" = "Alertes de rythme";
+
+/* Settings - Pacing */
+"settings.pacing.paceThreshold" = "Seuil d'alerte de rythme";
+"settings.pacing.paceThreshold.hint" = "Déclencher lorsque le rythme d'utilisation hebdomadaire (utilisé% / écoulé%) dépasse ce multiplicateur. Plage : 1.1x - 2.0x.";

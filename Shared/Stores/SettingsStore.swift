@@ -150,8 +150,17 @@ final class SettingsStore: ObservableObject {
     var watcherVisibility: WatcherVisibility {
         get { overlay.watcherVisibility } set { overlay.watcherVisibility = newValue }
     }
+    var watcherIdleTimeout: WatcherIdleTimeout {
+        get { overlay.watcherIdleTimeout } set { overlay.watcherIdleTimeout = newValue }
+    }
     var watcherAnimationsEnabled: Bool {
         get { overlay.watcherAnimationsEnabled } set { overlay.watcherAnimationsEnabled = newValue }
+    }
+    var overlayDisplayTarget: OverlayDisplayTarget {
+        get { overlay.overlayDisplayTarget } set { overlay.overlayDisplayTarget = newValue }
+    }
+    var overlaySpecificDisplay: OverlayDisplayReference? {
+        get { overlay.overlaySpecificDisplay } set { overlay.overlaySpecificDisplay = newValue }
     }
 
     // Pacing - extracted into a child ObservableObject domain slice. Views should

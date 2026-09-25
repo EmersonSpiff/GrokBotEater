@@ -27,13 +27,13 @@ enum MetricID: String, CaseIterable {
 
     var shortLabel: String {
         switch self {
-        case .fiveHour: return "5h"
+        case .fiveHour: return "Wk"
         case .sessionReset: return ""
         case .sevenDay: return "7d"
-        case .sonnet: return "S"
-        case .fable: return "F"
+        case .sonnet: return "D"
+        case .fable: return "D"
         case .extraCredits: return "EC"
-        case .sessionPacing: return "5hP"
+        case .sessionPacing: return "WkP"
         case .weeklyPacing: return "7dP"
         case .serviceStatus: return ""
         }

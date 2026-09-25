@@ -42,12 +42,30 @@ final class OverlaySettingsStore: ObservableObject {
     @Published var watcherVisibility: WatcherVisibility {
         didSet { UserDefaults.standard.set(watcherVisibility.rawValue, forKey: "watcherVisibility") }
     }
+    @Published var watcherIdleTimeout: WatcherIdleTimeout {
+        didSet { UserDefaults.standard.set(watcherIdleTimeout.rawValue, forKey: "watcherIdleTimeout") }
+    }
 
     // Performance
     @Published var watcherAnimationsEnabled: Bool {
         didSet { UserDefaults.standard.set(watcherAnimationsEnabled, forKey: "watcherAnimationsEnabled") }
     }
-
+    
+    // Display selection
+    @Published var overlayDisplayTarget: OverlayDisplayTarget {
+        didSet { UserDefaults.standard.set(overlayDisplayTarget.rawValue, forKey: "overlayDisplayTarget") }
+    }
+    @Published var overlaySpecificDisplay: OverlayDisplayReference? {
+        didSet {
+            if let ref = overlaySpecificDisplay,
+               let data = try? JSONEncoder().encode(ref) {
+                UserDefaults.standard.set(data, forKey: "overlaySpecificDisplay")
+            } else {
+                UserDefaults.standard.removeObject(forKey: "overlaySpecificDisplay")
+            }
+        }
+    }
+    
     init() {
         // Defaults below apply only on first launch (no value yet in
         // UserDefaults) - per the `as? T ?? default` reads.
@@ -56,8 +74,8 @@ final class OverlaySettingsStore: ObservableObject {
         self.overlayScale = UserDefaults.standard.object(forKey: "overlayScale") as? Double ?? 1.1
         self.overlayLeftSide = UserDefaults.standard.bool(forKey: "overlayLeftSide")
         self.overlayTriggerZone = OverlayTriggerZone(
-            rawValue: UserDefaults.standard.string(forKey: "overlayTriggerZone") ?? "medium"
-        ) ?? .medium
+            rawValue: UserDefaults.standard.string(forKey: "overlayTriggerZone") ?? OverlayTriggerZone.defaultZone.rawValue
+        ) ?? .defaultZone
         self.watchersDetailedMode = UserDefaults.standard.object(forKey: "watchersDetailedMode") as? Bool ?? true
         self.watcherStyle = WatcherStyle(
             rawValue: UserDefaults.standard.string(forKey: "watcherStyle") ?? "frost"
@@ -69,6 +87,13 @@ final class OverlaySettingsStore: ObservableObject {
             .flatMap(WatcherScanInterval.init(rawValue:)) ?? .twoSeconds
         self.watcherVisibility = (UserDefaults.standard.object(forKey: "watcherVisibility") as? Int)
             .flatMap(WatcherVisibility.init(rawValue:)) ?? .thirtyMinutes
+        self.watcherIdleTimeout = (UserDefaults.standard.object(forKey: "watcherIdleTimeout") as? Int)
+            .flatMap(WatcherIdleTimeout.init(rawValue:)) ?? .ten
         self.watcherAnimationsEnabled = UserDefaults.standard.object(forKey: "watcherAnimationsEnabled") as? Bool ?? true
+        self.overlayDisplayTarget = OverlayDisplayTarget(
+            rawValue: UserDefaults.standard.string(forKey: "overlayDisplayTarget") ?? OverlayDisplayTarget.followMenuBar.rawValue
+        ) ?? .followMenuBar
+        self.overlaySpecificDisplay = UserDefaults.standard.data(forKey: "overlaySpecificDisplay")
+            .flatMap { try? JSONDecoder().decode(OverlayDisplayReference.self, from: $0) }
     }
 }

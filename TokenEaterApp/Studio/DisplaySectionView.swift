@@ -222,6 +222,7 @@ struct BinaryChoiceChip: View {
     let label: String
     let icon: String
     let isActive: Bool
+    var iconRotation: Double = 0
     let action: () -> Void
 
     @State private var hovering = false
@@ -231,6 +232,7 @@ struct BinaryChoiceChip: View {
             HStack(spacing: 8) {
                 Image(systemName: icon)
                     .font(.system(size: 12, weight: .semibold))
+                    .rotationEffect(.degrees(iconRotation))
                 Text(label)
                     .font(.system(size: 12, weight: .medium))
             }

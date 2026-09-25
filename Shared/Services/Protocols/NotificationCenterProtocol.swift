@@ -8,6 +8,7 @@ protocol NotificationCenterProtocol {
     func requestAuthorization()
     func authorizationStatus() async -> UNAuthorizationStatus
     func add(_ request: UNNotificationRequest)
+    func add(_ request: UNNotificationRequest, withCompletionHandler completionHandler: @escaping (Error?) -> Void)
     func removePending(identifiers: [String])
 }
 
@@ -21,6 +22,9 @@ final class LiveNotificationCenter: NotificationCenterProtocol {
         await center.notificationSettings().authorizationStatus
     }
     func add(_ request: UNNotificationRequest) { center.add(request) }
+    func add(_ request: UNNotificationRequest, withCompletionHandler completionHandler: @escaping (Error?) -> Void) {
+        center.add(request, withCompletionHandler: completionHandler)
+    }
     func removePending(identifiers: [String]) {
         center.removePendingNotificationRequests(withIdentifiers: identifiers)
     }

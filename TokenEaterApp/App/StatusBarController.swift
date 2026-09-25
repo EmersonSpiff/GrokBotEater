@@ -24,6 +24,7 @@ final class StatusBarController: NSObject {
     private let settingsStore: SettingsStore
     private let updateStore: UpdateStore
     private let sessionStore: SessionStore
+    private let grokBotAgentSessionStore: GrokBotAgentSessionStore
     private let vendorStatusStore: VendorStatusStore
     private let tokenFileMonitor: TokenFileMonitorProtocol
 
@@ -34,6 +35,7 @@ final class StatusBarController: NSObject {
         settingsStore: SettingsStore,
         updateStore: UpdateStore,
         sessionStore: SessionStore,
+        grokBotAgentSessionStore: GrokBotAgentSessionStore,
         vendorStatusStore: VendorStatusStore,
         tokenFileMonitor: TokenFileMonitorProtocol = TokenFileMonitor()
     ) {
@@ -43,6 +45,7 @@ final class StatusBarController: NSObject {
         self.settingsStore = settingsStore
         self.updateStore = updateStore
         self.sessionStore = sessionStore
+        self.grokBotAgentSessionStore = grokBotAgentSessionStore
         self.vendorStatusStore = vendorStatusStore
         self.tokenFileMonitor = tokenFileMonitor
         self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -243,24 +246,27 @@ final class StatusBarController: NSObject {
     private func makeNotificationToggles() -> NotificationToggles {
         NotificationToggles(
             masterEnabled: settingsStore.notificationsEnabled,
-            trackFiveHour: settingsStore.notifTrackFiveHour,
-            trackWeekly: settingsStore.notifTrackWeekly,
-            trackSonnet: settingsStore.notifTrackSonnet,
-            trackFable: settingsStore.notifTrackFable,
-            trackGrokBot: settingsStore.notifTrackGrokBot,
+            trackFiveHour: false,  // Claude 5h session - not used for Grok Bot
+            trackWeekly: false,    // Claude weekly - not used for Grok Bot
+            trackSonnet: false,    // Claude model - not used for Grok Bot
+            trackFable: false,     // Claude model - not used for Grok Bot
+            trackGrokBot: true,    // Grok Bot weekly usage
+            trackGrokBotDailyBudget: settingsStore.notification.trackGrokBotDailyBudget,
+            trackGrokBotPace: settingsStore.notification.trackGrokBotPace,
             sendRecovery: settingsStore.notifSendRecovery,
             pacingHot: settingsStore.notifPacingHot,
             pacingWarning: settingsStore.notifPacingWarning,
-            resetReminderSession: settingsStore.notifResetReminderSession,
+            resetReminderSession: false,  // Claude 5h session - not used for Grok Bot
             resetReminderWeekly: settingsStore.notifResetReminderWeekly,
-            resetReminderSessionOffsetMinutes: settingsStore.notifResetReminderSessionOffset,
+            resetReminderSessionOffsetMinutes: 15,  // Unused for Grok Bot
             resetReminderWeeklyOffsetMinutes: settingsStore.notifResetReminderWeeklyOffset,
-            extraCredits: settingsStore.notifExtraCredits,
+            extraCredits: false,   // Claude extra credits - not used for Grok Bot
             tokenExpired: settingsStore.notifTokenExpired,
             smartColorEnabled: settingsStore.smartColorEnabled,
             smartColorProfile: settingsStore.smartColorProfile,
             pacingMargin: Double(settingsStore.pacingMargin),
             thresholds: themeStore.thresholds,
+            paceThreshold: settingsStore.pacing.paceThreshold,
             vendorDegraded: settingsStore.notifVendorDegraded,
             vendorRestored: settingsStore.notifVendorRestored
         )
@@ -640,6 +646,7 @@ final class StatusBarController: NSObject {
             .environmentObject(settingsStore)
             .environmentObject(updateStore)
             .environmentObject(sessionStore)
+            .environmentObject(grokBotAgentSessionStore)
             .environmentObject(vendorStatusStore)
 
         let isOnboarding = !settingsStore.hasCompletedOnboarding

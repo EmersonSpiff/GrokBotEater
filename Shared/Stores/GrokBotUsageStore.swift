@@ -23,14 +23,25 @@ final class GrokBotUsageStore: ObservableObject {
         return Calendar.current.date(byAdding: .day, value: 7, to: start)
     }
     
+    /// Current usage snapshot for notifications and test alerts.
+    var currentSnapshot: MetricSnapshot? {
+        guard hasGrokBot, !isLoading else { return nil }
+        return MetricSnapshot(
+            pct: usagePercent,
+            resetsAt: nextResetDate,
+            windowDuration: 7 * 24 * 3600
+        )
+    }
+    
     /// Human-readable status for onboarding/settings
     @Published var statusMessage: String = "Not connected"
     
     private(set) var lastResponse: GrokBotUsageResponse?
     private let apiClient: GrokBotAPIClientProtocol
     private let cookieReader: CursorCookieReaderProtocol
-    private let sharedFileService: SharedFileServiceProtocol
+    let sharedFileService: SharedFileServiceProtocol
     private let notificationService: NotificationServiceProtocol
+    private let historyService: GrokBotHistoryService
     
     private var refreshTask: Task<Void, Never>?
     private var autoRefreshTask: Task<Void, Never>?
@@ -47,12 +58,14 @@ final class GrokBotUsageStore: ObservableObject {
         apiClient: GrokBotAPIClientProtocol = GrokBotAPIClient(),
         cookieReader: CursorCookieReaderProtocol = CursorCookieReader(),
         sharedFileService: SharedFileServiceProtocol = SharedFileService(),
-        notificationService: NotificationServiceProtocol = NotificationService()
+        notificationService: NotificationServiceProtocol = NotificationService(),
+        historyService: GrokBotHistoryService = GrokBotHistoryService()
     ) {
         self.apiClient = apiClient
         self.cookieReader = cookieReader
         self.sharedFileService = sharedFileService
         self.notificationService = notificationService
+        self.historyService = historyService
         
         loadCached()
     }
@@ -149,14 +162,22 @@ final class GrokBotUsageStore: ObservableObject {
     }
     
     func reloadConfig() {
-        let hasCookie = cookieReader.readCookie() != nil
-        if !hasCookie {
-            errorState = .cookieUnavailable
-            statusMessage = "Cursor session not found"
-        }
+        // Start with loading state immediately (non-blocking)
+        errorState = .none
+        statusMessage = "Loading..."
         
         refreshTask?.cancel()
         refreshTask = Task {
+            // Load cookie asynchronously on background thread
+            let cookie = await cookieReader.readCookieAsync()
+            
+            await MainActor.run {
+                if cookie == nil {
+                    errorState = .cookieUnavailable
+                    statusMessage = "Cursor session not found"
+                }
+            }
+            
             await refresh(force: true)
         }
     }
@@ -216,16 +237,61 @@ final class GrokBotUsageStore: ObservableObject {
         recomputePacingAndPublish(weeklyPercent: usagePercent, periodStart: currentPeriodStart)
         logger.info("Grok Bot refresh succeeded: \(self.usagePercent)% used, shouldDrawRing=\(self.shouldShowRing), daily=\(self.sharedFileService.grokBotSnapshot?.dailyPercent ?? -1)")
         
+        // Record history snapshot
+        let snapshot = sharedFileService.grokBotSnapshot
+        historyService.recordSnapshot(
+            weeklyPercent: usagePercent,
+            activeAgentCount: 0, // Will be updated when SessionStore is available
+            dailyPercent: snapshot?.dailyPercent,
+            pacingDelta: snapshot?.pacingDelta
+        )
+        
         evaluateNotifications()
     }
     
     private func evaluateNotifications() {
         guard let toggles = notifTogglesProvider?() else { return }
+        
+        // Weekly usage threshold alerts
         notificationService.evaluateGrokBot(
             usagePercent: usagePercent,
             resetDate: nextResetDate,
             toggles: toggles
         )
+        
+        // Daily budget alerts
+        if let resetDate = nextResetDate {
+            let now = Date()
+            notificationService.evaluateGrokBotDailyBudget(
+                weeklyUsedPercent: usagePercent,
+                resetDate: resetDate,
+                now: now,
+                toggles: toggles
+            )
+        }
+        
+        // Pace alerts
+        if let resetDate = nextResetDate, let snapshot = sharedFileService.grokBotSnapshot, let periodStartString = snapshot.currentPeriodStart, let periodStart = Self.parsePeriodStart(periodStartString) {
+            let now = Date()
+            let totalDuration = resetDate.timeIntervalSince(periodStart)
+            let elapsed = now.timeIntervalSince(periodStart)
+            let elapsedFraction = totalDuration > 0 ? elapsed / totalDuration : 0
+            
+            // Calculate daily usage needed to reach 1.0x pace by reset
+            let daysRemaining = max(0.1, resetDate.timeIntervalSinceNow / 86400.0)
+            let targetUsageByReset = elapsedFraction * 100.0
+            let remainingToTarget = max(0, targetUsageByReset - Double(usagePercent))
+            let dailyUsageToReachPace = remainingToTarget / daysRemaining
+            
+            notificationService.evaluateGrokBotPace(
+                weeklyUsedPercent: usagePercent,
+                elapsedFraction: elapsedFraction,
+                resetDate: resetDate,
+                dailyUsageToReachPace: dailyUsageToReachPace,
+                now: now,
+                toggles: toggles
+            )
+        }
     }
 
     private static func parsePeriodStart(_ raw: String?) -> Date? {

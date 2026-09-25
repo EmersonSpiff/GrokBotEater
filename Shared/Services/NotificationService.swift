@@ -1,5 +1,8 @@
 import Foundation
 import UserNotifications
+import os.log
+
+private let logger = Logger(subsystem: "com.emersonspiff.grokboteater.app", category: "Notifications")
 
 // MARK: - Usage Level
 
@@ -184,6 +187,19 @@ final class NotificationService: NotificationServiceProtocol {
                     profile: toggles.smartColorProfile)
             : absoluteLevel
 
+        logger.info("checkSurface \(surface.rawValue): usage=\(snapshot.pct)%, level \(previous.rawValue)→\(current.rawValue)")
+
+        // RE-ARM LOGIC: lower stored level when usage drops below threshold (with hysteresis)
+        // or when thresholds change, so alerts can fire again after upgrade/config change.
+        let hysteresis = 2
+        let shouldReArm = (previous == .red && snapshot.pct < toggles.thresholds.criticalPercent - hysteresis) ||
+                          (previous == .orange && snapshot.pct < toggles.thresholds.warningPercent - hysteresis)
+        
+        if shouldReArm && current < previous {
+            logger.info("Re-arming \(surface.rawValue): usage dropped to \(snapshot.pct)%, lowering stored level \(previous.rawValue)→\(current.rawValue)")
+            state.setLastLevel(current.rawValue, forKey: key)
+        }
+
         // Track the window reset boundary. A real reset moves `resets_at`
         // meaningfully forward (the window rolled); a mid-window refresh keeps
         // it stable. The recovery ("new cycle") alert is gated on this so it
@@ -201,8 +217,7 @@ final class NotificationService: NotificationServiceProtocol {
             state.setLastResetsAt(resetsAt, forKey: resetKey)
         }
 
-        guard current != previous else { return }
-        state.setLastLevel(current.rawValue, forKey: key)
+        guard current != previous || shouldReArm else { return }
 
         // When Smart Color escalates ABOVE the raw-threshold level, the alert is
         // driven by rate/projection, not by nearing the cap. The copy then says
@@ -211,8 +226,11 @@ final class NotificationService: NotificationServiceProtocol {
         let paceDriven = toggles.smartColorEnabled && current > absoluteLevel
 
         if current > previous {
+            logger.info("Escalation \(surface.rawValue): \(previous.rawValue)→\(current.rawValue), sending notification")
             notifyEscalation(surface: surface, level: current, snapshot: snapshot, pacing: pacing, paceDriven: paceDriven)
+            // Only persist level after successful send
         } else if current == .green && previous > .green && toggles.sendRecovery && windowDidReset {
+            logger.info("Recovery \(surface.rawValue): \(previous.rawValue)→green, window reset, sending notification")
             notifyRecovery(surface: surface, snapshot: snapshot)
         }
     }
@@ -228,7 +246,11 @@ final class NotificationService: NotificationServiceProtocol {
         content.sound = .default
         content.title = title(for: surface, level: level, pacing: pacing, paceDriven: paceDriven)
         content.body = body(for: surface, level: level, snapshot: snapshot, pacing: pacing, paceDriven: paceDriven)
-        send(id: "escalation_\(surface.rawValue)", content: content)
+        let key = "lastLevel_\(surface.rawValue)"
+        sendAndPersist(id: "escalation_\(surface.rawValue)", content: content, onSuccess: {
+            self.state.setLastLevel(level.rawValue, forKey: key)
+            logger.info("Persisted \(surface.rawValue) level \(level.rawValue) after successful send")
+        })
     }
 
     private func notifyRecovery(surface: Surface, snapshot: MetricSnapshot) {
@@ -463,13 +485,24 @@ final class NotificationService: NotificationServiceProtocol {
             return level == .red
                 ? NSLocalizedString("notif.body.fivehour.red.fallback", comment: "")
                 : NSLocalizedString("notif.body.fivehour.orange.fallback", comment: "")
-        case .weekly, .sonnet, .fable, .grokBot:
+        case .weekly, .sonnet, .fable:
             if let resetsAt, resetsAt.timeIntervalSinceNow > 0 {
                 let dateTime = NotificationBodyFormatter.formatDateTime(resetsAt)
                 let key = level == .red
                     ? "notif.body.\(surface.bodyFamily).red"
                     : "notif.body.\(surface.bodyFamily).orange"
                 return String(format: NSLocalizedString(key, comment: ""), dateTime)
+            }
+            return level == .red
+                ? NSLocalizedString("notif.body.\(surface.bodyFamily).red.fallback", comment: "")
+                : NSLocalizedString("notif.body.\(surface.bodyFamily).orange.fallback", comment: "")
+        case .grokBot:
+            if let resetsAt, resetsAt.timeIntervalSinceNow > 0 {
+                let dateTime = NotificationBodyFormatter.formatDateTime(resetsAt)
+                let key = level == .red
+                    ? "notif.body.\(surface.bodyFamily).red"
+                    : "notif.body.\(surface.bodyFamily).orange"
+                return String(format: NSLocalizedString(key, comment: ""), snapshot.pct, dateTime)
             }
             return level == .red
                 ? NSLocalizedString("notif.body.\(surface.bodyFamily).red.fallback", comment: "")
@@ -503,11 +536,205 @@ final class NotificationService: NotificationServiceProtocol {
         )
         checkSurface(.grokBot, snapshot: snapshot, pacing: nil, toggles: toggles)
     }
+    
+    // MARK: - Daily Budget Alerts
+    
+    func evaluateGrokBotDailyBudget(
+        weeklyUsedPercent: Int,
+        resetDate: Date?,
+        now: Date = Date(),
+        toggles: NotificationToggles
+    ) {
+        guard toggles.masterEnabled, toggles.trackGrokBotDailyBudget, let resetDate else { return }
+        
+        let calendar = Calendar.current
+        let startOfToday = calendar.startOfDay(for: now)
+        
+        // Store weekly usage at start of day (first refresh after midnight)
+        let dayStartWeeklyKey = "dayStartWeekly_grokBotDaily"
+        let dayStartDateKey = "dayStartDate_grokBotDaily"
+        let lastMidnightKey = "lastMidnight_grokBotDaily"
+        let lastMidnight = state.lastResetsAt(forKey: lastMidnightKey)
+        let midnightChanged = lastMidnight == nil || !calendar.isDate(lastMidnight!, inSameDayAs: startOfToday)
+        
+        var weeklyAtDayStart: Int
+        var justSetBaseline = false
+        
+        // Migration: if lastMidnight is today's midnight and we have a baseline, treat it as today's
+        let storedDayStart = UserDefaults.standard.integer(forKey: dayStartWeeklyKey)
+        let storedDateTimestamp = UserDefaults.standard.double(forKey: dayStartDateKey)
+        let storedDate = storedDateTimestamp > 0 ? Date(timeIntervalSince1970: storedDateTimestamp) : nil
+        
+        if storedDate == nil, let lastMidnight, calendar.isDate(lastMidnight, inSameDayAs: startOfToday), storedDayStart > 0 {
+            // Migration: lastMidnight is today, baseline exists, but no date stored yet
+            UserDefaults.standard.set(startOfToday.timeIntervalSince1970, forKey: dayStartDateKey)
+            logger.info("Daily budget: migrated baseline date from lastMidnight")
+        }
+        
+        // Check for weekly reset mid-day (usage dropped)
+        let weeklyReset = storedDayStart > 0 && weeklyUsedPercent < storedDayStart
+        
+        if midnightChanged || weeklyReset {
+            // First refresh after midnight OR weekly reset detected
+            weeklyAtDayStart = weeklyUsedPercent
+            UserDefaults.standard.set(weeklyAtDayStart, forKey: dayStartWeeklyKey)
+            UserDefaults.standard.set(startOfToday.timeIntervalSince1970, forKey: dayStartDateKey)
+            state.setLastResetsAt(startOfToday, forKey: lastMidnightKey)
+            justSetBaseline = true
+            
+            let reason = weeklyReset ? "weekly reset detected" : "new day started"
+            logger.info("Daily budget: \(reason, privacy: .public), weekly at day start = \(weeklyAtDayStart, privacy: .public)%")
+            
+            // Re-arm level at midnight
+            let key = "lastLevel_grokBotDaily"
+            let previousRaw = state.lastLevel(forKey: key)
+            if previousRaw != UsageLevel.green.rawValue {
+                logger.info("Daily budget re-armed at midnight: \(previousRaw)→green")
+                state.setLastLevel(UsageLevel.green.rawValue, forKey: key)
+            }
+        } else {
+            // Use stored day start value
+            weeklyAtDayStart = storedDayStart
+            if weeklyAtDayStart == 0 {
+                // First run - set baseline but don't fire
+                weeklyAtDayStart = weeklyUsedPercent
+                UserDefaults.standard.set(weeklyAtDayStart, forKey: dayStartWeeklyKey)
+                UserDefaults.standard.set(startOfToday.timeIntervalSince1970, forKey: dayStartDateKey)
+                justSetBaseline = true
+                logger.info("Daily budget: first run, setting baseline = \(weeklyAtDayStart, privacy: .public)%")
+            } else {
+                // Baseline is valid for today - confirm the date is set
+                if storedDate == nil || !calendar.isDate(storedDate!, inSameDayAs: startOfToday) {
+                    UserDefaults.standard.set(startOfToday.timeIntervalSince1970, forKey: dayStartDateKey)
+                    logger.info("Daily budget: confirmed baseline date for today")
+                }
+            }
+        }
+        
+        // Calculate today's consumption as the difference
+        let todayConsumptionPercent = max(0.0, Double(weeklyUsedPercent - weeklyAtDayStart))
+        
+        // Calculate daily budget share using weekly usage at START of day
+        let daysRemaining = max(0.1, resetDate.timeIntervalSince(startOfToday) / 86400.0)
+        let remainingBudget = max(0.0, 100.0 - Double(weeklyAtDayStart))
+        let todayShare = remainingBudget / daysRemaining
+        let todayShareUsedPercent = todayShare > 0 ? (todayConsumptionPercent / todayShare) * 100.0 : 0.0
+        
+        logger.info("Daily budget: today=\(todayConsumptionPercent, privacy: .public)% / share=\(todayShare, privacy: .public)% = \(todayShareUsedPercent, privacy: .public)% used, weeklyAtDayStart=\(weeklyAtDayStart, privacy: .public)%, weeklyNow=\(weeklyUsedPercent, privacy: .public)%, days remaining=\(daysRemaining, privacy: .public)")
+        
+        // Never fire on the same check that set a new baseline
+        if justSetBaseline {
+            logger.info("Daily budget: skipping alert check (just set baseline)")
+            return
+        }
+        
+        let key = "lastLevel_grokBotDaily"
+        let previousRaw = state.lastLevel(forKey: key)
+        let previous = UsageLevel(rawValue: previousRaw) ?? .green
+        
+        let current: UsageLevel
+        if todayShareUsedPercent >= Double(toggles.thresholds.criticalPercent) {
+            current = .red
+        } else if todayShareUsedPercent >= Double(toggles.thresholds.warningPercent) {
+            current = .orange
+        } else {
+            current = .green
+        }
+        
+        let hysteresis = 2.0
+        let shouldReArm = (previous == .red && todayShareUsedPercent < Double(toggles.thresholds.criticalPercent) - hysteresis) ||
+                          (previous == .orange && todayShareUsedPercent < Double(toggles.thresholds.warningPercent) - hysteresis)
+        
+        if shouldReArm && current < previous {
+            logger.info("Daily budget re-armed: \(previous.rawValue)→\(current.rawValue), no notification")
+            state.setLastLevel(current.rawValue, forKey: key)
+            return
+        }
+        
+        guard current != previous else {
+            logger.debug("Daily budget: level unchanged (\(current.rawValue))")
+            return
+        }
+        
+        if current > previous {
+            logger.info("Daily budget alert: \(previous.rawValue)→\(current.rawValue), sending notification")
+            let content = UNMutableNotificationContent()
+            content.sound = .default
+            content.title = String(localized: "notif.title.grokBot.daily.\(current == .red ? "red" : "orange")")
+            content.body = String(format: NSLocalizedString("notif.body.grokBot.daily", comment: ""),
+                                  String(format: "%.1f", todayShareUsedPercent),
+                                  String(format: "%.1f", todayConsumptionPercent),
+                                  String(format: "%.1f", todayShare),
+                                  weeklyUsedPercent,
+                                  NotificationBodyFormatter.formatDateTime(resetDate))
+            sendAndPersist(id: "daily_budget_grokBot", content: content, onSuccess: {
+                self.state.setLastLevel(current.rawValue, forKey: key)
+                logger.info("Persisted daily budget level \(current.rawValue) after successful send")
+            })
+        }
+    }
+    
+    // MARK: - Pace Alerts
+    
+    func evaluateGrokBotPace(
+        weeklyUsedPercent: Int,
+        elapsedFraction: Double,
+        resetDate: Date?,
+        dailyUsageToReachPace: Double,
+        now: Date = Date(),
+        toggles: NotificationToggles
+    ) {
+        guard toggles.masterEnabled, toggles.trackGrokBotPace, let resetDate, elapsedFraction > 0 else { return }
+        
+        let pace = (Double(weeklyUsedPercent) / 100.0) / elapsedFraction
+        let elapsedPercent = elapsedFraction * 100.0
+        logger.info("Pace check: weekly=\(weeklyUsedPercent, privacy: .public)%, elapsed=\(elapsedPercent, privacy: .public)%, pace=\(pace, privacy: .public)x, threshold=\(toggles.paceThreshold, privacy: .public)x")
+        
+        let key = "lastFired_grokBotPace"
+        let lastFired = state.lastResetsAt(forKey: key)
+        let calendar = Calendar.current
+        let startOfToday = calendar.startOfDay(for: now)
+        
+        let alreadyFiredToday = lastFired != nil && calendar.isDate(lastFired!, inSameDayAs: startOfToday)
+        
+        // Re-arm: fire at most once per day, re-arm if pace drops below 1.20x
+        let reArmThreshold = toggles.paceThreshold - 0.05
+        if pace < reArmThreshold && lastFired != nil {
+            logger.info("Pace alert re-armed: pace dropped to \(String(format: "%.2f", pace))x below \(String(format: "%.2f", reArmThreshold))x")
+            state.setLastResetsAt(Date.distantPast, forKey: key)
+        }
+        
+        guard pace >= toggles.paceThreshold, !alreadyFiredToday else { return }
+        
+        logger.info("Pace alert: pace=\(String(format: "%.2f", pace))x ≥ \(String(format: "%.2f", toggles.paceThreshold))x, sending notification")
+        let content = UNMutableNotificationContent()
+        content.sound = .default
+        content.title = String(localized: "notif.title.grokBot.pace")
+        content.body = String(format: NSLocalizedString("notif.body.grokBot.pace", comment: ""),
+                              pace,
+                              weeklyUsedPercent,
+                              NotificationBodyFormatter.formatDateTime(resetDate))
+        sendAndPersist(id: "pace_grokBot", content: content, onSuccess: {
+            self.state.setLastResetsAt(now, forKey: key)
+            logger.info("Persisted pace alert fire time for today")
+        })
+    }
 
     // MARK: - Send
 
     private func send(id: String, content: UNMutableNotificationContent) {
         let request = UNNotificationRequest(identifier: id, content: content, trigger: nil)
         center.add(request)
+    }
+    
+    private func sendAndPersist(id: String, content: UNMutableNotificationContent, onSuccess: @escaping () -> Void) {
+        let request = UNNotificationRequest(identifier: id, content: content, trigger: nil)
+        center.add(request) { error in
+            if let error = error {
+                logger.error("Failed to send notification \(id): \(error.localizedDescription)")
+            } else {
+                onSuccess()
+            }
+        }
     }
 }

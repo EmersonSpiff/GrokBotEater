@@ -1,4 +1,5 @@
 import SwiftUI
+import UserNotifications
 
 /// Settings sub-section dedicated to notifications. Hosts the authorization
 /// status row + test button at the top, then a card per category (usage
@@ -6,6 +7,8 @@ import SwiftUI
 /// toggle per event.
 struct NotificationsSectionView: View {
     @EnvironmentObject private var settingsStore: SettingsStore
+    @EnvironmentObject private var themeStore: ThemeStore
+    @EnvironmentObject private var grokBotUsageStore: GrokBotUsageStore
 
     @State private var notifTestCooldown = false
 
@@ -46,17 +49,11 @@ struct NotificationsSectionView: View {
 
     private func resetToDefaults() {
         settingsStore.notificationsEnabled = true
-        settingsStore.notifTrackFiveHour = true
-        settingsStore.notifTrackWeekly = true
-        settingsStore.notifTrackSonnet = false
         settingsStore.notifSendRecovery = true
         settingsStore.notifPacingHot = true
         settingsStore.notifPacingWarning = false
-        settingsStore.notifResetReminderSession = false
         settingsStore.notifResetReminderWeekly = false
-        settingsStore.notifResetReminderSessionOffset = 15
         settingsStore.notifResetReminderWeeklyOffset = 60
-        settingsStore.notifExtraCredits = true
         settingsStore.notifTokenExpired = false
         settingsStore.notifVendorDegraded = true
         settingsStore.notifVendorRestored = true
@@ -129,27 +126,116 @@ struct NotificationsSectionView: View {
         }
     }
 
-    // MARK: - Usage thresholds
+    // MARK: - Usage notifications
 
     private var usageCard: some View {
         glassCard {
             VStack(alignment: .leading, spacing: 10) {
-                cardLabel(String(localized: "settings.notifications.group.usage"))
-                Text(String(localized: "settings.notifications.group.usage.hint"))
+                HStack(alignment: .top, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        cardLabel("Grok Bot Usage Alerts")
+                        Text("Get notified when usage crosses thresholds (configured in Settings > Pacing)")
+                            .font(.system(size: 11))
+                            .foregroundStyle(DS.Palette.textTertiary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer()
+                    Button {
+                        guard !notifTestCooldown else { return }
+                        testUsageAlert()
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: notifTestCooldown ? "checkmark" : "bell.badge")
+                                .font(.system(size: 10))
+                            Text(notifTestCooldown ? "Sent" : "Test")
+                                .font(.system(size: 10))
+                        }
+                        .foregroundStyle(notifTestCooldown ? .green : .blue)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(Color.black.opacity(0.1))
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(notifTestCooldown)
+                }
+                
+                darkToggle("Track weekly Grok Bot usage", isOn: .constant(true))
+                    .disabled(true)
+                    .opacity(0.6)
+                Text("Always on for Grok Bot (weekly billing cycle)")
                     .font(.system(size: 11))
                     .foregroundStyle(DS.Palette.textTertiary)
                     .fixedSize(horizontal: false, vertical: true)
-                darkToggle(String(localized: "settings.notifications.track.fivehour"), isOn: $settingsStore.notification.trackFiveHour)
-                darkToggle(String(localized: "settings.notifications.track.weekly"), isOn: $settingsStore.notification.trackWeekly)
-                darkToggle(String(localized: "settings.notifications.track.sonnet"), isOn: $settingsStore.notification.trackSonnet)
-                darkToggle(String(localized: "settings.notifications.track.fable"), isOn: $settingsStore.notification.trackFable)
+                    .padding(.leading, 32)
+                
                 Divider().padding(.vertical, 2)
-                darkToggle(String(localized: "settings.notifications.recovery"), isOn: $settingsStore.notification.sendRecovery)
-                Text(String(localized: "settings.notifications.recovery.hint"))
+                
+                darkToggle(String(localized: "settings.notifications.track.grokBotDailyBudget"), isOn: $settingsStore.notification.trackGrokBotDailyBudget)
+                Text("Alert when today's usage crosses thresholds of your daily budget share")
+                    .font(.system(size: 11))
+                    .foregroundStyle(DS.Palette.textTertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.leading, 32)
+                
+                darkToggle(String(localized: "settings.notifications.track.grokBotPace"), isOn: $settingsStore.notification.trackGrokBotPace)
+                Text("Alert when weekly usage pace exceeds threshold (configured in Settings > Pacing)")
+                    .font(.system(size: 11))
+                    .foregroundStyle(DS.Palette.textTertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.leading, 32)
+                
+                Divider().padding(.vertical, 2)
+                
+                darkToggle("Send recovery notification", isOn: $settingsStore.notification.sendRecovery)
+                Text("Notify when usage drops back below the warning threshold after a weekly reset")
                     .font(.system(size: 11))
                     .foregroundStyle(DS.Palette.textTertiary)
                     .fixedSize(horizontal: false, vertical: true)
             }
+        }
+    }
+    
+    private func testUsageAlert() {
+        guard let snapshot = grokBotUsageStore.currentSnapshot else { return }
+        
+        let testPct = max(themeStore.warningThreshold, snapshot.pct)
+        let resetDate = snapshot.resetsAt ?? Date().addingTimeInterval(3600 * 24 * 3)
+        
+        let notif = UNMutableNotificationContent()
+        notif.title = testPct >= themeStore.criticalThreshold 
+            ? String(localized: "notif.title.grokBot.red")
+            : String(localized: "notif.title.grokBot.orange")
+        notif.sound = .default
+        
+        let formatter = DateFormatter()
+        formatter.dateStyle = .none
+        formatter.timeStyle = .short
+        let timeStr = formatter.string(from: resetDate)
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "E"
+        let dayStr = dateFormatter.string(from: resetDate)
+        let dateTime = "\(dayStr) \(timeStr)"
+        
+        let bodyKey = testPct >= themeStore.criticalThreshold
+            ? "notif.body.grokBot.red"
+            : "notif.body.grokBot.orange"
+        notif.body = String(format: NSLocalizedString(bodyKey, comment: ""), testPct, dateTime)
+        
+        let request = UNNotificationRequest(
+            identifier: "test-usage-\(UUID().uuidString)",
+            content: notif,
+            trigger: nil
+        )
+        
+        UNUserNotificationCenter.current().add(request) { _ in }
+        
+        notifTestCooldown = true
+        Task {
+            try? await Task.sleep(for: .seconds(3))
+            notifTestCooldown = false
         }
     }
 
@@ -174,18 +260,12 @@ struct NotificationsSectionView: View {
     private var resetRemindersCard: some View {
         glassCard {
             VStack(alignment: .leading, spacing: 10) {
-                cardLabel(String(localized: "settings.notifications.group.reset"))
-                Text(String(localized: "settings.notifications.group.reset.hint"))
+                cardLabel("Grok Bot Reset Reminders")
+                Text("Get notified before your weekly Grok Bot usage resets")
                     .font(.system(size: 11))
                     .foregroundStyle(DS.Palette.textTertiary)
                     .fixedSize(horizontal: false, vertical: true)
-                darkToggle(String(localized: "settings.notifications.reset.session"), isOn: $settingsStore.notification.resetReminderSession)
-                reminderOffsetPicker(
-                    selection: $settingsStore.notification.resetReminderSessionOffset,
-                    options: [5, 10, 15, 30, 60],
-                    enabled: settingsStore.notifResetReminderSession
-                )
-                darkToggle(String(localized: "settings.notifications.reset.weekly"), isOn: $settingsStore.notification.resetReminderWeekly)
+                darkToggle("Weekly reset reminder", isOn: $settingsStore.notification.resetReminderWeekly)
                 reminderOffsetPicker(
                     selection: $settingsStore.notification.resetReminderWeeklyOffset,
                     options: [30, 60, 120, 180, 360],
@@ -220,17 +300,19 @@ struct NotificationsSectionView: View {
         return String(format: String(localized: "settings.notifications.reset.offset.minutes"), minutes)
     }
 
-    // MARK: - Extra credits
+    // MARK: - Pool refills
 
     private var extraCreditsCard: some View {
         glassCard {
             VStack(alignment: .leading, spacing: 10) {
-                cardLabel(String(localized: "settings.notifications.group.extra"))
-                Text(String(localized: "settings.notifications.group.extra.hint"))
+                cardLabel("Usage Pool Refills")
+                Text("Grok Bot usage is billed per-seat in weekly cycles. Extra credits concept does not apply.")
                     .font(.system(size: 11))
                     .foregroundStyle(DS.Palette.textTertiary)
                     .fixedSize(horizontal: false, vertical: true)
-                darkToggle(String(localized: "settings.notifications.extra"), isOn: $settingsStore.notification.extraCredits)
+                darkToggle("Notify on pool expansion", isOn: .constant(false))
+                    .disabled(true)
+                    .opacity(0.4)
             }
         }
     }
@@ -240,14 +322,14 @@ struct NotificationsSectionView: View {
     private var healthCard: some View {
         glassCard {
             VStack(alignment: .leading, spacing: 10) {
-                cardLabel(String(localized: "settings.notifications.group.health"))
-                Text(String(localized: "settings.notifications.group.health.hint"))
+                cardLabel("Cursor & Grok Bot Health")
+                Text("Get notified about Cursor service status and login session issues")
                     .font(.system(size: 11))
                     .foregroundStyle(DS.Palette.textTertiary)
                     .fixedSize(horizontal: false, vertical: true)
-                darkToggle(String(localized: "settings.notifications.token"), isOn: $settingsStore.notification.tokenExpired)
-                darkToggle(String(localized: "settings.notifications.status.degraded"), isOn: $settingsStore.notification.vendorDegraded)
-                darkToggle(String(localized: "settings.notifications.status.restored"), isOn: $settingsStore.notification.vendorRestored)
+                darkToggle("Cursor login session expired", isOn: $settingsStore.notification.tokenExpired)
+                darkToggle("Cursor service degraded (status.cursor.com)", isOn: $settingsStore.notification.vendorDegraded)
+                darkToggle("Cursor service restored", isOn: $settingsStore.notification.vendorRestored)
             }
         }
     }
