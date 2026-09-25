@@ -44,11 +44,52 @@ struct GrokBotRosterEntry: Codable {
     let updatedAt: Int
     let lastActivityAt: Int
     let lastViewedAt: Int
-    let awaitingUserResponse: String?
+    let awaitingUserResponse: Bool
     let hasUnread: Bool
     let unreadCount: Int
     let notificationsEnabled: Bool
     let isHiddenFromSidebar: Bool
+    
+    enum CodingKeys: String, CodingKey {
+        case id, name, title, harness, origin, isGroup, memberIds
+        case createdAt, updatedAt, lastActivityAt, lastViewedAt
+        case awaitingUserResponse, hasUnread, unreadCount
+        case notificationsEnabled, isHiddenFromSidebar
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        title = try? container.decode(String.self, forKey: .title)
+        harness = try container.decode(String.self, forKey: .harness)
+        origin = try container.decode(String.self, forKey: .origin)
+        isGroup = try container.decode(Bool.self, forKey: .isGroup)
+        memberIds = try? container.decode([String].self, forKey: .memberIds)
+        createdAt = try container.decode(Int.self, forKey: .createdAt)
+        updatedAt = try container.decode(Int.self, forKey: .updatedAt)
+        lastActivityAt = try container.decode(Int.self, forKey: .lastActivityAt)
+        lastViewedAt = try container.decode(Int.self, forKey: .lastViewedAt)
+        hasUnread = try container.decode(Bool.self, forKey: .hasUnread)
+        unreadCount = try container.decode(Int.self, forKey: .unreadCount)
+        notificationsEnabled = try container.decode(Bool.self, forKey: .notificationsEnabled)
+        isHiddenFromSidebar = try container.decode(Bool.self, forKey: .isHiddenFromSidebar)
+        
+        // awaitingUserResponse can be String, object, or null - decode as Bool presence
+        if let stringValue = try? container.decode(String.self, forKey: .awaitingUserResponse), !stringValue.isEmpty {
+            awaitingUserResponse = true
+        } else if let _ = try? container.decode([String: AnyCodable].self, forKey: .awaitingUserResponse) {
+            awaitingUserResponse = true
+        } else {
+            awaitingUserResponse = false
+        }
+    }
+}
+
+private struct AnyCodable: Codable {
+    init(from decoder: Decoder) throws {
+        // Accept any JSON value
+    }
 }
 
 struct GrokBotSessionMarker: Codable {
@@ -61,7 +102,7 @@ struct GrokBotSessionMarker: Codable {
 
 struct GrokBotTranscriptReplica: Codable {
     let entries: [GrokBotTranscriptEntry]
-    let epochHint: Int?
+    let epochHint: String?
     let acceptedSequenceHint: Int?
     let persistedAt: Int?
 }
@@ -89,13 +130,44 @@ enum GrokBotPersistenceValue: Codable {
     case transcript(GrokBotTranscriptReplica)
     case unknown
     
+    struct RosterWrapper: Codable {
+        let rows: [GrokBotRosterEntry]
+        
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            var rowsArray = try container.nestedUnkeyedContainer(forKey: .rows)
+            var entries: [GrokBotRosterEntry] = []
+            while !rowsArray.isAtEnd {
+                if let entry = try? rowsArray.decode(GrokBotRosterEntry.self) {
+                    entries.append(entry)
+                } else {
+                    _ = try? rowsArray.decode(AnyCodable.self)
+                }
+            }
+            self.rows = entries
+        }
+        
+        enum CodingKeys: String, CodingKey {
+            case rows
+        }
+    }
+    
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
-        if let roster = try? container.decode([GrokBotRosterEntry].self) {
+        
+        // Try nested {"rows": [...]} structure first (roster blob)
+        if let wrapper = try? container.decode(RosterWrapper.self) {
+            self = .roster(wrapper.rows)
+        }
+        // Fallback to direct array (legacy format)
+        else if let roster = try? container.decode([GrokBotRosterEntry].self) {
             self = .roster(roster)
-        } else if let transcript = try? container.decode(GrokBotTranscriptReplica.self) {
+        }
+        // Try transcript
+        else if let transcript = try? container.decode(GrokBotTranscriptReplica.self) {
             self = .transcript(transcript)
-        } else {
+        }
+        else {
             self = .unknown
         }
     }

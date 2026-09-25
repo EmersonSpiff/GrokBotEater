@@ -183,9 +183,18 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
                 continue
             }
             
-            guard let data = try? Data(contentsOf: file),
-                  let blob = try? JSONDecoder().decode(GrokBotPersistenceBlob.self, from: data),
-                  case .roster(let entries) = blob.value else {
+            guard let data = try? Data(contentsOf: file) else {
+                logger.warning("Failed to read roster blob: \(file.path)")
+                continue
+            }
+            
+            guard let blob = try? JSONDecoder().decode(GrokBotPersistenceBlob.self, from: data) else {
+                logger.warning("Failed to decode roster blob JSON: \(file.path)")
+                continue
+            }
+            
+            guard case .roster(let entries) = blob.value else {
+                logger.warning("Roster blob value is not roster type: \(file.path)")
                 continue
             }
             
@@ -216,9 +225,18 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
                 continue
             }
             
-            guard let data = try? Data(contentsOf: file),
-                  let blob = try? JSONDecoder().decode(GrokBotPersistenceBlob.self, from: data),
-                  case .transcript(let replica) = blob.value else {
+            guard let data = try? Data(contentsOf: file) else {
+                logger.warning("Failed to read transcript blob for agent \(agentId): \(file.path)")
+                continue
+            }
+            
+            guard let blob = try? JSONDecoder().decode(GrokBotPersistenceBlob.self, from: data) else {
+                logger.warning("Failed to decode transcript blob JSON for agent \(agentId): \(file.path)")
+                continue
+            }
+            
+            guard case .transcript(let replica) = blob.value else {
+                logger.warning("Transcript blob value is not transcript type for agent \(agentId): \(file.path)")
                 continue
             }
             

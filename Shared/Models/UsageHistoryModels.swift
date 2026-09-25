@@ -87,13 +87,13 @@ enum ModelKind: String, CaseIterable, Codable, Hashable, Sendable {
 
     var displayName: String {
         switch self {
-        case .fable:   return "Fable 5"
+        case .fable:   return "Daily 5"
         case .opus5:   return "Opus 5"
         case .opus48:  return "Opus 4.8"
         case .opus47:  return "Opus 4.7"
         case .opus46:  return "Opus 4.6"
-        case .sonnet5: return "Sonnet 5"
-        case .sonnet:  return "Sonnet"
+        case .sonnet5: return "Daily 5"
+        case .sonnet:  return "Daily"
         case .haiku:   return "Haiku"
         case .other:   return "Other"
         }
@@ -130,9 +130,9 @@ enum ModelFamily: String, CaseIterable, Codable, Hashable, Sendable {
 
     var displayName: String {
         switch self {
-        case .fable:  return "Fable"
+        case .fable:  return "Daily"
         case .opus:   return "Opus"
-        case .sonnet: return "Sonnet"
+        case .sonnet: return "Daily"
         case .haiku:  return "Haiku"
         case .other:  return "Other"
         }

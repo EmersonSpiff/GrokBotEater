@@ -48,14 +48,44 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             grokBotAgentSessionStore: grokBotAgentSessionStore,
             vendorStatusStore: vendorStatusStore
         )
-        // Start monitoring Grok Bot agents when overlay is enabled
-        if settingsStore.overlayEnabled {
-            grokBotAgentSessionStore.startMonitoring()
-            grokBotAgentSessionStore.setScanInterval(settingsStore.watcherScanInterval.seconds)
-            grokBotAgentSessionStore.setActivityWindow(settingsStore.watcherVisibility.seconds)
-        }
+        
+        // Monitor always starts regardless of overlay toggle (for hero live count)
+        grokBotAgentSessionStore.startMonitoring()
+        grokBotAgentSessionStore.setScanInterval(settingsStore.watcherScanInterval.seconds)
+        grokBotAgentSessionStore.setActivityWindow(settingsStore.watcherVisibility.seconds)
+        
+        // Observe overlay toggle to start/stop monitoring
+        settingsStore.overlay.$overlayEnabled
+            .sink { [weak grokBotAgentSessionStore, weak settingsStore] enabled in
+                guard let store = grokBotAgentSessionStore, let settings = settingsStore else { return }
+                if enabled {
+                    store.startMonitoring()
+                    store.setScanInterval(settings.watcherScanInterval.seconds)
+                    store.setActivityWindow(settings.watcherVisibility.seconds)
+                } else {
+                    // Keep monitoring for hero count even when overlay is off
+                    // Just the overlay window hides; session data still updates
+                }
+            }
+            .store(in: &cancellables)
+        
+        // Observe scan interval changes
+        settingsStore.overlay.$watcherScanInterval
+            .sink { [weak grokBotAgentSessionStore] interval in
+                grokBotAgentSessionStore?.setScanInterval(interval.seconds)
+            }
+            .store(in: &cancellables)
+        
+        // Observe visibility window changes
+        settingsStore.overlay.$watcherVisibility
+            .sink { [weak grokBotAgentSessionStore] visibility in
+                grokBotAgentSessionStore?.setActivityWindow(visibility.seconds)
+            }
+            .store(in: &cancellables)
+        
         // Stop Claude monitoring
         sessionStore.stopMonitoring()
+        
         overlayWindowController = OverlayWindowController(
             sessionStore: sessionStore,
             grokBotAgentSessionStore: grokBotAgentSessionStore,

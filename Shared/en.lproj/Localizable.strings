@@ -41,8 +41,8 @@
 "widget.updated" = "Upd. %@";
 "widget.refresh.interval" = "15 min";
 "widget.refresh.button" = "Refresh";
-"widget.description.usage" = "Monitor your Claude usage in real time";
-"widget.description.pacing" = "Your Claude usage pace";
+"widget.description.usage" = "Monitor your Grok Bot usage in real time";
+"widget.description.pacing" = "Your Grok Bot usage pace";
 "widget.title.sessionRing" = "Session Ring";
 "widget.description.sessionRing" = "Big ring gauge for your weekly Grok Bot usage with Smart Color";
 "widget.title.pacingGraph" = "Pacing Graph";
@@ -67,7 +67,7 @@
 "widget.history.empty.body" = "Open GrokBotEater so it can index your sessions";
 
 /* Settings */
-"settings.subtitle" = "Monitor your Claude usage";
+"settings.subtitle" = "Monitor your Grok Bot usage";
 "settings.test" = "Test";
 "settings.refresh" = "Refresh";
 "settings.refresh.title" = "Refresh";
@@ -139,9 +139,9 @@
 
 /* Guide */
 "guide.title" = "Setup Guide";
-"guide.oauth.title" = "Claude Code";
+"guide.oauth.title" = "Cursor";
 "guide.oauth.badge" = "Recommended";
-"guide.oauth.step1" = "Install **Claude Code** (Anthropic's CLI)";
+"guide.oauth.step1" = "Install **Cursor** (the AI IDE)";
 "guide.oauth.step2" = "Open GrokBotEater and click **Connect**";
 "guide.oauth.step3" = "Done - token refreshes automatically";
 "guide.widget" = "Add the widget";
@@ -332,9 +332,9 @@
 "settings.notifications.master" = "Notifications enabled";
 "settings.notifications.group.usage" = "Usage thresholds";
 "settings.notifications.group.usage.hint" = "Fires when a tracked metric crosses its warning or critical level.";
-"settings.notifications.track.fivehour" = "Track 5h session";
+"settings.notifications.track.fivehour" = "Track weekly usage";
 "settings.notifications.track.weekly" = "Track 7d weekly";
-"settings.notifications.track.sonnet" = "Track Sonnet weekly";
+"settings.notifications.track.sonnet" = "Track daily usage";
 "settings.notifications.recovery" = "Send recovery notifications";
 "settings.notifications.recovery.hint" = "When OFF, only escalations fire (no \"you're back\" message).";
 "settings.notifications.group.pacing" = "Pacing";
@@ -349,7 +349,7 @@
 "settings.notifications.reset.offset.minutes" = "%d min before";
 "settings.notifications.reset.offset.hours" = "%d h before";
 "settings.notifications.group.extra" = "Extra credits";
-"settings.notifications.group.extra.hint" = "Only fires if the paid pool is enabled in your Anthropic plan.";
+"settings.notifications.group.extra.hint" = "Only fires if the paid pool is enabled in your Cursor plan.";
 "settings.notifications.extra" = "Pool warning / critical";
 "settings.notifications.group.health" = "Health";
 "settings.notifications.group.health.hint" = "Connection issues that might block tracking.";
@@ -362,7 +362,7 @@
 "sidebar.serviceStatus.subtitle" = "Service outage monitoring (disabled for GrokBotEater)";
 "settings.status.master" = "Monitoring";
 "settings.status.group.polling" = "Polling";
-"settings.status.group.polling.hint" = "How often to check Claude's status. Checks speed up automatically during an outage.";
+"settings.status.group.polling.hint" = "How often to check Cursor's status. Checks speed up automatically during an outage.";
 "settings.status.interval.label" = "Check every";
 "settings.status.interval.minutes" = "%d min";
 "settings.status.group.display" = "Display";
@@ -420,7 +420,7 @@
 "dashboard.org" = "Organization";
 "dashboard.pacing.reset.days" = "Resets in %dd %dh";
 "dashboard.pacing.reset.hours" = "Resets in %dh";
-"dashboard.hero.session.label" = "Session · 5h window";
+"dashboard.hero.session.label" = "Weekly usage";
 "dashboard.hero.resetsIn" = "Resets in";
 "dashboard.hero.grokbot.label" = "Weekly";
 "pacing.zone.chill" = "Chill";
@@ -605,7 +605,7 @@
 "sidebar.history" = "History";
 "sidebar.general" = "General";
 "history.placeholder.title" = "History coming soon";
-"history.placeholder.subtitle" = "Your Claude Code session history will live here -> per-model token breakdown, daily charts, and usage patterns across your local JSONL files.";
+"history.placeholder.subtitle" = "Your Cursor agent session history will live here -> per-model token breakdown, daily charts, and usage patterns across your local JSONL files.";
 
 /* History view */
 "history.sessions.label" = "sessions";
@@ -625,7 +625,7 @@
 "history.coming.title" = "History";
 "history.coming.subtitle" = "Grok Bot usage over time";
 "history.coming.badge" = "Coming soon";
-"history.coming.body" = "This tab used to show Claude Code session tokens (Sonnet / Opus / Haiku). Grok Bot history isn’t wired yet — we’ll put sand-usage trends here when that API is ready.";
+"history.coming.body" = "This tab used to show Cursor agent session tokens. Grok Bot history isn’t wired yet — we’ll put sand-usage trends here when that API is ready.";
 
 "history.empty.title" = "No sessions yet";
 "history.empty.subtitle" = "Grok Bot agents will appear here when active.";
@@ -924,7 +924,7 @@
 /* Fable (Daily Grok Bot usage) */
 "metric.fable" = "Daily";
 "widget.fable" = "Daily";
-"settings.notifications.track.fable" = "Track Claude Fable weekly";
+"settings.notifications.track.fable" = "Track daily usage";
 "notif.title.fable.pace" = "Ahead of Fable pace";
 "notif.body.fable.pace" = "You're ahead of an even Fable burn rate, not near the cap. Fine if intentional.";
 "notif.title.fable.orange" = "Fable pool heavy";

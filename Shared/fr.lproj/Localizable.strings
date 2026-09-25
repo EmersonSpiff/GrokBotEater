@@ -139,7 +139,7 @@
 
 /* Guide */
 "guide.title" = "Configuration";
-"guide.oauth.title" = "Claude Code";
+"guide.oauth.title" = "Cursor";
 "guide.oauth.badge" = "Recommandé";
 "guide.oauth.step1" = "Installez **Claude Code** (le CLI d'Anthropic)";
 "guide.oauth.step2" = "Ouvrez GrokBotEater et cliquez sur **Connecter**";
@@ -349,7 +349,7 @@
 "settings.notifications.reset.offset.minutes" = "%d min avant";
 "settings.notifications.reset.offset.hours" = "%dh avant";
 "settings.notifications.group.extra" = "Extra credits";
-"settings.notifications.group.extra.hint" = "Ne se déclenche que si le pool payant est activé sur ton plan Anthropic.";
+"settings.notifications.group.extra.hint" = "Ne se déclenche que si le pool payant est activé sur ton plan Cursor.";
 "settings.notifications.extra" = "Pool warning / critique";
 "settings.notifications.group.health" = "Santé";
 "settings.notifications.group.health.hint" = "Soucis de connexion qui peuvent bloquer le suivi.";
