@@ -114,7 +114,7 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
                 // Check transcript for working state
                 let transcript = readTranscript(supportDir: supportDir, agentId: entry.id)
                 let isStreaming = transcript?.entries.last?.isStreaming == true
-                let isWaitingOnUser = entry.awaitingUserResponse != nil
+                let isWaitingOnUser = entry.awaitingUserResponse
                 
                 // Determine state
                 let state: GrokBotSessionState
