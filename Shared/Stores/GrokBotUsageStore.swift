@@ -243,11 +243,52 @@ final class GrokBotUsageStore: ObservableObject {
     
     private func evaluateNotifications() {
         guard let toggles = notifTogglesProvider?() else { return }
+        
+        // Weekly usage threshold alerts
         notificationService.evaluateGrokBot(
             usagePercent: usagePercent,
             resetDate: nextResetDate,
             toggles: toggles
         )
+        
+        // Daily budget alerts
+        if let resetDate = nextResetDate, let snapshot = sharedFileService.grokBotSnapshot {
+            let now = Date()
+            
+            // Get today's usage from daily pacing (default 0 if not available)
+            let todayUsagePercent = Double(snapshot.dailyPercent ?? 0)
+            
+            notificationService.evaluateGrokBotDailyBudget(
+                weeklyUsedPercent: usagePercent,
+                resetDate: resetDate,
+                todayUsagePercent: todayUsagePercent,
+                now: now,
+                toggles: toggles
+            )
+        }
+        
+        // Pace alerts
+        if let resetDate = nextResetDate, let snapshot = sharedFileService.grokBotSnapshot, let periodStart = snapshot.currentPeriodStart {
+            let now = Date()
+            let totalDuration = resetDate.timeIntervalSince(periodStart)
+            let elapsed = now.timeIntervalSince(periodStart)
+            let elapsedPercent = totalDuration > 0 ? elapsed / totalDuration : 0
+            
+            // Calculate daily usage needed to reach 1.0x pace by reset
+            let daysRemaining = max(0.1, resetDate.timeIntervalSinceNow / 86400.0)
+            let targetUsageByReset = elapsedPercent * 100
+            let remainingToTarget = max(0, targetUsageByReset - Double(usagePercent))
+            let dailyUsageToReachPace = remainingToTarget / daysRemaining
+            
+            notificationService.evaluateGrokBotPace(
+                weeklyUsedPercent: usagePercent,
+                elapsedPercent: elapsedPercent,
+                resetDate: resetDate,
+                dailyUsageToReachPace: dailyUsageToReachPace,
+                now: now,
+                toggles: toggles
+            )
+        }
     }
 
     private static func parsePeriodStart(_ raw: String?) -> Date? {

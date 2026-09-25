@@ -28,6 +28,12 @@ final class NotificationSettingsStore: ObservableObject {
     @Published var trackGrokBot: Bool {
         didSet { UserDefaults.standard.set(trackGrokBot, forKey: "notifTrackGrokBot") }
     }
+    @Published var trackGrokBotDailyBudget: Bool {
+        didSet { UserDefaults.standard.set(trackGrokBotDailyBudget, forKey: "notifTrackGrokBotDailyBudget") }
+    }
+    @Published var trackGrokBotPace: Bool {
+        didSet { UserDefaults.standard.set(trackGrokBotPace, forKey: "notifTrackGrokBotPace") }
+    }
     /// When false, only escalations (orange / red) fire. Recovery to green stays silent.
     @Published var sendRecovery: Bool {
         didSet { UserDefaults.standard.set(sendRecovery, forKey: "notifSendRecovery") }
@@ -82,6 +88,8 @@ final class NotificationSettingsStore: ObservableObject {
         self.trackSonnet = SettingsDefaults.bool(key: "notifTrackSonnet", default: false)
         self.trackFable = SettingsDefaults.bool(key: "notifTrackFable", default: false)
         self.trackGrokBot = SettingsDefaults.bool(key: "notifTrackGrokBot", default: true)
+        self.trackGrokBotDailyBudget = SettingsDefaults.bool(key: "notifTrackGrokBotDailyBudget", default: true)
+        self.trackGrokBotPace = SettingsDefaults.bool(key: "notifTrackGrokBotPace", default: true)
         self.sendRecovery = SettingsDefaults.bool(key: "notifSendRecovery", default: true)
         self.pacingHot = SettingsDefaults.bool(key: "notifPacingHot", default: true)
         self.pacingWarning = SettingsDefaults.bool(key: "notifPacingWarning", default: false)

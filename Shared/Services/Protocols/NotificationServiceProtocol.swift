@@ -33,6 +33,8 @@ struct NotificationToggles {
     let trackSonnet: Bool
     let trackFable: Bool
     let trackGrokBot: Bool
+    let trackGrokBotDailyBudget: Bool
+    let trackGrokBotPace: Bool
     let sendRecovery: Bool
     let pacingHot: Bool
     let pacingWarning: Bool
@@ -48,6 +50,7 @@ struct NotificationToggles {
     let smartColorProfile: SmartColorProfile
     let pacingMargin: Double
     let thresholds: UsageThresholds
+    let paceThreshold: Double
     /// Fire a notification when a monitored vendor goes degraded/down.
     let vendorDegraded: Bool
     /// Fire a notification when a monitored vendor recovers to healthy.

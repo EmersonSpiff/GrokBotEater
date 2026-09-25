@@ -251,6 +251,8 @@ final class StatusBarController: NSObject {
             trackSonnet: false,    // Claude model - not used for Grok Bot
             trackFable: false,     // Claude model - not used for Grok Bot
             trackGrokBot: true,    // Grok Bot weekly usage
+            trackGrokBotDailyBudget: settingsStore.notifTrackGrokBotDailyBudget,
+            trackGrokBotPace: settingsStore.notifTrackGrokBotPace,
             sendRecovery: settingsStore.notifSendRecovery,
             pacingHot: settingsStore.notifPacingHot,
             pacingWarning: settingsStore.notifPacingWarning,
@@ -264,6 +266,7 @@ final class StatusBarController: NSObject {
             smartColorProfile: settingsStore.smartColorProfile,
             pacingMargin: Double(settingsStore.pacingMargin),
             thresholds: themeStore.thresholds,
+            paceThreshold: settingsStore.pacingPaceThreshold,
             vendorDegraded: settingsStore.notifVendorDegraded,
             vendorRestored: settingsStore.notifVendorRestored
         )

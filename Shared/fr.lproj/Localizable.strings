@@ -960,3 +960,20 @@
 "pacing.grokBot.hot.1" = "Vide trop tôt";
 "pacing.grokBot.hot.2" = "Vide aujourd'hui";
 "pacing.grokBot.hot.3" = "Upgrade ou ralentis";
+
+/* Daily Budget Alerts */
+"notif.title.grokBot.daily.orange" = "Alerte budget quotidien";
+"notif.title.grokBot.daily.red" = "Budget quotidien critique";
+"notif.body.grokBot.daily" = "Aujourd'hui : %@%% de votre part quotidienne de %@%%. Hebdo : %d%%, réinitialise %@.";
+
+/* Pace Alerts */
+"notif.title.grokBot.pace" = "Rythme au-dessus du seuil";
+"notif.body.grokBot.pace" = "Rythme actuel : %.2fx. Hebdo : %d%%. Utilisez ≤%.1f%% aujourd'hui pour atteindre 1.0x avant la réinitialisation (%@).";
+
+/* Settings - Daily Budget */
+"settings.notifications.track.grokBotDailyBudget" = "Alertes budget quotidien";
+"settings.notifications.track.grokBotPace" = "Alertes de rythme";
+
+/* Settings - Pacing */
+"settings.pacing.paceThreshold" = "Seuil d'alerte de rythme";
+"settings.pacing.paceThreshold.hint" = "Déclencher lorsque le rythme d'utilisation hebdomadaire (utilisé% / écoulé%) dépasse ce multiplicateur. Plage : 1.1x - 2.0x.";

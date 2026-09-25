@@ -967,3 +967,20 @@
 "pacing.grokBot.hot.1" = "Will empty early";
 "pacing.grokBot.hot.2" = "Emptying today";
 "pacing.grokBot.hot.3" = "Upgrade or slow";
+
+/* Daily Budget Alerts */
+"notif.title.grokBot.daily.orange" = "Daily budget warning";
+"notif.title.grokBot.daily.red" = "Daily budget critical";
+"notif.body.grokBot.daily" = "Today: %@%% of your %@%% daily share. Weekly: %d%%, resets %@.";
+
+/* Pace Alerts */
+"notif.title.grokBot.pace" = "Pace above threshold";
+"notif.body.grokBot.pace" = "Current pace: %.2fx. Weekly: %d%%. Use ≤%.1f%% today to reach 1.0x by reset (%@).";
+
+/* Settings - Daily Budget */
+"settings.notifications.track.grokBotDailyBudget" = "Daily budget alerts";
+"settings.notifications.track.grokBotPace" = "Pace alerts";
+
+/* Settings - Pacing */
+"settings.pacing.paceThreshold" = "Pace alert threshold";
+"settings.pacing.paceThreshold.hint" = "Fire when weekly usage pace (used% / elapsed%) exceeds this multiplier. Range: 1.1x - 2.0x.";
