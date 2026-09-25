@@ -4,6 +4,10 @@ import os.log
 
 private let logger = Logger(subsystem: "com.emersonspiff.grokboteater.app", category: "GrokBotSessionMonitor")
 
+/// Maximum age (in seconds) for a pending user message to count as Working state.
+/// Older user messages indicate stale transcripts and should not pin the Working state.
+private let maxPendingMessageAge: TimeInterval = 180 // 3 minutes
+
 final class GrokBotSessionMonitorService: @unchecked Sendable {
     private let sessionsSubject = CurrentValueSubject<[GrokBotSession], Never>([])
     var sessionsPublisher: AnyPublisher<[GrokBotSession], Never> {
@@ -264,11 +268,11 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
             return false
         }
         
-        // Only treat as pending/working if recent (within 15 minutes)
+        // Only treat as pending/working if recent (within maxPendingMessageAge)
         // Older user messages indicate stale transcripts, don't pin Working state
         let messageTime = Date(timeIntervalSince1970: Double(last.timestampMs) / 1000.0)
         let age = Date().timeIntervalSince(messageTime)
-        return age < 900 // 15 minutes
+        return age < maxPendingMessageAge
     }
     
     private func countLocalWorkProcesses() -> Int {
