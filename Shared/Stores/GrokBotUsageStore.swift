@@ -163,7 +163,7 @@ final class GrokBotUsageStore: ObservableObject {
     
     func reloadConfig() {
         // Start with loading state immediately (non-blocking)
-        errorState = nil
+        errorState = .none
         statusMessage = "Loading..."
         
         refreshTask?.cancel()
