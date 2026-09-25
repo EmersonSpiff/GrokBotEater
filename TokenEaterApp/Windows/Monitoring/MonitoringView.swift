@@ -14,6 +14,7 @@ struct MonitoringView: View {
     @EnvironmentObject private var themeStore: ThemeStore
     @EnvironmentObject private var settingsStore: SettingsStore
     @EnvironmentObject private var sessionStore: SessionStore
+    @EnvironmentObject private var grokBotSessionStore: GrokBotSessionStore
     @EnvironmentObject private var vendorStatusStore: VendorStatusStore
 
     /// Lightweight 7d daily-buckets store for the back-of-card stats.
@@ -424,37 +425,81 @@ struct MonitoringView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            // Right column: Grok Bot daily usage + reset countdown
-            VStack(alignment: .trailing, spacing: 6) {
-                Text("TODAY")
-                    .font(DS.Typography.micro)
-                    .tracking(1.2)
-                    .foregroundStyle(DS.Palette.textTertiary)
-
-                let dailyPct = grokBotUsageStore.sharedFileService.grokBotSnapshot?.dailyPercent ?? 0
-                Text("\(dailyPct)%")
-                    .font(.system(size: 34, weight: .bold, design: .rounded))
-                    .foregroundStyle(gaugeColor)
-                    .monospacedDigit()
-                    .contentTransition(.numericText(value: Double(dailyPct)))
-                    .animation(DS.Motion.springLiquid, value: dailyPct)
-                Text("Daily usage")
-                    .font(.system(size: 9, weight: .medium))
-                    .tracking(0.8)
-                    .foregroundStyle(DS.Palette.textTertiary)
-                    .textCase(.uppercase)
-
-                if let resetDate {
-                    let countdown = ResetCountdownFormatter.weekly(from: resetDate)
-                    HStack(spacing: 5) {
-                        Image(systemName: "clock.arrow.circlepath")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(DS.Palette.textTertiary)
-                        Text(countdown.relative.isEmpty ? "-" : countdown.relative)
-                            .font(.system(size: 11, weight: .semibold, design: .rounded))
-                            .foregroundStyle(DS.Palette.textSecondary)
+            // Right column: Split between LIVE sessions (top) and TODAY usage (bottom)
+            VStack(alignment: .trailing, spacing: 8) {
+                // Top: LIVE session count
+                VStack(alignment: .trailing, spacing: 3) {
+                    Text("LIVE")
+                        .font(DS.Typography.micro)
+                        .tracking(1.2)
+                        .foregroundStyle(DS.Palette.textTertiary)
+                    
+                    let liveCount = grokBotSessionStore.activeCount
+                    Text("\(liveCount)")
+                        .font(.system(size: 26, weight: .bold, design: .rounded))
+                        .foregroundStyle(liveCount > 0 ? DS.Palette.textPrimary : DS.Palette.textTertiary)
+                        .monospacedDigit()
+                        .contentTransition(.numericText(value: Double(liveCount)))
+                        .animation(DS.Motion.springLiquid, value: liveCount)
+                    
+                    Text(liveCount == 1 ? "agent" : "agents")
+                        .font(.system(size: 8, weight: .medium))
+                        .tracking(0.8)
+                        .foregroundStyle(DS.Palette.textTertiary)
+                        .textCase(.uppercase)
+                    
+                    // Sub-lines for waiting/local when nonzero
+                    let waitingCount = grokBotSessionStore.waitingOnUserCount
+                    let localCount = grokBotSessionStore.runningLocallyCount
+                    
+                    if waitingCount > 0 {
+                        Text("\(waitingCount) waiting on you")
+                            .font(.system(size: 8, weight: .medium))
+                            .foregroundStyle(DS.Palette.semanticWarning.opacity(0.8))
                     }
-                    .padding(.top, 2)
+                    if localCount > 0 {
+                        Text("\(localCount) running locally")
+                            .font(.system(size: 8, weight: .medium))
+                            .foregroundStyle(DS.Palette.brandPrimary.opacity(0.8))
+                    }
+                }
+                
+                Divider()
+                    .frame(width: 40)
+                    .opacity(0.3)
+                
+                // Bottom: TODAY daily usage + countdown
+                VStack(alignment: .trailing, spacing: 3) {
+                    Text("TODAY")
+                        .font(DS.Typography.micro)
+                        .tracking(1.2)
+                        .foregroundStyle(DS.Palette.textTertiary)
+                    
+                    let dailyPct = grokBotUsageStore.sharedFileService.grokBotSnapshot?.dailyPercent ?? 0
+                    Text("\(dailyPct)%")
+                        .font(.system(size: 26, weight: .bold, design: .rounded))
+                        .foregroundStyle(gaugeColor)
+                        .monospacedDigit()
+                        .contentTransition(.numericText(value: Double(dailyPct)))
+                        .animation(DS.Motion.springLiquid, value: dailyPct)
+                    
+                    Text("daily usage")
+                        .font(.system(size: 8, weight: .medium))
+                        .tracking(0.8)
+                        .foregroundStyle(DS.Palette.textTertiary)
+                        .textCase(.uppercase)
+                    
+                    if let resetDate {
+                        let countdown = ResetCountdownFormatter.weekly(from: resetDate)
+                        HStack(spacing: 4) {
+                            Image(systemName: "clock.arrow.circlepath")
+                                .font(.system(size: 9, weight: .semibold))
+                                .foregroundStyle(DS.Palette.textTertiary)
+                            Text(countdown.relative.isEmpty ? "-" : countdown.relative)
+                                .font(.system(size: 9, weight: .semibold, design: .rounded))
+                                .foregroundStyle(DS.Palette.textSecondary)
+                        }
+                    }
                 }
             }
             .frame(width: 160, height: 160)

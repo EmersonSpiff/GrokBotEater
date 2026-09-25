@@ -527,7 +527,7 @@
 "settings.overlay.toggle" = "Show session overlay";
 
 /* Agent Watchers */
-"settings.watchers.description" = "A floating overlay showing your active Claude Code sessions. Hover to expand, click to jump to a session.";
+"settings.watchers.description" = "A floating overlay showing your active Grok Bot agents. Hover to expand.";
 "settings.watchers.trigger" = "Hover zone";
 "settings.watchers.trigger.minimal" = "Minimal";
 "settings.watchers.trigger.narrow" = "Narrow";
@@ -628,7 +628,7 @@
 "history.coming.body" = "This tab used to show Claude Code session tokens (Sonnet / Opus / Haiku). Grok Bot history isn’t wired yet — we’ll put sand-usage trends here when that API is ready.";
 
 "history.empty.title" = "No sessions yet";
-"history.empty.subtitle" = "Run Claude Code to populate your history. Each session writes a JSONL file under ~/.claude/projects/ which GrokBotEater aggregates here.";
+"history.empty.subtitle" = "Grok Bot agents will appear here when active.";
 "history.empty.filter.all" = "Nothing logged in the last %@";
 "history.empty.filter.model" = "No %@ usage in the last %@";
 "history.chip.cacheHit" = "Cache hit";

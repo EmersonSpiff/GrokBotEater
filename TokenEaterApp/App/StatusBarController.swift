@@ -24,6 +24,7 @@ final class StatusBarController: NSObject {
     private let settingsStore: SettingsStore
     private let updateStore: UpdateStore
     private let sessionStore: SessionStore
+    private let grokBotSessionStore: GrokBotSessionStore
     private let vendorStatusStore: VendorStatusStore
     private let tokenFileMonitor: TokenFileMonitorProtocol
 
@@ -34,6 +35,7 @@ final class StatusBarController: NSObject {
         settingsStore: SettingsStore,
         updateStore: UpdateStore,
         sessionStore: SessionStore,
+        grokBotSessionStore: GrokBotSessionStore,
         vendorStatusStore: VendorStatusStore,
         tokenFileMonitor: TokenFileMonitorProtocol = TokenFileMonitor()
     ) {
@@ -43,6 +45,7 @@ final class StatusBarController: NSObject {
         self.settingsStore = settingsStore
         self.updateStore = updateStore
         self.sessionStore = sessionStore
+        self.grokBotSessionStore = grokBotSessionStore
         self.vendorStatusStore = vendorStatusStore
         self.tokenFileMonitor = tokenFileMonitor
         self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -640,6 +643,7 @@ final class StatusBarController: NSObject {
             .environmentObject(settingsStore)
             .environmentObject(updateStore)
             .environmentObject(sessionStore)
+            .environmentObject(grokBotSessionStore)
             .environmentObject(vendorStatusStore)
 
         let isOnboarding = !settingsStore.hasCompletedOnboarding

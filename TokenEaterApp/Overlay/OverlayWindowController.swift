@@ -26,6 +26,7 @@ final class OverlayState: ObservableObject {
     /// menu tracks, so the 2s scan republish can't reshuffle or restyle the
     /// card under the open menu.
     @Published var frozenSessions: [ClaudeSession]? = nil
+    @Published var frozenGrokBotSessions: [GrokBotSession]? = nil
 }
 
 @MainActor
@@ -37,6 +38,7 @@ final class OverlayWindowController {
     private var screenObserver: NSObjectProtocol?
 
     private let sessionStore: SessionStore
+    private let grokBotSessionStore: GrokBotSessionStore
     private let settingsStore: SettingsStore
     let overlayState = OverlayState()
     private var lastCursorCheck: CFAbsoluteTime = 0
@@ -58,8 +60,9 @@ final class OverlayWindowController {
         min(windowWidth, settingsStore.overlayTriggerZone.exitWidth * CGFloat(settingsStore.overlayScale))
     }
 
-    init(sessionStore: SessionStore, settingsStore: SettingsStore) {
+    init(sessionStore: SessionStore, grokBotSessionStore: GrokBotSessionStore, settingsStore: SettingsStore) {
         self.sessionStore = sessionStore
+        self.grokBotSessionStore = grokBotSessionStore
         self.settingsStore = settingsStore
 
         observeSettings()
@@ -78,14 +81,10 @@ final class OverlayWindowController {
             }
             .store(in: &cancellables)
 
-        // Show/hide follows the sessions the overlay actually renders:
-        // active minus user-hidden (#247). Hiding the last visible watcher
-        // must drop the panel, and a purge of hidden ids must bring it back.
-        // An open context menu pins the panel: tearing it down would kill the
-        // menu mid-tracking; the close re-emits and settles the real state.
+        // Show/hide follows Grok Bot sessions
         Publishers.CombineLatest3(
-            sessionStore.$sessions,
-            sessionStore.$hiddenSessionIds,
+            grokBotSessionStore.$sessions,
+            grokBotSessionStore.$hiddenSessionIds,
             overlayState.$contextMenuSessionId
         )
             .map { sessions, hidden, openMenu in
@@ -178,6 +177,7 @@ final class OverlayWindowController {
 
         let overlayView = OverlayView()
             .environmentObject(sessionStore)
+            .environmentObject(grokBotSessionStore)
             .environmentObject(settingsStore)
             .environmentObject(overlayState)
 

@@ -6,6 +6,7 @@ struct MainAppView: View {
     @EnvironmentObject private var settingsStore: SettingsStore
     @EnvironmentObject private var updateStore: UpdateStore
     @EnvironmentObject private var sessionStore: SessionStore
+    @EnvironmentObject private var grokBotSessionStore: GrokBotSessionStore
 
     @State private var selectedSpace: AppSpace = .monitoring
     @State private var selectedSettingsSection: SettingsSection = .general

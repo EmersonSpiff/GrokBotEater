@@ -9,6 +9,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     var settingsStore: SettingsStore!
     var updateStore: UpdateStore!
     var sessionStore: SessionStore!
+    var grokBotSessionStore: GrokBotSessionStore!
     var vendorStatusStore: VendorStatusStore!
 
     private var statusBarController: StatusBarController?
@@ -44,14 +45,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             settingsStore: settingsStore,
             updateStore: updateStore,
             sessionStore: sessionStore,
+            grokBotSessionStore: grokBotSessionStore,
             vendorStatusStore: vendorStatusStore
         )
-        // GrokBotEater does not monitor Claude Code sessions. Keep overlay off
-        // until a Cursor/Grok Bot agent watcher exists.
-        settingsStore.overlayEnabled = false
+        // Start monitoring Grok Bot agents when overlay is enabled
+        if settingsStore.overlayEnabled {
+            grokBotSessionStore.startMonitoring()
+            grokBotSessionStore.setScanInterval(settingsStore.watchersScanInterval)
+            grokBotSessionStore.setActivityWindow(settingsStore.watchersVisibility)
+        }
+        // Stop Claude monitoring
         sessionStore.stopMonitoring()
         overlayWindowController = OverlayWindowController(
             sessionStore: sessionStore,
+            grokBotSessionStore: grokBotSessionStore,
             settingsStore: settingsStore
         )
 
@@ -70,6 +77,7 @@ struct TokenEaterApp: App {
     private let settingsStore: SettingsStore
     private let updateStore: UpdateStore
     private let sessionStore: SessionStore
+    private let grokBotSessionStore: GrokBotSessionStore
     private let vendorStatusStore: VendorStatusStore
 
     init() {
@@ -96,6 +104,7 @@ struct TokenEaterApp: App {
         self.settingsStore = SettingsStore()
         self.updateStore = UpdateStore()
         self.sessionStore = SessionStore()
+        self.grokBotSessionStore = GrokBotSessionStore()
         self.vendorStatusStore = VendorStatusStore()
 
         NotificationService().setupDelegate()
@@ -105,6 +114,7 @@ struct TokenEaterApp: App {
         appDelegate.settingsStore = settingsStore
         appDelegate.updateStore = updateStore
         appDelegate.sessionStore = sessionStore
+        appDelegate.grokBotSessionStore = grokBotSessionStore
         appDelegate.vendorStatusStore = vendorStatusStore
     }
 
