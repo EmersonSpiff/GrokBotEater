@@ -310,24 +310,6 @@ final class OverlayWindowController {
             return
         }
 
-        // Horizontal zone: use the wider "exit" width once the panel is
-        // already active so the cursor can drift off the tight entry strip
-        // without the overlay snapping shut mid-hover.
-        let distanceFromEdge = settingsStore.overlayLeftSide ? localX : (frame.width - localX)
-        let threshold = isPanelActive ? exitZone : enterZone
-        guard distanceFromEdge <= threshold else {
-            isPanelActive = false
-            if overlayState.activationZone != enterZone {
-                overlayState.activationZone = enterZone
-            }
-            panel.ignoresMouseEvents = true
-            return
-        }
-        isPanelActive = true
-        if overlayState.activationZone != exitZone {
-            overlayState.activationZone = exitZone
-        }
-
         // Use the new shouldCapture API from upstream c738ce8
         let distanceFromEdge = settingsStore.overlayLeftSide ? localX : (frame.width - localX)
         let sessionCount = grokBotAgentSessionStore.overlaySessions.count
