@@ -31,6 +31,9 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
     private var axIsAvailable: Bool = false
     private var axCancellables: Set<AnyCancellable> = []
     
+    private var lastLocalExecCount: Int = 0
+    private var hasLoggedFirstScan: Bool = false
+    
     private var grokBotAppSupportDir: URL {
         if let override = grokBotSupportDir { return override }
         let home: String
@@ -149,8 +152,10 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
         
         // Count local exec commands (local-work detection)
         let localExecCount = countLocalExecCommands()
-        if localExecCount > 0 {
-            logger.info("Grok Bot scan: \(localExecCount, privacy: .public) local exec command(s) detected")
+        if !hasLoggedFirstScan || localExecCount != lastLocalExecCount {
+            logger.info("Grok Bot scan: \(localExecCount) local exec command(s) detected")
+            lastLocalExecCount = localExecCount
+            hasLoggedFirstScan = true
         }
         
         var sessions = roster
@@ -428,38 +433,55 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
     }
     
     /// Count local exec commands currently running on this Mac.
-    /// Scans ALL NodeService helpers (not just the first one) and counts only children
-    /// matching the local-exec wrapper pattern (zsh/bash -c with `<&3` snapshot).
+    /// Scans the FULL process list for shells whose parent is a Grok Bot NodeService helper
+    /// and whose args match the local-exec wrapper pattern (zsh/bash -c with `<&3` snapshot).
     /// Ignores long-lived MCP servers/connectors.
     private func countLocalExecCommands() -> Int {
-        let processes = ProcessResolver.findGrokBotProcesses()
+        // Get Grok Bot processes to find NodeService helper PIDs
+        let grokBotProcesses = ProcessResolver.findGrokBotProcesses()
         
-        guard let mainProc = processes.first(where: { $0.isMainGrokBot }) else {
+        guard let mainProc = grokBotProcesses.first(where: { $0.isMainGrokBot }) else {
             return 0
         }
         
         // Find ALL NodeService helpers (not just the first one)
-        let nodeHelpers = processes.filter { proc in
+        let nodeHelpers = grokBotProcesses.filter { proc in
             proc.parentPid == mainProc.pid && proc.args.contains("--utility-sub-type=node.mojom.NodeService")
         }
         
         guard !nodeHelpers.isEmpty else { return 0 }
         
-        // Count children of all helpers that match the local-exec wrapper pattern
         let helperPids = Set(nodeHelpers.map { $0.pid })
+        
+        // Scan FULL process list for children of NodeService helpers
+        let allProcesses = ProcessResolver.listAllProcesses()
         let localExecPattern = ["<&3"]  // The local-exec wrapper snapshot pattern
         
-        return processes.filter { proc in
+        var count = 0
+        for proc in allProcesses {
             // Must be a child of one of the NodeService helpers
-            guard helperPids.contains(proc.parentPid) else { return false }
+            guard helperPids.contains(proc.parentPid) else { continue }
             
-            // Must be a shell command with the local-exec wrapper pattern
-            // Example: /bin/zsh -c builtin export PATH=... snap=$(command cat <&3)
-            let isShell = proc.args.contains("/bin/zsh -c") || proc.args.contains("/bin/bash -c")
-            let hasWrapper = localExecPattern.allSatisfy { proc.args.contains($0) }
+            // Get the process path and arguments
+            var pathBuffer = [CChar](repeating: 0, count: Int(MAXPATHLEN))
+            let ret = proc_pidpath(proc.pid, &pathBuffer, UInt32(MAXPATHLEN))
+            guard ret > 0 else { continue }
+            let path = String(cString: pathBuffer)
             
-            return isShell && hasWrapper
-        }.count
+            // Must be a shell (/bin/zsh or /bin/bash)
+            guard path == "/bin/zsh" || path == "/bin/bash" else { continue }
+            
+            // Get arguments and check for wrapper pattern
+            let args = ProcessResolver.getProcessArguments(pid: proc.pid)
+            let hasWrapper = localExecPattern.allSatisfy { args.contains($0) }
+            let hasShellFlag = args.contains("-c")
+            
+            if hasShellFlag && hasWrapper {
+                count += 1
+            }
+        }
+        
+        return count
     }
     
     private func decodeBase32(_ input: String) -> String? {

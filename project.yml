@@ -38,6 +38,7 @@ targets:
         LSApplicationCategoryType: public.app-category.utilities
         CFBundleDisplayName: GrokBotEater
         LSUIElement: true
+        NSAccessibilityUsageDescription: "GrokBotEater needs Accessibility access to detect when your Grok Bot agents are actively working. This lets the watcher show real-time Working status by reading the Grok Bot app's interface."
         CFBundleURLTypes:
           - CFBundleURLName: com.emersonspiff.grokboteater.app
             CFBundleURLSchemes:

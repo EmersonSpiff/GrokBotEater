@@ -25,7 +25,7 @@ final class GrokBotAXWorkingService: @unchecked Sendable {
     private let queue = DispatchQueue(label: "com.emersonspiff.grokboteater.ax-working", qos: .utility)
     private let grokBotSupportDir: URL?
     private var lastSetPid: pid_t = -1
-    private var lastAvailableState: Bool = false
+    private var lastAvailableState: Bool? = nil
     private var lastWorkingStates: [String: Bool] = [:]
     
     private var grokBotAppSupportDir: URL {
@@ -55,7 +55,7 @@ final class GrokBotAXWorkingService: @unchecked Sendable {
             self?.timer = nil
             self?.workingStateSubject.send([:])
             self?.isAvailableSubject.send(false)
-            self?.lastAvailableState = false
+            self?.lastAvailableState = nil
             self?.lastWorkingStates = [:]
         }
     }
@@ -74,7 +74,7 @@ final class GrokBotAXWorkingService: @unchecked Sendable {
     private func scan() {
         // Check if Accessibility is trusted
         guard AXIsProcessTrusted() else {
-            if lastAvailableState {
+            if lastAvailableState != false {
                 logger.info("AX unavailable: not trusted for Accessibility")
                 lastAvailableState = false
             }
@@ -85,7 +85,7 @@ final class GrokBotAXWorkingService: @unchecked Sendable {
         
         // Read desktop-status.json for current pid
         guard let status = readDesktopStatus(), status.signedIn == true else {
-            if lastAvailableState {
+            if lastAvailableState != false {
                 logger.info("AX unavailable: Grok Bot not running or not signed in")
                 lastAvailableState = false
             }
@@ -98,7 +98,7 @@ final class GrokBotAXWorkingService: @unchecked Sendable {
         
         // Confirm pid is alive
         guard ProcessResolver.isProcessAlive(pid: pid) else {
-            if lastAvailableState {
+            if lastAvailableState != false {
                 logger.info("AX unavailable: pid \(pid) not alive")
                 lastAvailableState = false
             }
@@ -123,7 +123,7 @@ final class GrokBotAXWorkingService: @unchecked Sendable {
         let workingStates = scanAXTree(app: app)
         
         if workingStates.isEmpty {
-            if lastAvailableState {
+            if lastAvailableState != false {
                 logger.info("AX unavailable: no sand-agent-item elements found")
                 lastAvailableState = false
             }
@@ -133,7 +133,7 @@ final class GrokBotAXWorkingService: @unchecked Sendable {
         }
         
         // AX is available
-        if !lastAvailableState {
+        if lastAvailableState != true {
             logger.info("AX available: found \(workingStates.count) bot(s) in tree")
             lastAvailableState = true
         }
