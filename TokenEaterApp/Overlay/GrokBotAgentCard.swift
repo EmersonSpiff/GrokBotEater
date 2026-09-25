@@ -220,11 +220,38 @@ struct GrokBotAgentCard: View {
         let baseImage = Image(systemName: stateGlyph)
         
         if session.state == .runningLocally {
-            baseImage.symbolRenderingMode(.multicolor)
+            applySymbolEffect(to: baseImage.symbolRenderingMode(.multicolor))
         } else {
-            baseImage
+            applySymbolEffect(to: baseImage)
         }
-        .modifier(StateSymbolEffect(state: session.state, animationsEnabled: animationsEnabled))
+    }
+    
+    @ViewBuilder
+    private func applySymbolEffect(to image: Image) -> some View {
+        if animationsEnabled {
+            switch session.state {
+            case .working:
+                image.symbolEffect(.bounce, options: .repeating)
+            case .waitingOnUser:
+                if #available(macOS 15, *) {
+                    image.symbolEffect(.wiggle, options: .repeating)
+                } else {
+                    image.symbolEffect(.pulse, options: .repeating)
+                }
+            case .runningLocally:
+                if #available(macOS 15, *) {
+                    image.symbolEffect(.breathe)
+                } else {
+                    image.symbolEffect(.pulse)
+                }
+            case .done:
+                image.symbolEffect(.scale)
+            case .idle:
+                image
+            }
+        } else {
+            image
+        }
     }
 }
 
@@ -252,37 +279,5 @@ struct GrokBotAgentContextMenu: View {
                         onMenuOpen()
                     }
             )
-    }
-}
-
-private struct StateSymbolEffect: ViewModifier {
-    let state: GrokBotSessionState
-    let animationsEnabled: Bool
-    
-    func body(content: Content) -> some View {
-        if animationsEnabled {
-            switch state {
-            case .working:
-                content.symbolEffect(.bounce, options: .repeating)
-            case .waitingOnUser:
-                if #available(macOS 15, *) {
-                    content.symbolEffect(.wiggle, options: .repeating)
-                } else {
-                    content.symbolEffect(.pulse, options: .repeating)
-                }
-            case .runningLocally:
-                if #available(macOS 15, *) {
-                    content.symbolEffect(.breathe)
-                } else {
-                    content.symbolEffect(.pulse)
-                }
-            case .done:
-                content.symbolEffect(.scale)
-            case .idle:
-                content
-            }
-        } else {
-            content
-        }
     }
 }

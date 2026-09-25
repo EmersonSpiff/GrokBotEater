@@ -452,6 +452,24 @@ struct AgentWatchersSectionView: View {
                 .shadow(color: neonVariant.opacity(0.4), radius: 3)
         }
     }
+    
+    private func grokBotStatusRow(symbol: String, color: Color, label: String, description: String) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: symbol)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(color)
+                .frame(width: 20)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(label)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(DS.Palette.textPrimary)
+                Text(description)
+                    .font(.system(size: 10))
+                    .foregroundStyle(DS.Palette.textTertiary)
+            }
+        }
+        .padding(.vertical, 4)
+    }
 }
 
 // MARK: - Terminal setup sheet
@@ -622,23 +640,5 @@ private struct TerminalSetupSheet: View {
         case .wezterm: return "settings.watchers.wezterm.hint"
         case .kitty:   return "settings.watchers.kitty.hint"
         }
-    }
-    
-    private func grokBotStatusRow(symbol: String, color: Color, label: String, description: String) -> some View {
-        HStack(spacing: 10) {
-            Image(systemName: symbol)
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(color)
-                .frame(width: 20)
-            VStack(alignment: .leading, spacing: 1) {
-                Text(label)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(DS.Palette.textPrimary)
-                Text(description)
-                    .font(.system(size: 10))
-                    .foregroundStyle(DS.Palette.textTertiary)
-            }
-        }
-        .padding(.vertical, 4)
     }
 }
