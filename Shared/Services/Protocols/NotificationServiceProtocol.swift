@@ -88,7 +88,7 @@ protocol NotificationServiceProtocol {
     )
     func evaluateGrokBotPace(
         weeklyUsedPercent: Int,
-        elapsedPercent: Double,
+        elapsedFraction: Double,
         resetDate: Date?,
         dailyUsageToReachPace: Double,
         now: Date,

@@ -560,8 +560,18 @@ final class NotificationService: NotificationServiceProtocol {
         var weeklyAtDayStart: Int
         var justSetBaseline = false
         
-        // Check for weekly reset mid-day (usage dropped)
+        // Migration: if lastMidnight is today's midnight and we have a baseline, treat it as today's
         let storedDayStart = UserDefaults.standard.integer(forKey: dayStartWeeklyKey)
+        let storedDateTimestamp = UserDefaults.standard.double(forKey: dayStartDateKey)
+        let storedDate = storedDateTimestamp > 0 ? Date(timeIntervalSince1970: storedDateTimestamp) : nil
+        
+        if storedDate == nil, let lastMidnight, calendar.isDate(lastMidnight, inSameDayAs: startOfToday), storedDayStart > 0 {
+            // Migration: lastMidnight is today, baseline exists, but no date stored yet
+            UserDefaults.standard.set(startOfToday.timeIntervalSince1970, forKey: dayStartDateKey)
+            logger.info("Daily budget: migrated baseline date from lastMidnight")
+        }
+        
+        // Check for weekly reset mid-day (usage dropped)
         let weeklyReset = storedDayStart > 0 && weeklyUsedPercent < storedDayStart
         
         if midnightChanged || weeklyReset {
@@ -592,6 +602,12 @@ final class NotificationService: NotificationServiceProtocol {
                 UserDefaults.standard.set(startOfToday.timeIntervalSince1970, forKey: dayStartDateKey)
                 justSetBaseline = true
                 logger.info("Daily budget: first run, setting baseline = \(weeklyAtDayStart, privacy: .public)%")
+            } else {
+                // Baseline is valid for today - confirm the date is set
+                if storedDate == nil || !calendar.isDate(storedDate!, inSameDayAs: startOfToday) {
+                    UserDefaults.standard.set(startOfToday.timeIntervalSince1970, forKey: dayStartDateKey)
+                    logger.info("Daily budget: confirmed baseline date for today")
+                }
             }
         }
         
@@ -658,16 +674,17 @@ final class NotificationService: NotificationServiceProtocol {
     
     func evaluateGrokBotPace(
         weeklyUsedPercent: Int,
-        elapsedPercent: Double,
+        elapsedFraction: Double,
         resetDate: Date?,
         dailyUsageToReachPace: Double,
         now: Date = Date(),
         toggles: NotificationToggles
     ) {
-        guard toggles.masterEnabled, toggles.trackGrokBotPace, let resetDate, elapsedPercent > 0 else { return }
+        guard toggles.masterEnabled, toggles.trackGrokBotPace, let resetDate, elapsedFraction > 0 else { return }
         
-        let pace = Double(weeklyUsedPercent) / elapsedPercent
-        logger.info("Pace check: weekly=\(weeklyUsedPercent, privacy: .public)%, elapsed=\(elapsedPercent * 100.0, privacy: .public)%, pace=\(pace, privacy: .public)x, threshold=\(toggles.paceThreshold, privacy: .public)x")
+        let pace = (Double(weeklyUsedPercent) / 100.0) / elapsedFraction
+        let elapsedPercent = elapsedFraction * 100.0
+        logger.info("Pace check: weekly=\(weeklyUsedPercent, privacy: .public)%, elapsed=\(elapsedPercent, privacy: .public)%, pace=\(pace, privacy: .public)x, threshold=\(toggles.paceThreshold, privacy: .public)x")
         
         let key = "lastFired_grokBotPace"
         let lastFired = state.lastResetsAt(forKey: key)

@@ -267,17 +267,17 @@ final class GrokBotUsageStore: ObservableObject {
             let now = Date()
             let totalDuration = resetDate.timeIntervalSince(periodStart)
             let elapsed = now.timeIntervalSince(periodStart)
-            let elapsedPercent = totalDuration > 0 ? elapsed / totalDuration : 0
+            let elapsedFraction = totalDuration > 0 ? elapsed / totalDuration : 0
             
             // Calculate daily usage needed to reach 1.0x pace by reset
             let daysRemaining = max(0.1, resetDate.timeIntervalSinceNow / 86400.0)
-            let targetUsageByReset = elapsedPercent * 100
+            let targetUsageByReset = elapsedFraction * 100.0
             let remainingToTarget = max(0, targetUsageByReset - Double(usagePercent))
             let dailyUsageToReachPace = remainingToTarget / daysRemaining
             
             notificationService.evaluateGrokBotPace(
                 weeklyUsedPercent: usagePercent,
-                elapsedPercent: elapsedPercent,
+                elapsedFraction: elapsedFraction,
                 resetDate: resetDate,
                 dailyUsageToReachPace: dailyUsageToReachPace,
                 now: now,
