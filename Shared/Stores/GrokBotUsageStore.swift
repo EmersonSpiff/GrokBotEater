@@ -252,16 +252,11 @@ final class GrokBotUsageStore: ObservableObject {
         )
         
         // Daily budget alerts
-        if let resetDate = nextResetDate, let snapshot = sharedFileService.grokBotSnapshot {
+        if let resetDate = nextResetDate {
             let now = Date()
-            
-            // Get today's usage from daily pacing (default 0 if not available)
-            let todayUsagePercent = Double(snapshot.dailyPercent ?? 0)
-            
             notificationService.evaluateGrokBotDailyBudget(
                 weeklyUsedPercent: usagePercent,
                 resetDate: resetDate,
-                todayUsagePercent: todayUsagePercent,
                 now: now,
                 toggles: toggles
             )

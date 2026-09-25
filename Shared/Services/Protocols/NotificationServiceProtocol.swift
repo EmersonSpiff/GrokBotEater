@@ -83,7 +83,6 @@ protocol NotificationServiceProtocol {
     func evaluateGrokBotDailyBudget(
         weeklyUsedPercent: Int,
         resetDate: Date?,
-        todayUsagePercent: Double,
         now: Date,
         toggles: NotificationToggles
     )
