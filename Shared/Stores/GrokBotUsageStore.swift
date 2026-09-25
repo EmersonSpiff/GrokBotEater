@@ -31,6 +31,7 @@ final class GrokBotUsageStore: ObservableObject {
     private let cookieReader: CursorCookieReaderProtocol
     let sharedFileService: SharedFileServiceProtocol
     private let notificationService: NotificationServiceProtocol
+    private let historyService: GrokBotHistoryService
     
     private var refreshTask: Task<Void, Never>?
     private var autoRefreshTask: Task<Void, Never>?
@@ -47,12 +48,14 @@ final class GrokBotUsageStore: ObservableObject {
         apiClient: GrokBotAPIClientProtocol = GrokBotAPIClient(),
         cookieReader: CursorCookieReaderProtocol = CursorCookieReader(),
         sharedFileService: SharedFileServiceProtocol = SharedFileService(),
-        notificationService: NotificationServiceProtocol = NotificationService()
+        notificationService: NotificationServiceProtocol = NotificationService(),
+        historyService: GrokBotHistoryService = GrokBotHistoryService()
     ) {
         self.apiClient = apiClient
         self.cookieReader = cookieReader
         self.sharedFileService = sharedFileService
         self.notificationService = notificationService
+        self.historyService = historyService
         
         loadCached()
     }
@@ -215,6 +218,15 @@ final class GrokBotUsageStore: ObservableObject {
         
         recomputePacingAndPublish(weeklyPercent: usagePercent, periodStart: currentPeriodStart)
         logger.info("Grok Bot refresh succeeded: \(self.usagePercent)% used, shouldDrawRing=\(self.shouldShowRing), daily=\(self.sharedFileService.grokBotSnapshot?.dailyPercent ?? -1)")
+        
+        // Record history snapshot
+        let snapshot = sharedFileService.grokBotSnapshot
+        historyService.recordSnapshot(
+            weeklyPercent: usagePercent,
+            activeAgentCount: 0, // Will be updated when SessionStore is available
+            dailyPercent: snapshot?.dailyPercent,
+            pacingDelta: snapshot?.pacingDelta
+        )
         
         evaluateNotifications()
     }
