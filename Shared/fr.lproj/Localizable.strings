@@ -297,9 +297,9 @@
 "notif.title.grokBot.orange" = "Grok Bot qui se remplit";
 "notif.title.grokBot.red" = "Grok Bot presque plein";
 "notif.title.grokBot.green" = "Grok Bot relancé";
-"notif.body.grokBot.orange" = "Reset %@";
-"notif.body.grokBot.orange.fallback" = "Au-delà du seuil Grok Bot";
-"notif.body.grokBot.red" = "Tranquille jusqu'au %@";
+"notif.body.grokBot.orange" = "Vous avez utilisé %d%% de votre quota Grok Bot cette semaine. Reset %@.";
+"notif.body.grokBot.orange.fallback" = "Au-delà du seuil d'alerte Grok Bot";
+"notif.body.grokBot.red" = "Vous avez utilisé %d%% de votre quota Grok Bot cette semaine. Reset %@.";
 "notif.body.grokBot.red.fallback" = "Limite Grok Bot presque atteinte";
 "notif.body.grokBot.green" = "Nouveau cycle, t'es de retour le %@";
 "notif.body.grokBot.green.fallback" = "Nouveau cycle, t'es de retour";

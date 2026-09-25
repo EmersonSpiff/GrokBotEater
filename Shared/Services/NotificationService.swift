@@ -463,13 +463,24 @@ final class NotificationService: NotificationServiceProtocol {
             return level == .red
                 ? NSLocalizedString("notif.body.fivehour.red.fallback", comment: "")
                 : NSLocalizedString("notif.body.fivehour.orange.fallback", comment: "")
-        case .weekly, .sonnet, .fable, .grokBot:
+        case .weekly, .sonnet, .fable:
             if let resetsAt, resetsAt.timeIntervalSinceNow > 0 {
                 let dateTime = NotificationBodyFormatter.formatDateTime(resetsAt)
                 let key = level == .red
                     ? "notif.body.\(surface.bodyFamily).red"
                     : "notif.body.\(surface.bodyFamily).orange"
                 return String(format: NSLocalizedString(key, comment: ""), dateTime)
+            }
+            return level == .red
+                ? NSLocalizedString("notif.body.\(surface.bodyFamily).red.fallback", comment: "")
+                : NSLocalizedString("notif.body.\(surface.bodyFamily).orange.fallback", comment: "")
+        case .grokBot:
+            if let resetsAt, resetsAt.timeIntervalSinceNow > 0 {
+                let dateTime = NotificationBodyFormatter.formatDateTime(resetsAt)
+                let key = level == .red
+                    ? "notif.body.\(surface.bodyFamily).red"
+                    : "notif.body.\(surface.bodyFamily).orange"
+                return String(format: NSLocalizedString(key, comment: ""), snapshot.pct, dateTime)
             }
             return level == .red
                 ? NSLocalizedString("notif.body.\(surface.bodyFamily).red.fallback", comment: "")
