@@ -630,8 +630,9 @@ final class NotificationService: NotificationServiceProtocol {
                           (previous == .orange && todayShareUsedPercent < Double(toggles.thresholds.warningPercent) - hysteresis)
         
         if shouldReArm && current < previous {
-            logger.info("Daily budget re-armed: \(previous.rawValue)→\(current.rawValue)")
+            logger.info("Daily budget re-armed: \(previous.rawValue)→\(current.rawValue), no notification")
             state.setLastLevel(current.rawValue, forKey: key)
+            return
         }
         
         guard current != previous else { return }
@@ -642,7 +643,7 @@ final class NotificationService: NotificationServiceProtocol {
             content.sound = .default
             content.title = String(localized: "notif.title.grokBot.daily.\(current == .red ? "red" : "orange")")
             content.body = String(format: NSLocalizedString("notif.body.grokBot.daily", comment: ""),
-                                  String(format: "%.1f", todayUsagePercent),
+                                  String(format: "%.1f", todayConsumptionPercent),
                                   String(format: "%.1f", todayShare),
                                   weeklyUsedPercent,
                                   NotificationBodyFormatter.formatDateTime(resetDate))
