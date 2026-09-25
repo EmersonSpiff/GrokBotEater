@@ -583,7 +583,7 @@ final class NotificationService: NotificationServiceProtocol {
             justSetBaseline = true
             
             let reason = weeklyReset ? "weekly reset detected" : "new day started"
-            logger.info("Daily budget: \(reason, privacy: .public), weekly at day start = \(weeklyAtDayStart, privacy: .public)%")
+            logger.info("Daily budget: \(reason), weekly at day start = \(weeklyAtDayStart)%")
             
             // Re-arm level at midnight
             let key = "lastLevel_grokBotDaily"
@@ -601,7 +601,7 @@ final class NotificationService: NotificationServiceProtocol {
                 UserDefaults.standard.set(weeklyAtDayStart, forKey: dayStartWeeklyKey)
                 UserDefaults.standard.set(startOfToday.timeIntervalSince1970, forKey: dayStartDateKey)
                 justSetBaseline = true
-                logger.info("Daily budget: first run, setting baseline = \(weeklyAtDayStart, privacy: .public)%")
+                logger.info("Daily budget: first run, setting baseline = \(weeklyAtDayStart)%")
             } else {
                 // Baseline is valid for today - confirm the date is set
                 if storedDate == nil || !calendar.isDate(storedDate!, inSameDayAs: startOfToday) {
@@ -620,7 +620,7 @@ final class NotificationService: NotificationServiceProtocol {
         let todayShare = remainingBudget / daysRemaining
         let todayShareUsedPercent = todayShare > 0 ? (todayConsumptionPercent / todayShare) * 100.0 : 0.0
         
-        logger.info("Daily budget: today=\(todayConsumptionPercent, privacy: .public)% / share=\(todayShare, privacy: .public)% = \(todayShareUsedPercent, privacy: .public)% used, weeklyAtDayStart=\(weeklyAtDayStart, privacy: .public)%, weeklyNow=\(weeklyUsedPercent, privacy: .public)%, days remaining=\(daysRemaining, privacy: .public)")
+        logger.info("Daily budget: today=\(todayConsumptionPercent)% / share=\(todayShare)% = \(todayShareUsedPercent)% used, weeklyAtDayStart=\(weeklyAtDayStart)%, weeklyNow=\(weeklyUsedPercent)%, days remaining=\(daysRemaining)")
         
         // Never fire on the same check that set a new baseline
         if justSetBaseline {
@@ -688,7 +688,7 @@ final class NotificationService: NotificationServiceProtocol {
         
         let pace = (Double(weeklyUsedPercent) / 100.0) / elapsedFraction
         let elapsedPercent = elapsedFraction * 100.0
-        logger.info("Pace check: weekly=\(weeklyUsedPercent, privacy: .public)%, elapsed=\(elapsedPercent, privacy: .public)%, pace=\(pace, privacy: .public)x, threshold=\(toggles.paceThreshold, privacy: .public)x")
+        logger.info("Pace check: weekly=\(weeklyUsedPercent)%, elapsed=\(elapsedPercent)%, pace=\(pace)x, threshold=\(toggles.paceThreshold)x")
         
         let key = "lastFired_grokBotPace"
         let lastFired = state.lastResetsAt(forKey: key)

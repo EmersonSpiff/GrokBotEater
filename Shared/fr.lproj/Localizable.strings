@@ -592,6 +592,7 @@
 "settings.watchers.idletimeout.30min" = "30 min";
 "settings.watchers.localwork" = "Bots qui utilisent ce Mac";
 "settings.watchers.localwork.hint" = "Les commandes exécutées sur ce Mac sont affichées sur ces bots";
+"settings.watchers.localwork.nobots" = "Aucun bot trouvé";
 "settings.watchers.display.branchPriority.hint" = "Affiche la branche git en titre quand elle n'est pas par défaut, sinon le nom du projet.";
 "settings.watchers.display.projectAndBranch.hint" = "Affiche toujours le nom du projet en titre, avec la branche à côté du statut.";
 

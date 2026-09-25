@@ -14,6 +14,11 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
         sessionsSubject.eraseToAnyPublisher()
     }
     
+    private let rosterSubject = CurrentValueSubject<[GrokBotRosterEntry], Never>([])
+    var rosterPublisher: AnyPublisher<[GrokBotRosterEntry], Never> {
+        rosterSubject.eraseToAnyPublisher()
+    }
+    
     private var timer: DispatchSourceTimer?
     private let queue = DispatchQueue(label: "com.emersonspiff.grokboteater.grokbot-session-monitor", qos: .utility)
     private var scanInterval: TimeInterval
@@ -51,6 +56,7 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
             self?.timer?.cancel()
             self?.timer = nil
             self?.sessionsSubject.send([])
+            self?.rosterSubject.send([])
         }
     }
     
@@ -91,6 +97,7 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
         
         guard fm.fileExists(atPath: supportDir.path) else {
             sessionsSubject.send([])
+            rosterSubject.send([])
             return
         }
         
@@ -101,8 +108,13 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
         // Read roster
         guard let roster = readRoster(supportDir: supportDir) else {
             sessionsSubject.send([])
+            rosterSubject.send([])
             return
         }
+        
+        // Publish full roster (all non-group, non-hidden entries)
+        let availableRoster = roster.filter { !$0.isGroup && !$0.isHiddenFromSidebar }
+        rosterSubject.send(availableRoster)
         
         // Build sessions
         let now = Date()
@@ -111,7 +123,7 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
         // Count local exec commands (local-work detection)
         let localExecCount = countLocalExecCommands()
         if localExecCount > 0 {
-            logger.info("Grok Bot scan: \(localExecCount, privacy: .public) local exec command(s) detected", privacy: .public)
+            logger.info("Grok Bot scan: \(localExecCount, privacy: .public) local exec command(s) detected")
         }
         
         var sessions = roster
@@ -221,7 +233,7 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
             }
             
             if let target = targetBot {
-                logger.info("Grok Bot scan: attributing runningLocally to '\(target.name, privacy: .public)'", privacy: .public)
+                logger.info("Grok Bot scan: attributing runningLocally to '\(target.name, privacy: .public)'")
                 
                 // Ensure target is in sessions array (might have been created above)
                 if !sessions.contains(where: { $0.id == target.id }) {

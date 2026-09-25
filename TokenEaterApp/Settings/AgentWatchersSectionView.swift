@@ -234,50 +234,56 @@ struct AgentWatchersSectionView: View {
             subtitle: "settings.watchers.localwork.hint"
         ) {
             VStack(alignment: .leading, spacing: 8) {
-                let availableBots = grokBotAgentSessionStore.sessions
-                    .filter { !$0.isStale }
+                // Build list from full roster (all non-group, non-hidden entries)
+                // Plus any orphan IDs (selected but no longer in roster)
+                let rosterBots = grokBotAgentSessionStore.roster
+                let rosterIds = Set(rosterBots.map { $0.id })
+                let orphanIds = settingsStore.watcherLocalWorkBotIds.subtracting(rosterIds)
                 
-                if availableBots.isEmpty {
-                    Text("No active bots")
+                if rosterBots.isEmpty && orphanIds.isEmpty {
+                    Text(String(localized: "settings.watchers.localwork.nobots"))
                         .font(.system(size: 12))
                         .foregroundStyle(DS.Palette.textTertiary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.vertical, 8)
                 } else {
-                    ForEach(availableBots) { bot in
-                        localWorkBotRow(bot: bot)
+                    ForEach(rosterBots, id: \.id) { entry in
+                        localWorkRosterRow(entry: entry)
+                    }
+                    ForEach(Array(orphanIds), id: \.self) { orphanId in
+                        localWorkOrphanRow(id: orphanId)
                     }
                 }
             }
         }
     }
     
-    private func localWorkBotRow(bot: GrokBotSession) -> some View {
+    private func localWorkRosterRow(entry: GrokBotRosterEntry) -> some View {
         Button {
-            if settingsStore.watcherLocalWorkBotIds.contains(bot.id) {
-                settingsStore.watcherLocalWorkBotIds.remove(bot.id)
+            if settingsStore.watcherLocalWorkBotIds.contains(entry.id) {
+                settingsStore.watcherLocalWorkBotIds.remove(entry.id)
             } else {
-                settingsStore.watcherLocalWorkBotIds.insert(bot.id)
+                settingsStore.watcherLocalWorkBotIds.insert(entry.id)
             }
         } label: {
             HStack(spacing: 8) {
-                Image(systemName: settingsStore.watcherLocalWorkBotIds.contains(bot.id) ? "checkmark.circle.fill" : "circle")
+                Image(systemName: settingsStore.watcherLocalWorkBotIds.contains(entry.id) ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 16))
                     .foregroundStyle(
-                        settingsStore.watcherLocalWorkBotIds.contains(bot.id)
+                        settingsStore.watcherLocalWorkBotIds.contains(entry.id)
                             ? DS.Palette.accentBlue
                             : DS.Palette.textTertiary
                     )
                 
                 // Bot name + role chip (same style as watcher cards)
                 HStack(spacing: 6) {
-                    Text(bot.displayName)
+                    Text(entry.name)
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(DS.Palette.textPrimary)
                         .lineLimit(1)
                     
-                    if let role = bot.roleLabel, role != bot.displayName, !role.isEmpty {
-                        Text(role)
+                    if let title = entry.title, title != entry.name, !title.isEmpty {
+                        Text(title)
                             .font(.system(size: 9.5, weight: .regular))
                             .foregroundStyle(DS.Palette.textSecondary)
                             .lineLimit(1)
@@ -301,6 +307,39 @@ struct AgentWatchersSectionView: View {
         .background(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .fill(DS.Palette.bgElevated.opacity(0.3))
+        )
+    }
+    
+    private func localWorkOrphanRow(id: String) -> some View {
+        Button {
+            settingsStore.watcherLocalWorkBotIds.remove(id)
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 16))
+                    .foregroundStyle(DS.Palette.accentBlue.opacity(0.6))
+                
+                HStack(spacing: 6) {
+                    Text(id)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(DS.Palette.textTertiary)
+                        .lineLimit(1)
+                    
+                    Text("(not found)")
+                        .font(.system(size: 9.5, weight: .regular))
+                        .foregroundStyle(DS.Palette.textTertiary)
+                }
+                
+                Spacer()
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .padding(.vertical, 6)
+        .padding(.horizontal, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(DS.Palette.bgElevated.opacity(0.15))
         )
     }
     
