@@ -272,9 +272,9 @@
 "notif.title.weekly.red" = "Weekly almost capped";
 "notif.title.weekly.green" = "Weekly reset";
 "notif.title.weekly.pace" = "Ahead of weekly pace";
-"notif.title.sonnet.pace" = "Ahead of daily pace";
+"notif.title.sonnet.pace" = "Ahead of today's pace";
 "notif.body.weekly.pace" = "You're ahead of an even weekly burn rate, not near the cap. Fine if intentional.";
-"notif.body.sonnet.pace" = "You're ahead of an even daily burn rate, not near the cap. Fine if intentional.";
+"notif.body.sonnet.pace" = "You're ahead of an even burn rate for today, not near the cap. Fine if intentional.";
 "notif.body.weekly.orange" = "Resets %@";
 "notif.body.weekly.orange.fallback" = "Past the weekly warning";
 "notif.body.weekly.red" = "Take it slow until %@";
@@ -282,16 +282,16 @@
 "notif.body.weekly.green" = "New cycle, you're back at %@";
 "notif.body.weekly.green.fallback" = "New cycle, you're back";
 
-/* Notifications - Daily usage */
-"notif.title.sonnet.orange" = "Daily usage heavy";
-"notif.title.sonnet.red" = "Daily almost capped";
-"notif.title.sonnet.green" = "Daily reset";
+/* Notifications - Today usage */
+"notif.title.sonnet.orange" = "Today's usage heavy";
+"notif.title.sonnet.red" = "Today almost capped";
+"notif.title.sonnet.green" = "Today reset";
 "notif.body.sonnet.orange" = "Resets %@";
-"notif.body.sonnet.orange.fallback" = "Past the daily warning";
+"notif.body.sonnet.orange.fallback" = "Past today's warning";
 "notif.body.sonnet.red" = "Ease off until %@";
-"notif.body.sonnet.red.fallback" = "Daily usage almost maxed";
-"notif.body.sonnet.green" = "Sonnet refilled at %@";
-"notif.body.sonnet.green.fallback" = "Sonnet refilled, you're back";
+"notif.body.sonnet.red.fallback" = "Today's usage almost maxed";
+"notif.body.sonnet.green" = "Usage refilled at %@";
+"notif.body.sonnet.green.fallback" = "Usage refilled, you're back";
 
 /* Notifications - Grok Bot weekly */
 "notif.title.grokBot.orange" = "Grok Bot filling up";
@@ -317,8 +317,8 @@
 "notif.body.status.claude.degraded" = "Cursor reports a service issue";
 "notif.title.status.claude.down" = "Cursor is down";
 "notif.body.status.claude.down" = "Cursor reports a major outage";
-"notif.title.status.claude.restored" = "Claude is back";
-"notif.body.status.claude.restored" = "Service restored";
+"notif.title.status.claude.restored" = "Cursor is back";
+"notif.body.status.claude.restored" = "Cursor services restored";
 "settings.notifications.title" = "Notifications";
 "settings.notifications.status" = "Status";
 "settings.notifications.on" = "Enabled";
@@ -605,7 +605,7 @@
 "sidebar.history" = "History";
 "sidebar.general" = "General";
 "history.placeholder.title" = "History coming soon";
-"history.placeholder.subtitle" = "Your Cursor agent session history will live here -> per-model token breakdown, daily charts, and usage patterns across your local JSONL files.";
+"history.placeholder.subtitle" = "Your Grok Bot usage history will live here — daily charts and usage patterns when that data becomes available.";
 
 /* History view */
 "history.sessions.label" = "sessions";
@@ -625,7 +625,7 @@
 "history.coming.title" = "History";
 "history.coming.subtitle" = "Grok Bot usage over time";
 "history.coming.badge" = "Coming soon";
-"history.coming.body" = "This tab used to show Cursor agent session tokens. Grok Bot history isn’t wired yet — we’ll put sand-usage trends here when that API is ready.";
+"history.coming.body" = "Grok Bot usage history isn't available yet — we'll display usage trends here when that API is ready.";
 
 "history.empty.title" = "No sessions yet";
 "history.empty.subtitle" = "Grok Bot agents will appear here when active.";
@@ -925,17 +925,17 @@
 "metric.fable" = "Daily pace";
 "widget.fable" = "Daily";
 "settings.notifications.track.fable" = "Track daily usage";
-"notif.title.fable.pace" = "Ahead of Fable pace";
-"notif.body.fable.pace" = "You're ahead of an even Fable burn rate, not near the cap. Fine if intentional.";
-"notif.title.fable.orange" = "Fable pool heavy";
-"notif.title.fable.red" = "Fable almost gone";
-"notif.title.fable.green" = "Fable reset";
+"notif.title.fable.pace" = "Ahead of daily pace";
+"notif.body.fable.pace" = "You're ahead of an even daily burn rate, not near the cap. Fine if intentional.";
+"notif.title.fable.orange" = "Daily pace heavy";
+"notif.title.fable.red" = "Daily pace almost maxed";
+"notif.title.fable.green" = "Daily pace reset";
 "notif.body.fable.orange" = "Resets %@";
-"notif.body.fable.orange.fallback" = "Past the Fable warning";
+"notif.body.fable.orange.fallback" = "Past the daily pace warning";
 "notif.body.fable.red" = "Ease off until %@";
-"notif.body.fable.red.fallback" = "Fable pool almost out";
-"notif.body.fable.green" = "Fable refilled at %@";
-"notif.body.fable.green.fallback" = "Fable refilled, you're back";
+"notif.body.fable.red.fallback" = "Daily pace almost maxed";
+"notif.body.fable.green" = "Daily pace refilled at %@";
+"notif.body.fable.green.fallback" = "Daily pace refilled, you're back";
 
 /* Grok Bot widget */
 "widget.grokBot" = "Grok Bot Eater";
