@@ -220,7 +220,6 @@ struct GrokBotAgentCard: View {
             
             stateIconImage
                 .font(.system(size: iconSize, weight: .semibold))
-                .foregroundStyle(stateColor)
         }
     }
     
@@ -229,9 +228,12 @@ struct GrokBotAgentCard: View {
         let baseImage = Image(systemName: stateGlyph)
         
         if session.state == .runningLocally {
-            applySymbolEffect(to: baseImage.symbolRenderingMode(.multicolor))
+            applySymbolEffect(to: baseImage
+                .symbolRenderingMode(.palette)
+                .foregroundStyle(Color.secondary, stateColor))
         } else {
             applySymbolEffect(to: baseImage)
+                .foregroundStyle(stateColor)
         }
     }
     

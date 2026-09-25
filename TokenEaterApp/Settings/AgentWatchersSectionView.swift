@@ -455,10 +455,18 @@ struct AgentWatchersSectionView: View {
     
     private func grokBotStatusRow(symbol: String, color: Color, label: String, description: String) -> some View {
         HStack(spacing: 10) {
-            Image(systemName: symbol)
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(color)
-                .frame(width: 20)
+            Group {
+                if symbol == "desktopcomputer.and.macbook" {
+                    Image(systemName: symbol)
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(Color.secondary, color)
+                } else {
+                    Image(systemName: symbol)
+                        .foregroundStyle(color)
+                }
+            }
+            .font(.system(size: 12, weight: .semibold))
+            .frame(width: 20)
             VStack(alignment: .leading, spacing: 1) {
                 Text(label)
                     .font(.system(size: 11, weight: .medium))
