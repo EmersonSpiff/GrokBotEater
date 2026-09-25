@@ -29,7 +29,7 @@ final class GrokBotUsageStore: ObservableObject {
     private(set) var lastResponse: GrokBotUsageResponse?
     private let apiClient: GrokBotAPIClientProtocol
     private let cookieReader: CursorCookieReaderProtocol
-    private let sharedFileService: SharedFileServiceProtocol
+    let sharedFileService: SharedFileServiceProtocol
     private let notificationService: NotificationServiceProtocol
     
     private var refreshTask: Task<Void, Never>?

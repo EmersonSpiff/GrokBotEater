@@ -197,8 +197,27 @@ struct MonitoringView: View {
         let resetDate = grokBotUsageStore.nextResetDate
         let gaugeColor = gaugeColor(pct: pct, resetDate: resetDate, windowDuration: 7 * 24 * 3600)
         let gaugeGradient = gaugeGradient(pct: pct, resetDate: resetDate, windowDuration: 7 * 24 * 3600)
-        let zone: PacingZone? = nil
-        let pacing: PacingResult? = nil
+        
+        // Grok Bot pacing from weekly usage
+        let snapshot = grokBotUsageStore.sharedFileService.grokBotSnapshot
+        let zone: PacingZone? = snapshot?.pacingZone.flatMap { PacingZone(rawValue: $0) }
+        let pacing: PacingResult? = {
+            guard let snap = snapshot,
+                  let daily = snap.dailyPercent,
+                  let delta = snap.pacingDelta,
+                  let zoneRaw = snap.pacingZone,
+                  let zone = PacingZone(rawValue: zoneRaw) else { return nil }
+            return PacingResult(
+                actualUsage: Double(pct),
+                expectedUsage: Double(pct) - delta,
+                delta: delta,
+                zone: zone,
+                message: snap.pacingMessage ?? "",
+                resetDate: resetDate,
+                coolingDate: nil
+            )
+        }()
+        
         // Ambient tint follows the gauge color so the wash, the big
         // number, and the ring all read as a single signal.
         let accent = gaugeColor
@@ -345,9 +364,7 @@ struct MonitoringView: View {
         }
     }
 
-    /// Hero back face. Left side = pacing graph (equilibrium diagonal +
-    /// trajectory + delta fill zone); right side = live session activity.
-    /// Reset date stays on the front - no duplication.
+    /// Hero back face. Left side = Grok Bot weekly pacing; right side = Grok Bot daily usage + countdown.
     @ViewBuilder
     private func heroBackContent(
         gaugeColor: Color,
@@ -362,7 +379,7 @@ struct MonitoringView: View {
                         .fill(gaugeColor)
                         .frame(width: 6, height: 6)
                         .dsGlow(gaugeColor, radius: 4, opacity: 0.6)
-                    Text(String(localized: "dashboard.hero.session.label").uppercased() + " · PACING")
+                    Text("WEEKLY · PACING")
                         .font(DS.Typography.micro)
                         .tracking(1.5)
                         .foregroundStyle(DS.Palette.textSecondary)
@@ -381,17 +398,13 @@ struct MonitoringView: View {
                         expectedUsage: pacing.expectedUsage,
                         deltaColor: pacing.delta > 0 ? DS.Palette.semanticWarning : DS.Palette.brandPrimary,
                         trajectoryColor: gaugeColor,
-                        trajectory: PacingSampleBuffer.trajectory(
-                            usageStore.sessionSamples,
-                            resetDate: usageStore.lastUsage?.fiveHour?.resetsAtDate,
-                            windowDuration: 5 * 3600
-                        )
+                        trajectory: []
                     )
                     .frame(maxWidth: .infinity)
                     .frame(height: 92)
                 } else {
                     Spacer(minLength: 0)
-                    Text("Pacing data unavailable")
+                    Text("Open Grok Bot to load pacing")
                         .font(.system(size: 10))
                         .foregroundStyle(DS.Palette.textTertiary)
                     Spacer(minLength: 0)
@@ -411,34 +424,33 @@ struct MonitoringView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            // Right column: live session activity. Sessions count is the
-            // headline number; top model fills the line below. Pulls
-            // from SessionStore (kept in sync by the overlay watcher).
+            // Right column: Grok Bot daily usage + reset countdown
             VStack(alignment: .trailing, spacing: 6) {
-                Text("LIVE")
+                Text("TODAY")
                     .font(DS.Typography.micro)
                     .tracking(1.2)
                     .foregroundStyle(DS.Palette.textTertiary)
 
-                let count = sessionStore.activeSessions.count
-                Text("\(count)")
+                let dailyPct = grokBotUsageStore.sharedFileService.grokBotSnapshot?.dailyPercent ?? 0
+                Text("\(dailyPct)%")
                     .font(.system(size: 34, weight: .bold, design: .rounded))
-                    .foregroundStyle(count > 0 ? DS.Palette.textPrimary : DS.Palette.textTertiary)
+                    .foregroundStyle(gaugeColor)
                     .monospacedDigit()
-                    .contentTransition(.numericText(value: Double(count)))
-                    .animation(DS.Motion.springLiquid, value: count)
-                Text(count == 1 ? "active session" : "active sessions")
+                    .contentTransition(.numericText(value: Double(dailyPct)))
+                    .animation(DS.Motion.springLiquid, value: dailyPct)
+                Text("Daily usage")
                     .font(.system(size: 9, weight: .medium))
                     .tracking(0.8)
                     .foregroundStyle(DS.Palette.textTertiary)
                     .textCase(.uppercase)
 
-                if let topModel = sessionStore.topActiveModelName {
+                if let resetDate {
+                    let countdown = ResetCountdownFormatter.weekly(from: resetDate)
                     HStack(spacing: 5) {
-                        Circle()
-                            .fill(gaugeColor)
-                            .frame(width: 5, height: 5)
-                        Text(topModel)
+                        Image(systemName: "clock.arrow.circlepath")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(DS.Palette.textTertiary)
+                        Text(countdown.relative.isEmpty ? "-" : countdown.relative)
                             .font(.system(size: 11, weight: .semibold, design: .rounded))
                             .foregroundStyle(DS.Palette.textSecondary)
                     }
