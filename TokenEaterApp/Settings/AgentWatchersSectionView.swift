@@ -14,37 +14,54 @@ struct AgentWatchersSectionView: View {
                     subtitle: String(localized: "sidebar.agentWatchers.subtitle")
                 )
 
-                grokBotWatchersComingSoon
+                enableToggleCard
+                styleGroup
+                behaviorGroup
+                legendGroup
+
+                ResetSectionButton(
+                    confirmTitle: String(localized: "settings.watchers.reset.confirm"),
+                    onReset: resetWatcherDefaults
+                )
 
                 Spacer(minLength: 0)
             }
             .padding(24)
         }
+        .sheet(isPresented: $showTerminalSetup) {
+            TerminalSetupSheet(isPresented: $showTerminalSetup)
+        }
     }
 
-    private var grokBotWatchersComingSoon: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 10) {
-                Image(systemName: "waveform.path.ecg")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(DS.Palette.brandPrimary)
-                Text(String(localized: "settings.watchers.coming.title"))
-                    .font(.system(size: 13, weight: .semibold))
+    private var enableToggleCard: some View {
+        HStack(alignment: .center, spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Grok Bot Agent Watchers")
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(DS.Palette.textPrimary)
+                Text("Track live Grok Bot agents in a floating overlay")
+                    .font(.system(size: 11))
+                    .foregroundStyle(DS.Palette.textSecondary)
             }
-            Text(String(localized: "settings.watchers.coming.body"))
-                .font(.system(size: 12))
-                .foregroundStyle(DS.Palette.textSecondary)
-                .fixedSize(horizontal: false, vertical: true)
+            Spacer()
+            ClickChip(
+                label: settingsStore.overlayEnabled ? "On" : "Off",
+                icon: settingsStore.overlayEnabled ? "checkmark" : "eye.slash",
+                isActive: settingsStore.overlayEnabled,
+                accent: .blue,
+                style: .compact
+            ) {
+                settingsStore.overlayEnabled.toggle()
+            }
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(DS.Palette.brandPrimary.opacity(0.08))
+                .fill(DS.Palette.bgElevated.opacity(0.5))
                 .overlay(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .stroke(DS.Palette.brandPrimary.opacity(0.25), lineWidth: 1)
+                        .stroke(DS.Palette.glassBorderLo, lineWidth: 1)
                 )
         )
     }

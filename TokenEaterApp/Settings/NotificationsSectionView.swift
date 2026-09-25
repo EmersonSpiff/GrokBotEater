@@ -1,4 +1,5 @@
 import SwiftUI
+import UserNotifications
 
 /// Settings sub-section dedicated to notifications. Hosts the authorization
 /// status row + test button at the top, then a card per category (usage
@@ -6,6 +7,8 @@ import SwiftUI
 /// toggle per event.
 struct NotificationsSectionView: View {
     @EnvironmentObject private var settingsStore: SettingsStore
+    @EnvironmentObject private var themeStore: ThemeStore
+    @EnvironmentObject private var grokBotUsageStore: GrokBotUsageStore
 
     @State private var notifTestCooldown = false
 
@@ -29,6 +32,7 @@ struct NotificationsSectionView: View {
             }
 
             authorizationCard
+            thresholdsCard
             usageCard
             pacingCard
             resetRemindersCard
@@ -129,7 +133,121 @@ struct NotificationsSectionView: View {
         }
     }
 
-    // MARK: - Usage thresholds
+    // MARK: - Alert Thresholds
+
+    private var thresholdsCard: some View {
+        glassCard {
+            VStack(alignment: .leading, spacing: 14) {
+                cardLabel("Grok Bot Alert Thresholds")
+                Text("Set the usage % that triggers warning (orange) and critical (red) notifications")
+                    .font(.system(size: 11))
+                    .foregroundStyle(DS.Palette.textTertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+                
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text("Warning")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(DS.Palette.textPrimary)
+                        Spacer()
+                        Text("\(themeStore.warningThreshold)%")
+                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.orange)
+                            .monospacedDigit()
+                            .frame(minWidth: 40, alignment: .trailing)
+                    }
+                    TokenEaterSlider(
+                        value: Binding(
+                            get: { Double(themeStore.warningThreshold) },
+                            set: { themeStore.warningThreshold = Int($0) }
+                        ),
+                        in: 40...themeStore.criticalThreshold - 5,
+                        step: 5
+                    )
+                    
+                    HStack {
+                        Text("Critical")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(DS.Palette.textPrimary)
+                        Spacer()
+                        Text("\(themeStore.criticalThreshold)%")
+                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.red)
+                            .monospacedDigit()
+                            .frame(minWidth: 40, alignment: .trailing)
+                    }
+                    TokenEaterSlider(
+                        value: Binding(
+                            get: { Double(themeStore.criticalThreshold) },
+                            set: { themeStore.criticalThreshold = Int($0) }
+                        ),
+                        in: themeStore.warningThreshold + 5...95,
+                        step: 5
+                    )
+                }
+                
+                Divider().padding(.vertical, 4)
+                
+                Button {
+                    guard !notifTestCooldown else { return }
+                    testUsageAlert()
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: notifTestCooldown ? "checkmark" : "bell.badge")
+                            .font(.system(size: 11))
+                        Text(notifTestCooldown ? "Notification sent" : "Send test usage alert")
+                            .font(.system(size: 11))
+                    }
+                    .foregroundStyle(notifTestCooldown ? .green : .blue)
+                }
+                .buttonStyle(.plain)
+                .disabled(notifTestCooldown)
+            }
+        }
+    }
+    
+    private func testUsageAlert() {
+        guard let snapshot = grokBotUsageStore.currentSnapshot else { return }
+        
+        let testPct = max(themeStore.warningThreshold, snapshot.pct)
+        let resetDate = snapshot.resetsAt ?? Date().addingTimeInterval(3600 * 24 * 3)
+        
+        let notif = UNMutableNotificationContent()
+        notif.title = testPct >= themeStore.criticalThreshold 
+            ? String(localized: "notif.title.grokBot.red")
+            : String(localized: "notif.title.grokBot.orange")
+        notif.sound = .default
+        
+        let formatter = DateFormatter()
+        formatter.dateStyle = .none
+        formatter.timeStyle = .short
+        let timeStr = formatter.string(from: resetDate)
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "E"
+        let dayStr = dateFormatter.string(from: resetDate)
+        let dateTime = "\(dayStr) \(timeStr)"
+        
+        let bodyKey = testPct >= themeStore.criticalThreshold
+            ? "notif.body.grokBot.red"
+            : "notif.body.grokBot.orange"
+        notif.body = String(format: NSLocalizedString(bodyKey, comment: ""), testPct, dateTime)
+        
+        let request = UNNotificationRequest(
+            identifier: "test-usage-\(UUID().uuidString)",
+            content: notif,
+            trigger: nil
+        )
+        
+        UNUserNotificationCenter.current().add(request) { _ in }
+        
+        notifTestCooldown = true
+        Task {
+            try? await Task.sleep(for: .seconds(3))
+            notifTestCooldown = false
+        }
+    }
+
+    // MARK: - Usage toggles
 
     private var usageCard: some View {
         glassCard {

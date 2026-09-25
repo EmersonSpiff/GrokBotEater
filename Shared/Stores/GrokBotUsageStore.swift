@@ -23,6 +23,16 @@ final class GrokBotUsageStore: ObservableObject {
         return Calendar.current.date(byAdding: .day, value: 7, to: start)
     }
     
+    /// Current usage snapshot for notifications and test alerts.
+    var currentSnapshot: MetricSnapshot? {
+        guard hasGrokBot, !isLoading else { return nil }
+        return MetricSnapshot(
+            pct: usagePercent,
+            resetsAt: nextResetDate,
+            windowDuration: 7 * 24 * 3600
+        )
+    }
+    
     /// Human-readable status for onboarding/settings
     @Published var statusMessage: String = "Not connected"
     
