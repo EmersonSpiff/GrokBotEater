@@ -80,7 +80,7 @@ final class NotificationSettingsStore: ObservableObject {
         self.trackFiveHour = SettingsDefaults.bool(key: "notifTrackFiveHour", default: true)
         self.trackWeekly = SettingsDefaults.bool(key: "notifTrackWeekly", default: true)
         self.trackSonnet = SettingsDefaults.bool(key: "notifTrackSonnet", default: false)
-        self.trackFable = SettingsDefaults.bool(key: "notifTrackFable", default: true)
+        self.trackFable = SettingsDefaults.bool(key: "notifTrackFable", default: false)
         self.trackGrokBot = SettingsDefaults.bool(key: "notifTrackGrokBot", default: true)
         self.sendRecovery = SettingsDefaults.bool(key: "notifSendRecovery", default: true)
         self.pacingHot = SettingsDefaults.bool(key: "notifPacingHot", default: true)

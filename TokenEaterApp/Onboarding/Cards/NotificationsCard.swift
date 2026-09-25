@@ -53,7 +53,7 @@ struct NotificationsCard: View {
                 .rotationEffect(.degrees(0.6))
                 .offset(y: -16)
 
-            notifPreview(title: "GrokBotEater", body: "5h limit warming up", time: "now")
+            notifPreview(title: "GrokBotEater", body: "Weekly usage at 62%", time: "now")
                 .rotationEffect(.degrees(-1.2))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

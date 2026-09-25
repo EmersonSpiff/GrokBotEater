@@ -7,7 +7,7 @@
 "menubar.updated" = "Mis à jour %@";
 
 /* Metrics */
-"metric.session" = "5h";
+"metric.session" = "Hebdo";
 "metric.serviceStatus" = "État du service";
 
 /* Extra usage (paid credits pool) */
@@ -23,7 +23,7 @@
 "settings.group.weekly" = "Weekly";
 "settings.group.sonnet" = "Sonnet";
 "metric.weekly" = "Hebdo";
-"metric.sonnet" = "Sonnet";
+"metric.sonnet" = "Quotidien";
 "metric.reset" = "Reset dans %@";
 
 /* Widget */
@@ -95,7 +95,7 @@
 "settings.session.reset" = "Afficher le compte à rebours";
 "pacing.session.label" = "Rythme session";
 "pacing.weekly.label" = "Rythme hebdomadaire";
-"pacing.fable.label" = "Rythme Fable";
+"pacing.fable.label" = "Rythme quotidien";
 "pacing.cooldown" = "retour à 0%% dans %@";
 "pacing.sonnet.label" = "Rythme Sonnet";
 "settings.display.sonnet" = "Afficher Sonnet";
@@ -165,9 +165,9 @@
 "error.banner.reauth.hint" = "Token expiré et la récupération automatique a échoué";
 "error.banner.reauth.button" = "Ré-autoriser";
 "error.banner.waiting" = "En attente du rafraîchissement par Claude Code";
-"error.banner.apiunavailable" = "API usage throttle par Anthropic";
-"error.banner.apiunavailable.hint" = "C'est une limite de débit côté Anthropic (leur API usage), pas votre token ni votre configuration. Rien à corriger de votre côté - GrokBotEater réessaie tout seul et se met à jour dès que la limite se lève (bug connu : anthropics/claude-code#31637).";
-"error.banner.apiunavailable.settings" = "C'est côté Anthropic (leur API usage), pas votre token ni votre configuration. GrokBotEater réessaie automatiquement et repart dès que la limite se lève.";
+"error.banner.apiunavailable" = "API usage throttle par Cursor";
+"error.banner.apiunavailable.hint" = "C'est une limite de débit côté Cursor (leur API usage), pas votre token ni votre configuration. Rien à corriger de votre côté - GrokBotEater réessaie tout seul et se met à jour dès que la limite se lève.";
+"error.banner.apiunavailable.settings" = "C'est côté Cursor (leur API usage), pas votre token ni votre configuration. GrokBotEater réessaie automatiquement et repart dès que la limite se lève.";
 "error.banner.apiunavailable.learnmore" = "En savoir plus";
 "error.banner.lastupdate" = "Dernière mise à jour réussie : %@";
 "error.banner.retry.button" = "Réessayer";
@@ -314,9 +314,9 @@
 
 /* Notifications - Vendor status */
 "notif.title.status.claude.degraded" = "Claude est dégradé";
-"notif.body.status.claude.degraded" = "Anthropic signale un incident";
-"notif.title.status.claude.down" = "Claude est hors service";
-"notif.body.status.claude.down" = "Anthropic signale une panne majeure";
+"notif.body.status.claude.degraded" = "Cursor signale un incident";
+"notif.title.status.claude.down" = "Cursor est hors service";
+"notif.body.status.claude.down" = "Cursor signale une panne majeure";
 "notif.title.status.claude.restored" = "Claude est rétabli";
 "notif.body.status.claude.restored" = "Service rétabli";
 "settings.notifications.title" = "Notifications";
@@ -552,7 +552,7 @@
 "settings.watchers.compacting" = "Compacting - compresse le contexte";
 "settings.watchers.detailed" = "Mode détaillé";
 "settings.watchers.simple.idle" = "Idle - en attente d'une action";
-"settings.watchers.simple.working" = "Working - Claude travaille";
+"settings.watchers.simple.working" = "Working - Agent occupé";
 "settings.watchers.behavior" = "Comportement";
 
 /* Watcher card context menu (right-click on an overlay card) */
@@ -703,7 +703,7 @@
 /* Section subtitles */
 "sidebar.display.subtitle" = "Choisissez les métriques qui s'affichent dans la barre de menus et leur apparence.";
 "sidebar.themes.subtitle" = "Couleurs et style visuel.";
-"sidebar.agentWatchers.subtitle" = "Overlay flottant pour vos sessions Claude Code actives.";
+"sidebar.agentWatchers.subtitle" = "Overlay flottant pour vos agents Grok Bot actifs.";
 "sidebar.performance.subtitle" = "Réglez la consommation CPU en désactivant ce dont vous n'avez pas besoin.";
 "sidebar.settings.subtitle" = "Proxy, intervalle de rafraîchissement et autres préférences globales.";
 "popover.settings.preview" = "Aperçu";
@@ -843,7 +843,7 @@
 
 "pacing.session.label.short" = "Session";
 "pacing.weekly.label.short" = "Hebdo";
-"pacing.fable.label.short" = "Fable";
+"pacing.fable.label.short" = "Quotidien";
 
 /* MARK: - Onboarding (rework 2026-04) */
 
@@ -915,7 +915,7 @@
 "dashboard.status.affected" = "Concerné : %@";
 
 /* Fable (limite hebdomadaire Claude Fable) */
-"metric.fable" = "Fable";
+"metric.fable" = "Quotidien";
 "widget.fable" = "Fable";
 "settings.notifications.track.fable" = "Suivre la semaine Claude Fable";
 "notif.title.fable.pace" = "En avance sur le rythme Fable";

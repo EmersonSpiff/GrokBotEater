@@ -10,8 +10,8 @@ struct AgentWatchersSectionView: View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(alignment: .leading, spacing: 18) {
                 sectionTitle(
-                    String(localized: "sidebar.agentWatchers"),
-                    subtitle: String(localized: "sidebar.agentWatchers.subtitle")
+                    "Grok Bot Agent Watchers",
+                    subtitle: "Floating overlay for your live Grok Bot agents"
                 )
 
                 enableToggleCard
@@ -404,7 +404,7 @@ struct AgentWatchersSectionView: View {
             id: "settings-watcher-preview",
             projectPath: "/Users/dev/tokeneater",
             gitBranch: "feat/menu-bar",
-            model: "claude-sonnet-4-6",
+            model: "grok-bot",
             state: .thinking,
             lastUpdate: now,
             startedAt: now.addingTimeInterval(-300),
