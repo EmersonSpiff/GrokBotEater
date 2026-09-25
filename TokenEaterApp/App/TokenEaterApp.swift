@@ -51,8 +51,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Start monitoring Grok Bot agents when overlay is enabled
         if settingsStore.overlayEnabled {
             grokBotAgentSessionStore.startMonitoring()
-            grokBotAgentSessionStore.setScanInterval(settingsStore.watchersScanInterval)
-            grokBotAgentSessionStore.setActivityWindow(settingsStore.watchersVisibility)
+            grokBotAgentSessionStore.setScanInterval(settingsStore.watcherScanInterval.seconds)
+            grokBotAgentSessionStore.setActivityWindow(settingsStore.watcherVisibility.seconds)
         }
         // Stop Claude monitoring
         sessionStore.stopMonitoring()

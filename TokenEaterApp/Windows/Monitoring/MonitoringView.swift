@@ -209,9 +209,9 @@ struct MonitoringView: View {
                   let zoneRaw = snap.pacingZone,
                   let zone = PacingZone(rawValue: zoneRaw) else { return nil }
             return PacingResult(
-                actualUsage: Double(pct),
-                expectedUsage: Double(pct) - delta,
                 delta: delta,
+                expectedUsage: Double(pct) - delta,
+                actualUsage: Double(pct),
                 zone: zone,
                 message: snap.pacingMessage ?? "",
                 resetDate: resetDate,

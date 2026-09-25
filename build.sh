@@ -33,7 +33,7 @@ xcodegen generate
 # generate; without it macOS never registers the widget and the gallery
 # stays empty). Load-bearing, same step as CI and SETUP.md.
 plutil -insert NSExtension -json '{"NSExtensionPointIdentifier":"com.apple.widgetkit-extension"}' \
-    GrokBotEaterWidget/Info.plist 2>/dev/null || true
+    TokenEaterWidget/Info.plist 2>/dev/null || true
 
 # 5. Build
 echo -e "${BLUE}Building...${NC}"
@@ -50,13 +50,24 @@ else
     CODE_SIGN_ARGS=()
 fi
 
+BUILD_LOG="build/xcodebuild.log"
+mkdir -p build
+
 xcodebuild \
     -project GrokBotEater.xcodeproj \
     -scheme GrokBotEaterApp \
     -configuration Release \
     -derivedDataPath build \
     "${CODE_SIGN_ARGS[@]}" \
-    build 2>&1 | tail -20
+    build 2>&1 | tee "$BUILD_LOG"
+
+# Show errors if build failed
+if [ ${PIPESTATUS[0]} -ne 0 ]; then
+    echo ""
+    echo -e "${RED}Build failed. Errors:${NC}"
+    grep -i "error:" "$BUILD_LOG" | tail -20
+    exit 1
+fi
 
 # 6. Find the built app
 APP_PATH=$(find build -name "GrokBotEater.app" -type d | head -1)
