@@ -184,7 +184,7 @@ final class OverlayWindowController {
             return
         }
 
-        guard let screen = NSScreen.main else { return }
+        guard let screen = targetScreen() else { return }
         let screenFrame = screen.visibleFrame
         let panelHeight = screenFrame.height
 
@@ -263,7 +263,7 @@ final class OverlayWindowController {
     }
 
     private func positionPanel(_ panel: NSPanel) {
-        guard let screen = NSScreen.main else { return }
+        guard let screen = targetScreen() else { return }
         let screenFrame = screen.visibleFrame
         let w = windowWidth
 
@@ -271,7 +271,34 @@ final class OverlayWindowController {
             ? screenFrame.minX
             : screenFrame.maxX - w
 
+        logger.info("Positioning overlay on screen: \(screen.localizedName)")
         panel.setFrame(NSRect(x: x, y: screenFrame.minY, width: w, height: screenFrame.height), display: true)
+    }
+    
+    private func targetScreen() -> NSScreen? {
+        // If a specific display is set, try to find it
+        if let ref = settingsStore.overlaySpecificDisplay {
+            // Try to find by displayID first
+            if let screen = NSScreen.screens.first(where: { screen in
+                guard let screenNumber = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else {
+                    return false
+                }
+                return screenNumber.uint32Value == ref.displayID
+            }) {
+                return screen
+            }
+            
+            // Fallback to name matching
+            if let screen = NSScreen.screens.first(where: { $0.localizedName == ref.displayName }) {
+                return screen
+            }
+            
+            // Display disconnected, fall back to main
+            logger.info("Selected display '\(ref.displayName)' (ID \(ref.displayID)) not found, falling back to main display")
+        }
+        
+        // For followMenuBar and mainDisplay, or when specific display not found
+        return NSScreen.main
     }
 
     private func updateCursorTracking() {

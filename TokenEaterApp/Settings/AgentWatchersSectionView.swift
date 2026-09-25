@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct AgentWatchersSectionView: View {
     @EnvironmentObject private var settingsStore: SettingsStore
@@ -135,6 +136,12 @@ struct AgentWatchersSectionView: View {
                     }
                 }
 
+                // Display selection
+                groupLabel("Display")
+                    .padding(.top, 4)
+                displayPicker
+                    .padding(.top, 2)
+
                 // Side + dock effect + animations -> chip row
                 HStack(spacing: 8) {
                     ClickChip(
@@ -222,6 +229,95 @@ struct AgentWatchersSectionView: View {
         ) {
             settingsStore.overlayTriggerZone = zone
         }
+    }
+
+    // MARK: - Display picker
+    
+    private var displayPicker: some View {
+        Menu {
+            Button {
+                settingsStore.overlayDisplayTarget = .followMenuBar
+                settingsStore.overlaySpecificDisplay = nil
+            } label: {
+                HStack {
+                    Text(OverlayDisplayTarget.followMenuBar.label)
+                    if settingsStore.overlayDisplayTarget == .followMenuBar {
+                        Image(systemName: "checkmark")
+                    }
+                }
+            }
+            
+            Button {
+                settingsStore.overlayDisplayTarget = .mainDisplay
+                settingsStore.overlaySpecificDisplay = nil
+            } label: {
+                HStack {
+                    Text(OverlayDisplayTarget.mainDisplay.label)
+                    if settingsStore.overlayDisplayTarget == .mainDisplay {
+                        Image(systemName: "checkmark")
+                    }
+                }
+            }
+            
+            if NSScreen.screens.count > 1 {
+                Divider()
+                ForEach(NSScreen.screens, id: \.self) { screen in
+                    Button {
+                        if let screenNumber = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber {
+                            let displayID = screenNumber.uint32Value
+                            let displayName = screen.localizedName
+                            settingsStore.overlayDisplayTarget = .followMenuBar
+                            settingsStore.overlaySpecificDisplay = OverlayDisplayReference(
+                                displayID: displayID,
+                                displayName: displayName
+                            )
+                        }
+                    } label: {
+                        HStack {
+                            Text(screen.localizedName)
+                            if let ref = settingsStore.overlaySpecificDisplay,
+                               let screenNumber = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber,
+                               screenNumber.uint32Value == ref.displayID {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "display")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(DS.Palette.textSecondary)
+                
+                Text(displayPickerLabel)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(DS.Palette.textPrimary)
+                
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(DS.Palette.textTertiary)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(DS.Palette.bgElevated)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .stroke(DS.Palette.glassBorderLo, lineWidth: 1)
+                    )
+            )
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+    }
+    
+    private var displayPickerLabel: String {
+        if let ref = settingsStore.overlaySpecificDisplay {
+            return ref.displayName
+        }
+        return settingsStore.overlayDisplayTarget.label
     }
 
     // MARK: - Legend group

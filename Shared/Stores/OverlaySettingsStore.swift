@@ -47,7 +47,22 @@ final class OverlaySettingsStore: ObservableObject {
     @Published var watcherAnimationsEnabled: Bool {
         didSet { UserDefaults.standard.set(watcherAnimationsEnabled, forKey: "watcherAnimationsEnabled") }
     }
-
+    
+    // Display selection
+    @Published var overlayDisplayTarget: OverlayDisplayTarget {
+        didSet { UserDefaults.standard.set(overlayDisplayTarget.rawValue, forKey: "overlayDisplayTarget") }
+    }
+    @Published var overlaySpecificDisplay: OverlayDisplayReference? {
+        didSet {
+            if let ref = overlaySpecificDisplay,
+               let data = try? JSONEncoder().encode(ref) {
+                UserDefaults.standard.set(data, forKey: "overlaySpecificDisplay")
+            } else {
+                UserDefaults.standard.removeObject(forKey: "overlaySpecificDisplay")
+            }
+        }
+    }
+    
     init() {
         // Defaults below apply only on first launch (no value yet in
         // UserDefaults) - per the `as? T ?? default` reads.
@@ -70,5 +85,10 @@ final class OverlaySettingsStore: ObservableObject {
         self.watcherVisibility = (UserDefaults.standard.object(forKey: "watcherVisibility") as? Int)
             .flatMap(WatcherVisibility.init(rawValue:)) ?? .thirtyMinutes
         self.watcherAnimationsEnabled = UserDefaults.standard.object(forKey: "watcherAnimationsEnabled") as? Bool ?? true
+        self.overlayDisplayTarget = OverlayDisplayTarget(
+            rawValue: UserDefaults.standard.string(forKey: "overlayDisplayTarget") ?? OverlayDisplayTarget.followMenuBar.rawValue
+        ) ?? .followMenuBar
+        self.overlaySpecificDisplay = UserDefaults.standard.data(forKey: "overlaySpecificDisplay")
+            .flatMap { try? JSONDecoder().decode(OverlayDisplayReference.self, from: $0) }
     }
 }
