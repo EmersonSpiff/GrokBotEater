@@ -275,7 +275,7 @@ struct AgentWatchersSectionView: View {
                     .font(.system(size: 16))
                     .foregroundStyle(
                         settingsStore.watcherLocalWorkBotIds.contains(entry.id)
-                            ? DS.Palette.accentBlue
+                            ? DS.Palette.accentHistory
                             : DS.Palette.textTertiary
                     )
                 
@@ -321,7 +321,7 @@ struct AgentWatchersSectionView: View {
             HStack(spacing: 8) {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: 16))
-                    .foregroundStyle(DS.Palette.accentBlue.opacity(0.6))
+                    .foregroundStyle(DS.Palette.accentHistory.opacity(0.6))
                 
                 HStack(spacing: 6) {
                     Text(id)
@@ -357,7 +357,7 @@ struct AgentWatchersSectionView: View {
             HStack(spacing: 12) {
                 Image(systemName: axPermissionGranted ? "checkmark.circle.fill" : "xmark.circle.fill")
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(axPermissionGranted ? DS.Palette.accentGreen : DS.Palette.textTertiary)
+                    .foregroundStyle(axPermissionGranted ? DS.Palette.semanticSuccess : DS.Palette.textTertiary)
                 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(String(localized: "settings.watchers.accessibility.status"))
@@ -367,7 +367,7 @@ struct AgentWatchersSectionView: View {
                          ? String(localized: "settings.watchers.accessibility.status.on")
                          : String(localized: "settings.watchers.accessibility.status.off"))
                         .font(.system(size: 11))
-                        .foregroundStyle(axPermissionGranted ? DS.Palette.accentGreen : DS.Palette.textTertiary)
+                        .foregroundStyle(axPermissionGranted ? DS.Palette.semanticSuccess : DS.Palette.textTertiary)
                 }
                 
                 Spacer()
@@ -383,7 +383,7 @@ struct AgentWatchersSectionView: View {
                             .padding(.vertical, 6)
                             .background(
                                 RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                    .fill(DS.Palette.accentBlue)
+                                    .fill(DS.Palette.accentHistory)
                             )
                     }
                     .buttonStyle(.plain)
