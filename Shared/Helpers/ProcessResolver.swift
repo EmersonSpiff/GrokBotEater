@@ -209,7 +209,7 @@ enum ProcessResolver {
 
     // MARK: - Native Process APIs
 
-    private struct BasicProcessInfo {
+    struct BasicProcessInfo {
         let pid: Int32
         let parentPid: Int32
     }
