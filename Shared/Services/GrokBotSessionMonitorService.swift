@@ -101,7 +101,13 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
         let now = Date()
         logger.info("Grok Bot scan: roster has \(roster.count) entries, \(roster.filter { !$0.isGroup && !$0.isHiddenFromSidebar }.count) non-group visible entries")
         
-        let sessions = roster
+        // Count local exec commands (local-work detection)
+        let localExecCount = countLocalExecCommands()
+        if localExecCount > 0 {
+            logger.info("Grok Bot scan: \(localExecCount, privacy: .public) local exec command(s) detected", privacy: .public)
+        }
+        
+        var sessions = roster
             .filter { !$0.isGroup && !$0.isHiddenFromSidebar }
             .compactMap { entry -> GrokBotSession? in
                 let lastActivity = Date(timeIntervalSince1970: Double(entry.lastActivityAt) / 1000.0)
@@ -116,20 +122,13 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
                 let isStreaming = transcript?.entries.last?.isStreaming == true
                 let isWaitingOnUser = entry.awaitingUserResponse
                 
-                // Determine state
+                // Determine state (before runningLocally attribution)
                 let state: GrokBotSessionState
                 if isStreaming || (transcript != nil && isLastEntryUserMessage(transcript!)) {
                     state = .working
                 } else if isWaitingOnUser {
                     state = .waitingOnUser
                 } else {
-                    // Note: .runningLocally requires per-agent evidence of local work (e.g.,
-                    // tool call to machine, in-flight shell command). No reliable per-agent
-                    // signal exists in GrokBotRosterEntry or transcript entries, so we don't
-                    // mark bots as runningLocally based on global process counts. This prevents
-                    // every recently-active bot from incorrectly showing runningLocally when
-                    // any MCP server/connector is running.
-                    
                     // Idle, but check if it's "done" (recently finished with unread output)
                     let hasUnread = entry.unreadCount > 0
                     let recentlyActive = Date().timeIntervalSince(lastActivity) < 600 // 10 minutes
@@ -158,6 +157,36 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
                     lastTranscriptTimestamp: lastTranscriptTimestamp
                 )
             }
+        
+        // Heuristic: If local commands are running, attribute runningLocally to the most
+        // recently active bot that isn't already working or waitingOnUser. macOS hides
+        // other processes' environment (KERN_PROCARGS2 limitation), so per-agent
+        // attribution from process data alone is not possible.
+        if localExecCount > 0, let mostRecent = sessions
+            .filter({ $0.state != .working && $0.state != .waitingOnUser })
+            .filter({ now.timeIntervalSince($0.lastActivityAt) < 600 }) // within 10 minutes
+            .max(by: { $0.lastActivityAt < $1.lastActivityAt }) {
+            
+            logger.info("Grok Bot scan: attributing runningLocally to '\(mostRecent.name, privacy: .public)'", privacy: .public)
+            
+            // Update this session to runningLocally (or set hasLocalWork if already working)
+            sessions = sessions.map { session in
+                guard session.id == mostRecent.id else { return session }
+                
+                if session.state == .working {
+                    // Already working - set hasLocalWork flag instead
+                    var updated = session
+                    updated.hasLocalWork = true
+                    return updated
+                } else {
+                    // Not working - upgrade to runningLocally
+                    var updated = session
+                    updated.state = .runningLocally
+                    updated.hasLocalWork = true
+                    return updated
+                }
+            }
+        }
         
         logger.info("Grok Bot scan complete: \(sessions.count) active sessions found")
         sessionsSubject.send(sessions)
@@ -275,20 +304,39 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
         return age < maxPendingMessageAge
     }
     
-    private func countLocalWorkProcesses() -> Int {
+    /// Count local exec commands currently running on this Mac.
+    /// Scans ALL NodeService helpers (not just the first one) and counts only children
+    /// matching the local-exec wrapper pattern (zsh/bash -c with `<&3` snapshot).
+    /// Ignores long-lived MCP servers/connectors.
+    private func countLocalExecCommands() -> Int {
         let processes = ProcessResolver.findGrokBotProcesses()
         
         guard let mainProc = processes.first(where: { $0.isMainGrokBot }) else {
             return 0
         }
         
-        let nodeHelper = processes.first { proc in
+        // Find ALL NodeService helpers (not just the first one)
+        let nodeHelpers = processes.filter { proc in
             proc.parentPid == mainProc.pid && proc.args.contains("--utility-sub-type=node.mojom.NodeService")
         }
         
-        guard let helper = nodeHelper else { return 0 }
+        guard !nodeHelpers.isEmpty else { return 0 }
         
-        return processes.filter { $0.parentPid == helper.pid }.count
+        // Count children of all helpers that match the local-exec wrapper pattern
+        let helperPids = Set(nodeHelpers.map { $0.pid })
+        let localExecPattern = ["<&3"]  // The local-exec wrapper snapshot pattern
+        
+        return processes.filter { proc in
+            // Must be a child of one of the NodeService helpers
+            guard helperPids.contains(proc.parentPid) else { return false }
+            
+            // Must be a shell command with the local-exec wrapper pattern
+            // Example: /bin/zsh -c builtin export PATH=... snap=$(command cat <&3)
+            let isShell = proc.args.contains("/bin/zsh -c") || proc.args.contains("/bin/bash -c")
+            let hasWrapper = localExecPattern.allSatisfy { proc.args.contains($0) }
+            
+            return isShell && hasWrapper
+        }.count
     }
     
     private func decodeBase32(_ input: String) -> String? {
