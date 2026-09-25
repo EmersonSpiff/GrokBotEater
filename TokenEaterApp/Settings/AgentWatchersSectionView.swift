@@ -4,6 +4,7 @@ import AppKit
 struct AgentWatchersSectionView: View {
     @EnvironmentObject private var settingsStore: SettingsStore
     @EnvironmentObject private var sessionStore: SessionStore
+    @EnvironmentObject private var grokBotAgentSessionStore: GrokBotAgentSessionStore
 
     @State private var showTerminalSetup = false
 
@@ -18,6 +19,7 @@ struct AgentWatchersSectionView: View {
                 enableToggleCard
                 styleGroup
                 behaviorGroup
+                localWorkBotsGroup
                 legendGroup
 
                 ResetSectionButton(
@@ -224,6 +226,84 @@ struct AgentWatchersSectionView: View {
         }
     }
 
+    // MARK: - Local Work Bots Group
+    
+    private var localWorkBotsGroup: some View {
+        groupSection(
+            title: "settings.watchers.localwork",
+            subtitle: "settings.watchers.localwork.hint"
+        ) {
+            VStack(alignment: .leading, spacing: 8) {
+                let availableBots = grokBotAgentSessionStore.sessions
+                    .filter { !$0.isStale }
+                
+                if availableBots.isEmpty {
+                    Text("No active bots")
+                        .font(.system(size: 12))
+                        .foregroundStyle(DS.Palette.textTertiary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.vertical, 8)
+                } else {
+                    ForEach(availableBots) { bot in
+                        localWorkBotRow(bot: bot)
+                    }
+                }
+            }
+        }
+    }
+    
+    private func localWorkBotRow(bot: GrokBotSession) -> some View {
+        Button {
+            if settingsStore.watcherLocalWorkBotIds.contains(bot.id) {
+                settingsStore.watcherLocalWorkBotIds.remove(bot.id)
+            } else {
+                settingsStore.watcherLocalWorkBotIds.insert(bot.id)
+            }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: settingsStore.watcherLocalWorkBotIds.contains(bot.id) ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 16))
+                    .foregroundStyle(
+                        settingsStore.watcherLocalWorkBotIds.contains(bot.id)
+                            ? DS.Palette.accentBlue
+                            : DS.Palette.textTertiary
+                    )
+                
+                // Bot name + role chip (same style as watcher cards)
+                HStack(spacing: 6) {
+                    Text(bot.displayName)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(DS.Palette.textPrimary)
+                        .lineLimit(1)
+                    
+                    if let role = bot.roleLabel, role != bot.displayName, !role.isEmpty {
+                        Text(role)
+                            .font(.system(size: 9.5, weight: .regular))
+                            .foregroundStyle(DS.Palette.textSecondary)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 1.5)
+                            .background(
+                                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                    .stroke(DS.Palette.glassBorderLo, lineWidth: 0.75)
+                            )
+                    }
+                }
+                
+                Spacer()
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .padding(.vertical, 6)
+        .padding(.horizontal, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(DS.Palette.bgElevated.opacity(0.3))
+        )
+    }
+    
     private func triggerIcon(_ zone: OverlayTriggerZone) -> String {
         switch zone {
         case .minimal: return "rectangle.compress.vertical"

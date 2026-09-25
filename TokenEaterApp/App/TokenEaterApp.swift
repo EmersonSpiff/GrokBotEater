@@ -53,6 +53,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         grokBotAgentSessionStore.startMonitoring()
         grokBotAgentSessionStore.setScanInterval(settingsStore.watcherScanInterval.seconds)
         grokBotAgentSessionStore.setActivityWindow(settingsStore.watcherIdleTimeout.seconds)
+        grokBotAgentSessionStore.setLocalWorkBotIds(settingsStore.watcherLocalWorkBotIds)
         
         // Observe overlay toggle to start/stop monitoring
         settingsStore.overlay.$overlayEnabled
@@ -87,6 +88,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         settingsStore.overlay.$watcherIdleTimeout
             .sink { [weak grokBotAgentSessionStore] timeout in
                 grokBotAgentSessionStore?.setActivityWindow(timeout.seconds)
+            }
+            .store(in: &cancellables)
+        
+        // Observe local work bot assignment changes
+        settingsStore.overlay.$watcherLocalWorkBotIds
+            .sink { [weak grokBotAgentSessionStore] ids in
+                grokBotAgentSessionStore?.setLocalWorkBotIds(ids)
             }
             .store(in: &cancellables)
         

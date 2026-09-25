@@ -590,6 +590,8 @@
 "settings.watchers.idletimeout.10min" = "10 min";
 "settings.watchers.idletimeout.15min" = "15 min";
 "settings.watchers.idletimeout.30min" = "30 min";
+"settings.watchers.localwork" = "Bots that use this Mac";
+"settings.watchers.localwork.hint" = "Commands running on this Mac are shown on these bots";
 "settings.watchers.display.branchPriority.hint" = "Shows the git branch as the title when on a non-default branch, otherwise the project name.";
 "settings.watchers.display.projectAndBranch.hint" = "Always shows the project name as the title, with the branch displayed next to the status.";
 

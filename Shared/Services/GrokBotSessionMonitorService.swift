@@ -18,6 +18,7 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
     private let queue = DispatchQueue(label: "com.emersonspiff.grokboteater.grokbot-session-monitor", qos: .utility)
     private var scanInterval: TimeInterval
     private var activityWindowSeconds: TimeInterval
+    private var localWorkBotIds: Set<String> = []
     private let grokBotSupportDir: URL?
     
     private var grokBotAppSupportDir: URL {
@@ -75,6 +76,12 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
     func setActivityWindow(_ seconds: TimeInterval) {
         queue.async { [weak self] in
             self?.activityWindowSeconds = seconds
+        }
+    }
+    
+    func setLocalWorkBotIds(_ ids: Set<String>) {
+        queue.async { [weak self] in
+            self?.localWorkBotIds = ids
         }
     }
     
@@ -158,31 +165,81 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
                 )
             }
         
-        // Heuristic: If local commands are running, attribute runningLocally to the most
-        // recently active bot that isn't already working or waitingOnUser. macOS hides
-        // other processes' environment (KERN_PROCARGS2 limitation), so per-agent
+        // Attribution: If local commands are running, attribute runningLocally to a bot.
+        // If the user assigned bots (Settings > Agent Watchers > 'Bots that use this Mac'),
+        // pick the most recently active assigned bot (no time limit). Otherwise, fall back
+        // to the most recently active visible bot within the last 10 minutes.
+        // macOS hides other processes' environment (KERN_PROCARGS2), so per-agent
         // attribution from process data alone is not possible.
-        if localExecCount > 0, let mostRecent = sessions
-            .filter({ $0.state != .working && $0.state != .waitingOnUser })
-            .filter({ now.timeIntervalSince($0.lastActivityAt) < 600 }) // within 10 minutes
-            .max(by: { $0.lastActivityAt < $1.lastActivityAt }) {
+        if localExecCount > 0 {
+            var targetBot: GrokBotSession?
             
-            logger.info("Grok Bot scan: attributing runningLocally to '\(mostRecent.name, privacy: .public)'", privacy: .public)
+            if !localWorkBotIds.isEmpty {
+                // Use assigned list: pick most recent assigned bot
+                // Include bots outside the visibility window (they get a card while running locally)
+                targetBot = roster
+                    .filter { !$0.isGroup && !$0.isHiddenFromSidebar }
+                    .filter { localWorkBotIds.contains($0.id) }
+                    .map { entry -> (id: String, lastActivityAt: Date) in
+                        let lastActivity = Date(timeIntervalSince1970: Double(entry.lastActivityAt) / 1000.0)
+                        return (id: entry.id, lastActivityAt: lastActivity)
+                    }
+                    .max(by: { $0.lastActivityAt < $1.lastActivityAt })
+                    .flatMap { mostRecent in
+                        // Find or create session for this bot
+                        if let existing = sessions.first(where: { $0.id == mostRecent.id }) {
+                            return existing
+                        } else {
+                            // Bot is outside visibility window - create a session for it
+                            guard let entry = roster.first(where: { $0.id == mostRecent.id }) else { return nil }
+                            let lastActivity = Date(timeIntervalSince1970: Double(entry.lastActivityAt) / 1000.0)
+                            let transcript = readTranscript(supportDir: supportDir, agentId: entry.id)
+                            let lastTranscriptTimestamp = transcript?.entries.last.map { entry in
+                                Date(timeIntervalSince1970: Double(entry.timestampMs) / 1000.0)
+                            }
+                            return GrokBotSession(
+                                id: entry.id,
+                                name: entry.name,
+                                title: entry.title,
+                                state: .idle,
+                                lastActivityAt: lastActivity,
+                                awaitingUserResponse: entry.awaitingUserResponse,
+                                unreadCount: entry.unreadCount,
+                                isHiddenFromSidebar: entry.isHiddenFromSidebar,
+                                isStreaming: false,
+                                hasLocalWork: false,
+                                lastTranscriptTimestamp: lastTranscriptTimestamp
+                            )
+                        }
+                    }
+            } else {
+                // Fall back to heuristic: most recent visible bot within 10 minutes
+                targetBot = sessions
+                    .filter({ $0.state != .working && $0.state != .waitingOnUser })
+                    .filter({ now.timeIntervalSince($0.lastActivityAt) < 600 })
+                    .max(by: { $0.lastActivityAt < $1.lastActivityAt })
+            }
             
-            // Update this session to runningLocally (or set hasLocalWork if already working)
-            sessions = sessions.map { session in
-                guard session.id == mostRecent.id else { return session }
+            if let target = targetBot {
+                logger.info("Grok Bot scan: attributing runningLocally to '\(target.name, privacy: .public)'", privacy: .public)
                 
-                if session.state == .working {
-                    // Already working - set hasLocalWork flag instead
+                // Ensure target is in sessions array (might have been created above)
+                if !sessions.contains(where: { $0.id == target.id }) {
+                    sessions.append(target)
+                }
+                
+                // Update state: respect precedence (working, waitingOnUser)
+                sessions = sessions.map { session in
+                    guard session.id == target.id else { return session }
+                    
                     var updated = session
                     updated.hasLocalWork = true
-                    return updated
-                } else {
-                    // Not working - upgrade to runningLocally
-                    var updated = session
-                    updated.state = .runningLocally
-                    updated.hasLocalWork = true
+                    
+                    // Only change state if not already working or waitingOnUser
+                    if session.state != .working && session.state != .waitingOnUser {
+                        updated.state = .runningLocally
+                    }
+                    
                     return updated
                 }
             }

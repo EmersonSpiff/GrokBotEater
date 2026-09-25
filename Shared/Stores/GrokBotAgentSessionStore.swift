@@ -74,4 +74,8 @@ final class GrokBotAgentSessionStore: ObservableObject {
     func setActivityWindow(_ seconds: TimeInterval) {
         monitorService.setActivityWindow(seconds)
     }
+    
+    func setLocalWorkBotIds(_ ids: Set<String>) {
+        monitorService.setLocalWorkBotIds(ids)
+    }
 }
