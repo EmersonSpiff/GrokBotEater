@@ -1,5 +1,7 @@
 import Foundation
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
+#endif
 import Darwin
 
 struct ClaudeProcessInfo: Sendable {
@@ -445,6 +447,7 @@ enum ProcessResolver {
     /// Also detects non-GUI service processes (e.g. iTermServer) and maps them
     /// to their parent GUI app.
     private static func resolveHostApp(startingFrom pid: Int32) -> NSRunningApplication? {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let runningApps = NSWorkspace.shared.runningApplications
         var currentPid = pid
 
@@ -479,6 +482,9 @@ enum ProcessResolver {
             }
         }
         return nil
+        #else
+        return nil
+        #endif
     }
 
     // MARK: - Smart Tab Focus
@@ -638,6 +644,7 @@ enum ProcessResolver {
 
     /// Activate via LaunchServices - reliably switches spaces/fullscreen.
     private static func activateApp(_ app: NSRunningApplication) {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let url = app.bundleURL else {
             DispatchQueue.main.async { app.activate() }
             return
@@ -645,6 +652,7 @@ enum ProcessResolver {
         let config = NSWorkspace.OpenConfiguration()
         config.activates = true
         NSWorkspace.shared.openApplication(at: url, configuration: config, completionHandler: nil)
+        #endif
     }
     
     // MARK: - Grok Bot Process Detection

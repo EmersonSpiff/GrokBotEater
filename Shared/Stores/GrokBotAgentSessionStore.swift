@@ -2,7 +2,7 @@ import Foundation
 import Combine
 
 @MainActor
-final class GrokBotSessionStore: ObservableObject {
+final class GrokBotAgentSessionStore: ObservableObject {
     @Published var sessions: [GrokBotSession] = []
     @Published private(set) var hiddenSessionIds: Set<String> = []
     

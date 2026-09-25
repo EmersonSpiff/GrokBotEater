@@ -38,7 +38,7 @@ final class OverlayWindowController {
     private var screenObserver: NSObjectProtocol?
 
     private let sessionStore: SessionStore
-    private let grokBotSessionStore: GrokBotSessionStore
+    private let grokBotAgentSessionStore: GrokBotAgentSessionStore
     private let settingsStore: SettingsStore
     let overlayState = OverlayState()
     private var lastCursorCheck: CFAbsoluteTime = 0
@@ -60,9 +60,9 @@ final class OverlayWindowController {
         min(windowWidth, settingsStore.overlayTriggerZone.exitWidth * CGFloat(settingsStore.overlayScale))
     }
 
-    init(sessionStore: SessionStore, grokBotSessionStore: GrokBotSessionStore, settingsStore: SettingsStore) {
+    init(sessionStore: SessionStore, grokBotAgentSessionStore: GrokBotAgentSessionStore, settingsStore: SettingsStore) {
         self.sessionStore = sessionStore
-        self.grokBotSessionStore = grokBotSessionStore
+        self.grokBotAgentSessionStore = grokBotAgentSessionStore
         self.settingsStore = settingsStore
 
         observeSettings()
@@ -83,8 +83,8 @@ final class OverlayWindowController {
 
         // Show/hide follows Grok Bot sessions
         Publishers.CombineLatest3(
-            grokBotSessionStore.$sessions,
-            grokBotSessionStore.$hiddenSessionIds,
+            grokBotAgentSessionStore.$sessions,
+            grokBotAgentSessionStore.$hiddenSessionIds,
             overlayState.$contextMenuSessionId
         )
             .map { sessions, hidden, openMenu in
@@ -177,7 +177,7 @@ final class OverlayWindowController {
 
         let overlayView = OverlayView()
             .environmentObject(sessionStore)
-            .environmentObject(grokBotSessionStore)
+            .environmentObject(grokBotAgentSessionStore)
             .environmentObject(settingsStore)
             .environmentObject(overlayState)
 

@@ -14,7 +14,7 @@ struct MonitoringView: View {
     @EnvironmentObject private var themeStore: ThemeStore
     @EnvironmentObject private var settingsStore: SettingsStore
     @EnvironmentObject private var sessionStore: SessionStore
-    @EnvironmentObject private var grokBotSessionStore: GrokBotSessionStore
+    @EnvironmentObject private var grokBotAgentSessionStore: GrokBotAgentSessionStore
     @EnvironmentObject private var vendorStatusStore: VendorStatusStore
 
     /// Lightweight 7d daily-buckets store for the back-of-card stats.
@@ -434,7 +434,7 @@ struct MonitoringView: View {
                         .tracking(1.2)
                         .foregroundStyle(DS.Palette.textTertiary)
                     
-                    let liveCount = grokBotSessionStore.activeCount
+                    let liveCount = grokBotAgentSessionStore.activeCount
                     Text("\(liveCount)")
                         .font(.system(size: 26, weight: .bold, design: .rounded))
                         .foregroundStyle(liveCount > 0 ? DS.Palette.textPrimary : DS.Palette.textTertiary)
@@ -449,8 +449,8 @@ struct MonitoringView: View {
                         .textCase(.uppercase)
                     
                     // Sub-lines for waiting/local when nonzero
-                    let waitingCount = grokBotSessionStore.waitingOnUserCount
-                    let localCount = grokBotSessionStore.runningLocallyCount
+                    let waitingCount = grokBotAgentSessionStore.waitingOnUserCount
+                    let localCount = grokBotAgentSessionStore.runningLocallyCount
                     
                     if waitingCount > 0 {
                         Text("\(waitingCount) waiting on you")

@@ -3,7 +3,7 @@ import AppKit
 
 struct OverlayView: View {
     @EnvironmentObject var sessionStore: SessionStore
-    @EnvironmentObject var grokBotSessionStore: GrokBotSessionStore
+    @EnvironmentObject var grokBotAgentSessionStore: GrokBotAgentSessionStore
     @EnvironmentObject var settingsStore: SettingsStore
     @EnvironmentObject var overlayState: OverlayState
 
@@ -19,7 +19,7 @@ struct OverlayView: View {
     /// open time, so the 2s scan republish can't reshuffle the rows (or
     /// rebuild the menu) mid-tracking. Live data otherwise.
     private var displayedGrokBotSessions: [GrokBotSession] {
-        overlayState.frozenGrokBotSessions ?? grokBotSessionStore.overlaySessions
+        overlayState.frozenGrokBotSessions ?? grokBotAgentSessionStore.overlaySessions
     }
 
     var body: some View {
@@ -37,7 +37,7 @@ struct OverlayView: View {
                         session: session,
                         onHide: {
                             endMenuFreeze()
-                            grokBotSessionStore.hideSession(id: session.id)
+                            grokBotAgentSessionStore.hideSession(id: session.id)
                         },
                         onMenuOpen: { beginMenuFreeze(for: session) },
                         onMenuClose: { endMenuFreeze() }
@@ -125,7 +125,7 @@ struct OverlayView: View {
     /// Pin the overlay while the menu tracks: snapshot the rendered sessions
     /// and record which card owns the menu so `proximity` keeps it expanded.
     private func beginMenuFreeze(for session: GrokBotSession) {
-        overlayState.frozenGrokBotSessions = grokBotSessionStore.overlaySessions
+        overlayState.frozenGrokBotSessions = grokBotAgentSessionStore.overlaySessions
         overlayState.contextMenuSessionId = session.id
     }
 

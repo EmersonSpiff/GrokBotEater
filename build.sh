@@ -37,11 +37,25 @@ plutil -insert NSExtension -json '{"NSExtensionPointIdentifier":"com.apple.widge
 
 # 5. Build
 echo -e "${BLUE}Building...${NC}"
+
+# Code signing settings
+if [ "${AD_HOC:-0}" = "1" ]; then
+    echo -e "${BLUE}Building with ad-hoc signing (no certificate)${NC}"
+    CODE_SIGN_ARGS=(
+        CODE_SIGN_IDENTITY="-"
+        CODE_SIGN_STYLE=Manual
+        DEVELOPMENT_TEAM=""
+    )
+else
+    CODE_SIGN_ARGS=()
+fi
+
 xcodebuild \
     -project GrokBotEater.xcodeproj \
     -scheme GrokBotEaterApp \
     -configuration Release \
     -derivedDataPath build \
+    "${CODE_SIGN_ARGS[@]}" \
     build 2>&1 | tail -20
 
 # 6. Find the built app
