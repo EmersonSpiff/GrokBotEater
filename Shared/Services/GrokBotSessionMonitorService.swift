@@ -304,7 +304,7 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
             let oldState = lastLoggedState[session.id]
             if oldState != session.state {
                 let oldStr = oldState?.rawValue ?? "nil"
-                logger.info("state \(session.name, privacy: .public): \(oldStr) → \(session.state.rawValue)")
+                logger.info("state \(session.name, privacy: .public): \(oldStr, privacy: .public) → \(session.state.rawValue, privacy: .public)")
                 lastLoggedState[session.id] = session.state
             }
         }
