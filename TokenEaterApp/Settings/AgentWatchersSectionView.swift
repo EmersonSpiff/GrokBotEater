@@ -770,15 +770,17 @@ struct AgentWatchersSectionView: View {
         HStack(spacing: 10) {
             Group {
                 if symbol == "desktopcomputer.and.macbook" {
-                    Image(systemName: symbol)
-                        .symbolRenderingMode(.palette)
-                        .foregroundStyle(Color.secondary, color)
+                    GrokBotMascotView(
+                        size: 20,
+                        tint: color,
+                        animated: false
+                    )
                 } else {
                     Image(systemName: symbol)
                         .foregroundStyle(color)
+                        .font(.system(size: 12, weight: .semibold))
                 }
             }
-            .font(.system(size: 12, weight: .semibold))
             .frame(width: 20)
             VStack(alignment: .leading, spacing: 1) {
                 Text(label)

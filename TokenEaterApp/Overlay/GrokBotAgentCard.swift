@@ -245,26 +245,17 @@ struct GrokBotAgentCard: View {
     
     @ViewBuilder
     private var stateIconImage: some View {
-        let baseImage = Image(systemName: stateGlyph)
-        
-        // When collapsed (proximity < 0.3), background is solid color, so use white icon for contrast
-        // When expanded (proximity >= 0.3), background is glass/material, so use status color
-        let iconColor = proximity < 0.3 ? Color.white : stateColor
-        
         if session.state == .runningLocally {
-            // For palette rendering, adjust colors based on proximity
-            if proximity < 0.3 {
-                // Collapsed: white frame with white screen (high contrast on colored background)
-                applySymbolEffect(to: baseImage
-                    .symbolRenderingMode(.palette)
-                    .foregroundStyle(Color.white, Color.white.opacity(0.85)))
-            } else {
-                // Expanded: gray frame with colored screen
-                applySymbolEffect(to: baseImage
-                    .symbolRenderingMode(.palette)
-                    .foregroundStyle(Color.secondary, stateColor))
-            }
+            let iconColor = proximity < 0.3 ? Color.white : stateColor
+            GrokBotMascotView(
+                size: iconSize,
+                tint: iconColor,
+                animated: animationsEnabled
+            )
         } else {
+            let baseImage = Image(systemName: stateGlyph)
+            let iconColor = proximity < 0.3 ? Color.white : stateColor
+            
             applySymbolEffect(to: baseImage)
                 .foregroundStyle(iconColor)
         }
