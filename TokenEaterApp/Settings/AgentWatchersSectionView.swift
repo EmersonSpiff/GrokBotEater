@@ -563,7 +563,7 @@ struct AgentWatchersSectionView: View {
                 if settingsStore.watchersDetailedMode {
                     grokBotStatusRow(symbol: "sparkles", color: Color(red: 0.3, green: 0.7, blue: 1.0), label: "Working", description: "Agent is generating a response")
                     grokBotStatusRow(symbol: "person.bubble", color: .orange, label: "Waiting on you", description: "Agent needs your input")
-                    grokBotStatusRow(symbol: "desktopcomputer.and.macbook", color: .purple, label: "Running locally", description: "Local command in progress")
+                    grokBotStatusRow(symbol: "dot.scope.laptopcomputer", color: .purple, label: "Running locally", description: "Local command in progress")
                     grokBotStatusRow(symbol: "moon.stars", color: .gray, label: "Idle", description: "No activity")
                     grokBotStatusRow(symbol: "checkmark.square", color: .green, label: "Done", description: "Finished with new output")
                 } else {
@@ -768,20 +768,10 @@ struct AgentWatchersSectionView: View {
     
     private func grokBotStatusRow(symbol: String, color: Color, label: String, description: String) -> some View {
         HStack(spacing: 10) {
-            Group {
-                if symbol == "desktopcomputer.and.macbook" {
-                    GrokBotMascotView(
-                        size: 20,
-                        tint: color,
-                        animated: false
-                    )
-                } else {
-                    Image(systemName: symbol)
-                        .foregroundStyle(color)
-                        .font(.system(size: 12, weight: .semibold))
-                }
-            }
-            .frame(width: 20)
+            Image(systemName: symbol)
+                .foregroundStyle(color)
+                .font(.system(size: 12, weight: .semibold))
+                .frame(width: 20)
             VStack(alignment: .leading, spacing: 1) {
                 Text(label)
                     .font(.system(size: 11, weight: .medium))

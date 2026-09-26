@@ -66,7 +66,7 @@ struct GrokBotAgentCard: View {
         switch session.state {
         case .working: return "sparkles"
         case .waitingOnUser: return "person.bubble"
-        case .runningLocally: return "desktopcomputer.and.macbook"
+        case .runningLocally: return "dot.scope.laptopcomputer"
         case .idle: return "moon.stars"
         case .done: return "checkmark.square"
         }
@@ -246,20 +246,11 @@ struct GrokBotAgentCard: View {
     
     @ViewBuilder
     private var stateIconImage: some View {
-        if session.state == .runningLocally {
-            let iconColor = proximity < 0.3 ? Color.white : stateColor
-            GrokBotMascotView(
-                size: iconSize,
-                tint: iconColor,
-                animated: animationsEnabled
-            )
-        } else {
-            let baseImage = Image(systemName: stateGlyph)
-            let iconColor = proximity < 0.3 ? Color.white : stateColor
-            
-            applySymbolEffect(to: baseImage)
-                .foregroundStyle(iconColor)
-        }
+        let baseImage = Image(systemName: stateGlyph)
+        let iconColor = proximity < 0.3 ? Color.white : stateColor
+        
+        applySymbolEffect(to: baseImage)
+            .foregroundStyle(iconColor)
     }
     
     @ViewBuilder
