@@ -32,9 +32,6 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
     private var axTreeIsLive: Bool = false
     private var axCancellables: Set<AnyCancellable> = []
     
-    private var axWasWorkingIds: Set<String> = []
-    private var axDoneUntil: [String: Date] = [:]
-    private let axDoneDuration: TimeInterval = 180
     
     private var lastLocalExecCount: Int = 0
     private var hasLoggedFirstScan: Bool = false
@@ -211,26 +208,14 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
             let isStreaming = transcript?.entries.last?.isStreaming == true
             let fileBasedWorking = isStreaming || (transcript != nil && isLastEntryUserMessage(transcript!))
             
-            // Track working → done transitions (use AX when live, file-based when stale)
-            let workingForTracking = (axWorking == true) || (axWorking == nil && axIsAvailable && fileBasedWorking)
-            if workingForTracking {
-                axWasWorkingIds.insert(entry.id)
-                axDoneUntil[entry.id] = nil
-            } else if axIsAvailable {
-                // Only track done transitions when AX is available (live or stale)
-                if axWasWorkingIds.remove(entry.id) != nil {
-                    // Just transitioned from working to not-working
-                    axDoneUntil[entry.id] = now.addingTimeInterval(axDoneDuration)
-                }
-            }
+            // Determine if working (use AX when live, file-based when stale)
+            let isWorking = (axWorking == true) || (axWorking == nil && axIsAvailable && fileBasedWorking)
             
-            let axDone = axDoneUntil[entry.id].map { now < $0 } ?? false
-            
-            // If working (AX or file-based when stale) or done, bypass activity window
+            // If working, bypass activity window
             let effectiveActivityTime: Date
             let bypassedActivityWindow: Bool
-            if workingForTracking || axDone {
-                // Working or done - bump activity to now so it's always visible
+            if isWorking {
+                // Working - bump activity to now so it's always visible
                 effectiveActivityTime = now
                 bypassedActivityWindow = true
             } else {
@@ -255,17 +240,10 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
                     state = .working
                 } else if isWaitingOnUser {
                     state = .waitingOnUser
-                } else if axDone {
+                } else if entry.unreadCount > 0 {
                     state = .done
                 } else {
-                    // Check if recently finished (Done) via transcript/unread
-                    let hasUnread = entry.unreadCount > 0
-                    let recentlyActive = Date().timeIntervalSince(lastActivity) < 180 // 3 minutes
-                    if hasUnread && recentlyActive {
-                        state = .done
-                    } else {
-                        state = .idle
-                    }
+                    state = .idle
                 }
             } else {
                 // AX unavailable OR tree is stale - use file-based signals
@@ -273,18 +251,10 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
                     state = .working
                 } else if isWaitingOnUser {
                     state = .waitingOnUser
-                } else if axDone {
-                    // Use done tracking even when tree is stale
+                } else if entry.unreadCount > 0 {
                     state = .done
                 } else {
-                    // Idle, but check if it's "done" (recently finished with unread output)
-                    let hasUnread = entry.unreadCount > 0
-                    let recentlyActive = Date().timeIntervalSince(lastActivity) < 180 // 3 minutes
-                    if hasUnread && recentlyActive {
-                        state = .done
-                    } else {
-                        state = .idle
-                    }
+                    state = .idle
                 }
             }
             
@@ -307,15 +277,6 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
             )
             
             sessions.append(session)
-        }
-        
-        // Prune expired axDoneUntil entries
-        axDoneUntil = axDoneUntil.filter { $0.value > now }
-        
-        // Clear AX done tracking if AX becomes unavailable
-        if !axIsAvailable {
-            axWasWorkingIds.removeAll()
-            axDoneUntil.removeAll()
         }
         
         // Log matched sessions for AX-working bots
