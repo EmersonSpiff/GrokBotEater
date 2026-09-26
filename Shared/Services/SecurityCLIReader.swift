@@ -35,7 +35,7 @@ final class SecurityCLIReader: SecurityCLIReaderProtocol, @unchecked Sendable {
         do {
             try task.run()
         } catch {
-            logger.info("security launch failed: \(error.localizedDescription, privacy: .public)")
+            logger.info("security launch failed: \(error.localizedDescription)")
             return nil
         }
         // Guard against a hung child. On macOS 26 the spawned `security` process

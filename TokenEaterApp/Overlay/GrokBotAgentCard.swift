@@ -10,12 +10,20 @@ struct GrokBotAgentCard: View {
     let detailedMode: Bool
     let onTap: () -> Void
     
+    @State private var effectTick: Int = 0
+    
     private var baseWidth: CGFloat { 30 * scale }
     private var expandedWidth: CGFloat { 185 * scale }
     private var height: CGFloat { 40 * scale }
     
     private var actualWidth: CGFloat {
         baseWidth + (expandedWidth - baseWidth) * proximity
+    }
+    
+    private var iconSize: CGFloat {
+        let collapsedIconSize = 15.0 * scale
+        let expandedIconSize = 16.0 * scale
+        return collapsedIconSize + (expandedIconSize - collapsedIconSize) * proximity
     }
     
     private var stateColor: Color {
@@ -60,7 +68,7 @@ struct GrokBotAgentCard: View {
         switch session.state {
         case .working: return "sparkles"
         case .waitingOnUser: return "person.bubble"
-        case .runningLocally: return "desktopcomputer.and.macbook"
+        case .runningLocally: return "dot.scope.laptopcomputer"
         case .idle: return "moon.stars"
         case .done: return "checkmark.square"
         }
@@ -153,6 +161,12 @@ struct GrokBotAgentCard: View {
                 Spacer(minLength: 0)
             }
         }
+        .onReceive(Timer.publish(every: 3.0, on: .main, in: .common).autoconnect()) { _ in
+            // Tick symbol effects for states that animate
+            if animationsEnabled && (session.state == .working || session.state == .waitingOnUser || session.state == .runningLocally) {
+                effectTick += 1
+            }
+        }
     }
     
     @ViewBuilder
@@ -221,11 +235,6 @@ struct GrokBotAgentCard: View {
     
     @ViewBuilder
     private var stateIcon: some View {
-        // Scale icon size based on proximity: larger minimum for collapsed readability
-        let collapsedIconSize = 15.0 * scale
-        let expandedIconSize = 16.0 * scale
-        let iconSize = collapsedIconSize + (expandedIconSize - collapsedIconSize) * proximity
-        
         let collapsedCircleSize = 5.0 * scale
         let expandedCircleSize = 28.0 * scale
         let circleSize = collapsedCircleSize + (expandedCircleSize - collapsedCircleSize) * proximity
@@ -246,28 +255,10 @@ struct GrokBotAgentCard: View {
     @ViewBuilder
     private var stateIconImage: some View {
         let baseImage = Image(systemName: stateGlyph)
-        
-        // When collapsed (proximity < 0.3), background is solid color, so use white icon for contrast
-        // When expanded (proximity >= 0.3), background is glass/material, so use status color
         let iconColor = proximity < 0.3 ? Color.white : stateColor
         
-        if session.state == .runningLocally {
-            // For palette rendering, adjust colors based on proximity
-            if proximity < 0.3 {
-                // Collapsed: white frame with white screen (high contrast on colored background)
-                applySymbolEffect(to: baseImage
-                    .symbolRenderingMode(.palette)
-                    .foregroundStyle(Color.white, Color.white.opacity(0.85)))
-            } else {
-                // Expanded: gray frame with colored screen
-                applySymbolEffect(to: baseImage
-                    .symbolRenderingMode(.palette)
-                    .foregroundStyle(Color.secondary, stateColor))
-            }
-        } else {
-            applySymbolEffect(to: baseImage)
-                .foregroundStyle(iconColor)
-        }
+        applySymbolEffect(to: baseImage)
+            .foregroundStyle(iconColor)
     }
     
     @ViewBuilder
@@ -275,19 +266,15 @@ struct GrokBotAgentCard: View {
         if animationsEnabled {
             switch session.state {
             case .working:
-                view.symbolEffect(.bounce, options: .repeating)
+                view.symbolEffect(.bounce, value: effectTick)
             case .waitingOnUser:
                 if #available(macOS 15, *) {
-                    view.symbolEffect(.wiggle, options: .repeating)
+                    view.symbolEffect(.wiggle, value: effectTick)
                 } else {
-                    view.symbolEffect(.pulse, options: .repeating)
+                    view.symbolEffect(.pulse, value: effectTick)
                 }
             case .runningLocally:
-                if #available(macOS 15, *) {
-                    view.symbolEffect(.breathe)
-                } else {
-                    view.symbolEffect(.pulse)
-                }
+                view.symbolEffect(.pulse, value: effectTick)
             case .done:
                 view.symbolEffect(.scale)
             case .idle:

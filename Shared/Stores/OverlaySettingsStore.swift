@@ -66,6 +66,14 @@ final class OverlaySettingsStore: ObservableObject {
         }
     }
     
+    // Local work assignment
+    @Published var watcherLocalWorkBotIds: Set<String> {
+        didSet {
+            let array = Array(watcherLocalWorkBotIds)
+            UserDefaults.standard.set(array, forKey: "watcherLocalWorkBotIds")
+        }
+    }
+    
     init() {
         // Defaults below apply only on first launch (no value yet in
         // UserDefaults) - per the `as? T ?? default` reads.
@@ -95,5 +103,6 @@ final class OverlaySettingsStore: ObservableObject {
         ) ?? .followMenuBar
         self.overlaySpecificDisplay = UserDefaults.standard.data(forKey: "overlaySpecificDisplay")
             .flatMap { try? JSONDecoder().decode(OverlayDisplayReference.self, from: $0) }
+        self.watcherLocalWorkBotIds = Set(UserDefaults.standard.stringArray(forKey: "watcherLocalWorkBotIds") ?? [])
     }
 }

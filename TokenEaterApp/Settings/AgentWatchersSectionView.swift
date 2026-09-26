@@ -1,11 +1,15 @@
 import SwiftUI
 import AppKit
+import ApplicationServices
 
 struct AgentWatchersSectionView: View {
     @EnvironmentObject private var settingsStore: SettingsStore
     @EnvironmentObject private var sessionStore: SessionStore
+    @EnvironmentObject private var grokBotAgentSessionStore: GrokBotAgentSessionStore
 
     @State private var showTerminalSetup = false
+    @State private var axPermissionGranted = false
+    @State private var axCheckTimer: Timer?
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
@@ -18,6 +22,8 @@ struct AgentWatchersSectionView: View {
                 enableToggleCard
                 styleGroup
                 behaviorGroup
+                localWorkBotsGroup
+                accessibilityPermissionGroup
                 legendGroup
 
                 ResetSectionButton(
@@ -224,6 +230,201 @@ struct AgentWatchersSectionView: View {
         }
     }
 
+    // MARK: - Local Work Bots Group
+    
+    private var localWorkBotsGroup: some View {
+        groupSection(
+            title: "settings.watchers.localwork",
+            subtitle: "settings.watchers.localwork.hint"
+        ) {
+            VStack(alignment: .leading, spacing: 8) {
+                // Build list from full roster (all non-group, non-hidden entries)
+                // Plus any orphan IDs (selected but no longer in roster)
+                let rosterBots = grokBotAgentSessionStore.roster
+                let rosterIds = Set(rosterBots.map { $0.id })
+                let orphanIds = settingsStore.watcherLocalWorkBotIds.subtracting(rosterIds)
+                
+                if rosterBots.isEmpty && orphanIds.isEmpty {
+                    Text(String(localized: "settings.watchers.localwork.nobots"))
+                        .font(.system(size: 12))
+                        .foregroundStyle(DS.Palette.textTertiary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.vertical, 8)
+                } else {
+                    ForEach(rosterBots, id: \.id) { entry in
+                        localWorkRosterRow(entry: entry)
+                    }
+                    ForEach(Array(orphanIds), id: \.self) { orphanId in
+                        localWorkOrphanRow(id: orphanId)
+                    }
+                }
+            }
+        }
+    }
+    
+    private func localWorkRosterRow(entry: GrokBotRosterEntry) -> some View {
+        Button {
+            if settingsStore.watcherLocalWorkBotIds.contains(entry.id) {
+                settingsStore.watcherLocalWorkBotIds.remove(entry.id)
+            } else {
+                settingsStore.watcherLocalWorkBotIds.insert(entry.id)
+            }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: settingsStore.watcherLocalWorkBotIds.contains(entry.id) ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 16))
+                    .foregroundStyle(
+                        settingsStore.watcherLocalWorkBotIds.contains(entry.id)
+                            ? DS.Palette.accentHistory
+                            : DS.Palette.textTertiary
+                    )
+                
+                // Bot name + role chip (same style as watcher cards)
+                HStack(spacing: 6) {
+                    Text(entry.name)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(DS.Palette.textPrimary)
+                        .lineLimit(1)
+                    
+                    if let title = entry.title, title != entry.name, !title.isEmpty {
+                        Text(title)
+                            .font(.system(size: 9.5, weight: .regular))
+                            .foregroundStyle(DS.Palette.textSecondary)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 1.5)
+                            .background(
+                                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                    .stroke(DS.Palette.glassBorderLo, lineWidth: 0.75)
+                            )
+                    }
+                }
+                
+                Spacer()
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .padding(.vertical, 6)
+        .padding(.horizontal, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(DS.Palette.bgElevated.opacity(0.3))
+        )
+    }
+    
+    private func localWorkOrphanRow(id: String) -> some View {
+        Button {
+            settingsStore.watcherLocalWorkBotIds.remove(id)
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 16))
+                    .foregroundStyle(DS.Palette.accentHistory.opacity(0.6))
+                
+                HStack(spacing: 6) {
+                    Text(id)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(DS.Palette.textTertiary)
+                        .lineLimit(1)
+                    
+                    Text("(not found)")
+                        .font(.system(size: 9.5, weight: .regular))
+                        .foregroundStyle(DS.Palette.textTertiary)
+                }
+                
+                Spacer()
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .padding(.vertical, 6)
+        .padding(.horizontal, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(DS.Palette.bgElevated.opacity(0.15))
+        )
+    }
+    
+    // MARK: - Accessibility Permission Group
+    
+    private var accessibilityPermissionGroup: some View {
+        groupSection(
+            title: "settings.watchers.accessibility",
+            subtitle: "settings.watchers.accessibility.hint"
+        ) {
+            HStack(spacing: 12) {
+                Image(systemName: axPermissionGranted ? "checkmark.circle.fill" : "xmark.circle.fill")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(axPermissionGranted ? DS.Palette.semanticSuccess : DS.Palette.textTertiary)
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(String(localized: "settings.watchers.accessibility.status"))
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(DS.Palette.textPrimary)
+                    Text(axPermissionGranted 
+                         ? String(localized: "settings.watchers.accessibility.status.on")
+                         : String(localized: "settings.watchers.accessibility.status.off"))
+                        .font(.system(size: 11))
+                        .foregroundStyle(axPermissionGranted ? DS.Palette.semanticSuccess : DS.Palette.textTertiary)
+                }
+                
+                Spacer()
+                
+                if !axPermissionGranted {
+                    Button {
+                        openAccessibilitySettings()
+                    } label: {
+                        Text(String(localized: "settings.watchers.accessibility.grant"))
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                    .fill(DS.Palette.accentHistory)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .onAppear {
+            checkAccessibilityPermission()
+            startAccessibilityCheckTimer()
+        }
+        .onDisappear {
+            stopAccessibilityCheckTimer()
+        }
+    }
+    
+    private func checkAccessibilityPermission() {
+        axPermissionGranted = AXIsProcessTrusted()
+    }
+    
+    private func startAccessibilityCheckTimer() {
+        axCheckTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            checkAccessibilityPermission()
+        }
+    }
+    
+    private func stopAccessibilityCheckTimer() {
+        axCheckTimer?.invalidate()
+        axCheckTimer = nil
+    }
+    
+    private func openAccessibilitySettings() {
+        // Prompt with system dialog
+        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+        _ = AXIsProcessTrustedWithOptions(options)
+        
+        // Also open System Settings to the right pane
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+    
     private func triggerIcon(_ zone: OverlayTriggerZone) -> String {
         switch zone {
         case .minimal: return "rectangle.compress.vertical"
@@ -362,7 +563,7 @@ struct AgentWatchersSectionView: View {
                 if settingsStore.watchersDetailedMode {
                     grokBotStatusRow(symbol: "sparkles", color: Color(red: 0.3, green: 0.7, blue: 1.0), label: "Working", description: "Agent is generating a response")
                     grokBotStatusRow(symbol: "person.bubble", color: .orange, label: "Waiting on you", description: "Agent needs your input")
-                    grokBotStatusRow(symbol: "desktopcomputer.and.macbook", color: .purple, label: "Running locally", description: "Local command in progress")
+                    grokBotStatusRow(symbol: "dot.scope.laptopcomputer", color: .purple, label: "Running locally", description: "Local command in progress")
                     grokBotStatusRow(symbol: "moon.stars", color: .gray, label: "Idle", description: "No activity")
                     grokBotStatusRow(symbol: "checkmark.square", color: .green, label: "Done", description: "Finished with new output")
                 } else {
@@ -567,18 +768,10 @@ struct AgentWatchersSectionView: View {
     
     private func grokBotStatusRow(symbol: String, color: Color, label: String, description: String) -> some View {
         HStack(spacing: 10) {
-            Group {
-                if symbol == "desktopcomputer.and.macbook" {
-                    Image(systemName: symbol)
-                        .symbolRenderingMode(.palette)
-                        .foregroundStyle(Color.secondary, color)
-                } else {
-                    Image(systemName: symbol)
-                        .foregroundStyle(color)
-                }
-            }
-            .font(.system(size: 12, weight: .semibold))
-            .frame(width: 20)
+            Image(systemName: symbol)
+                .foregroundStyle(color)
+                .font(.system(size: 12, weight: .semibold))
+                .frame(width: 20)
             VStack(alignment: .leading, spacing: 1) {
                 Text(label)
                     .font(.system(size: 11, weight: .medium))

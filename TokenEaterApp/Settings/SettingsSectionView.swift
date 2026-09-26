@@ -105,7 +105,7 @@ struct SettingsSectionView: View {
                                 .font(.system(size: 11))
                                 .foregroundStyle(.green)
                         } else if let version = updateStore.updateState.availableVersion {
-                            Button(String(localized: "update.available.badge \(version)")) {
+                            Button(String(format: NSLocalizedString("update.available.badge %@", comment: ""), version)) {
                                 updateStore.downloadUpdate()
                             }
                             .font(.system(size: 11, weight: .medium))

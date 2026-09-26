@@ -209,12 +209,12 @@ enum ProcessResolver {
 
     // MARK: - Native Process APIs
 
-    private struct BasicProcessInfo {
+    struct BasicProcessInfo {
         let pid: Int32
         let parentPid: Int32
     }
 
-    private static func listAllProcesses() -> [BasicProcessInfo] {
+    static func listAllProcesses() -> [BasicProcessInfo] {
         var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_ALL]
         var size: Int = 0
 
@@ -687,7 +687,7 @@ enum ProcessResolver {
         }
     }
     
-    private static func getProcessArguments(pid: Int32) -> String {
+    static func getProcessArguments(pid: Int32) -> String {
         var mib: [Int32] = [CTL_KERN, KERN_PROCARGS2, pid]
         var size: Int = 0
         

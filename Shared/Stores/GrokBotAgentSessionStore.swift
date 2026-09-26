@@ -4,6 +4,7 @@ import Combine
 @MainActor
 final class GrokBotAgentSessionStore: ObservableObject {
     @Published var sessions: [GrokBotSession] = []
+    @Published var roster: [GrokBotRosterEntry] = []
     @Published private(set) var hiddenSessionIds: Set<String> = []
     
     var activeSessions: [GrokBotSession] {
@@ -35,14 +36,15 @@ final class GrokBotAgentSessionStore: ObservableObject {
     }
     
     private let monitorService: GrokBotSessionMonitorService
-    private var cancellable: AnyCancellable?
+    private var sessionsCancellable: AnyCancellable?
+    private var rosterCancellable: AnyCancellable?
     
     init(monitorService: GrokBotSessionMonitorService = GrokBotSessionMonitorService()) {
         self.monitorService = monitorService
     }
     
     func bind() {
-        cancellable = monitorService.sessionsPublisher
+        sessionsCancellable = monitorService.sessionsPublisher
             .receive(on: RunLoop.main)
             .sink { [weak self] sessions in
                 guard let self else { return }
@@ -55,6 +57,12 @@ final class GrokBotAgentSessionStore: ObservableObject {
                     }
                 }
             }
+        
+        rosterCancellable = monitorService.rosterPublisher
+            .receive(on: RunLoop.main)
+            .sink { [weak self] roster in
+                self?.roster = roster
+            }
     }
     
     func startMonitoring() {
@@ -64,7 +72,8 @@ final class GrokBotAgentSessionStore: ObservableObject {
     
     func stopMonitoring() {
         monitorService.stopMonitoring()
-        cancellable = nil
+        sessionsCancellable = nil
+        rosterCancellable = nil
     }
     
     func setScanInterval(_ seconds: TimeInterval) {
@@ -73,5 +82,9 @@ final class GrokBotAgentSessionStore: ObservableObject {
     
     func setActivityWindow(_ seconds: TimeInterval) {
         monitorService.setActivityWindow(seconds)
+    }
+    
+    func setLocalWorkBotIds(_ ids: Set<String>) {
+        monitorService.setLocalWorkBotIds(ids)
     }
 }

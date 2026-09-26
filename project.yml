@@ -14,7 +14,7 @@ settings:
     CODE_SIGN_STYLE: Automatic
     DEVELOPMENT_TEAM: "S7B8M9JYF4"
     MARKETING_VERSION: "5.13.3"
-    CURRENT_PROJECT_VERSION: "548"
+    CURRENT_PROJECT_VERSION: "549"
     ARCHS: "arm64 x86_64"
 
 targets:
@@ -38,6 +38,7 @@ targets:
         LSApplicationCategoryType: public.app-category.utilities
         CFBundleDisplayName: GrokBotEater
         LSUIElement: true
+        NSAccessibilityUsageDescription: "GrokBotEater needs Accessibility access to detect when your Grok Bot agents are actively working. This lets the watcher show real-time Working status by reading the Grok Bot app's interface."
         CFBundleURLTypes:
           - CFBundleURLName: com.emersonspiff.grokboteater.app
             CFBundleURLSchemes:
@@ -77,7 +78,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.emersonspiff.grokboteater.app.widget
         PRODUCT_NAME: GrokBotEaterWidgetExtension
         MARKETING_VERSION: "5.13.3"
-        CURRENT_PROJECT_VERSION: "548"
+        CURRENT_PROJECT_VERSION: "549"
         CODE_SIGN_ENTITLEMENTS: TokenEaterWidget/TokenEaterWidget.entitlements
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks"
     info:

@@ -14,6 +14,17 @@ enum WatcherIdleTimeout: Int, CaseIterable, Identifiable {
     }
     
     var label: String {
-        String(localized: "settings.watchers.idletimeout.\(rawValue)min")
+        switch self {
+        case .three:
+            return String(localized: "settings.watchers.idletimeout.3min")
+        case .five:
+            return String(localized: "settings.watchers.idletimeout.5min")
+        case .ten:
+            return String(localized: "settings.watchers.idletimeout.10min")
+        case .fifteen:
+            return String(localized: "settings.watchers.idletimeout.15min")
+        case .thirty:
+            return String(localized: "settings.watchers.idletimeout.30min")
+        }
     }
 }
