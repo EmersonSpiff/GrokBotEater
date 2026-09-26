@@ -46,6 +46,9 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
     /// Track if we've initialized lastSeenReplyAt (to avoid flashing all bots on launch)
     private var hasInitializedReplyTracking: Bool = false
     
+    /// Transcript cache: agentId → (modDate, fileSize, parsed transcript)
+    private var transcriptCache: [String: (modDate: Date, size: Int64, transcript: GrokBotTranscriptReplica)] = [:]
+    
     private var grokBotAppSupportDir: URL {
         if let override = grokBotSupportDir { return override }
         let home: String
@@ -240,13 +243,6 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
                 if wasNotWorking, let previous = previousReply, latestReply > previous {
                     // New reply appeared and we didn't see the bot working - missed turn
                     detectedMissedTurn = true
-                    let holdUntil = now.addingTimeInterval(8.0)
-                    let existingHold = workingHoldUntil[entry.id]?.until ?? .distantPast
-                    if holdUntil > existingHold {
-                        // File-based detection (works with or without AX)
-                        workingHoldUntil[entry.id] = (until: holdUntil, isAXBased: false)
-                        logger.info("working hold \(entry.name, privacy: .public): reason=newReply until=\(holdUntil, privacy: .public)")
-                    }
                 } else if previousReply == nil && latestReply <= now {
                     // First time seeing a reply for this bot - initialize without triggering
                     lastSeenReplyAt[entry.id] = latestReply
@@ -261,26 +257,31 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
                 lastSeenReplyAt[entry.id] = max(lastSeenReplyAt[entry.id] ?? .distantPast, latestReply)
             }
             
-            // Determine if working (use AX when live, file-based when stale, or working hold)
-            var isWorking = (axWorking == true) || (axWorking == nil && axIsAvailable && fileBasedWorking)
+            // Determine if working from real signals only
+            let hasRealSignal = (axWorking == true) || (axWorking == nil && axIsAvailable && fileBasedWorking) || detectedMissedTurn
             
-            // Apply working hold if active (unless waitingOnUser)
-            let holdActive = (workingHoldUntil[entry.id]?.until ?? .distantPast) > now
-            if holdActive && !entry.awaitingUserResponse {
-                isWorking = true
-            }
-            
-            // Set working hold when detected as working (but not for missed turns - already set above)
-            if isWorking && !detectedMissedTurn {
+            // Set working hold ONLY on real signal (not when hold is already active)
+            if hasRealSignal {
                 let holdUntil = now.addingTimeInterval(8.0)
                 let previousHold = workingHoldUntil[entry.id]?.until ?? .distantPast
                 if holdUntil > previousHold {
                     let isAXBased = (axWorking == true)
                     workingHoldUntil[entry.id] = (until: holdUntil, isAXBased: isAXBased)
-                    let reason = isAXBased ? "ax" : "file"
+                    let reason: String
+                    if detectedMissedTurn {
+                        reason = "newReply"
+                    } else if isAXBased {
+                        reason = "ax"
+                    } else {
+                        reason = "file"
+                    }
                     logger.info("working hold \(entry.name, privacy: .public): reason=\(reason, privacy: .public) until=\(holdUntil, privacy: .public)")
                 }
             }
+            
+            // Determine isWorking: real signal OR active hold (unless waitingOnUser)
+            let holdActive = (workingHoldUntil[entry.id]?.until ?? .distantPast) > now
+            let isWorking = (hasRealSignal || holdActive) && !entry.awaitingUserResponse
             
             // If working, bypass activity window
             let effectiveActivityTime: Date
@@ -303,30 +304,16 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
             
             let isWaitingOnUser = entry.awaitingUserResponse
             
-            // Determine state (before runningLocally attribution)
+            // Determine state from combined isWorking (real signal or active hold)
             let state: GrokBotSessionState
-            if let axWorking = axWorking {
-                // AX tree is live - trust it as primary source
-                if axWorking {
-                    state = .working
-                } else if isWaitingOnUser {
-                    state = .waitingOnUser
-                } else if entry.unreadCount > 0 {
-                    state = .done
-                } else {
-                    state = .idle
-                }
+            if isWorking {
+                state = .working
+            } else if isWaitingOnUser {
+                state = .waitingOnUser
+            } else if entry.unreadCount > 0 {
+                state = .done
             } else {
-                // AX unavailable OR tree is stale - use file-based signals
-                if fileBasedWorking {
-                    state = .working
-                } else if isWaitingOnUser {
-                    state = .waitingOnUser
-                } else if entry.unreadCount > 0 {
-                    state = .done
-                } else {
-                    state = .idle
-                }
+                state = .idle
             }
             
             let lastTranscriptTimestamp = transcript?.entries.last.map { entry in
@@ -531,6 +518,21 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
                 continue
             }
             
+            // Check cache: if file unchanged (mod date + size), return cached result
+            let fm = FileManager.default
+            guard let attrs = try? fm.attributesOfItem(atPath: file.path),
+                  let modDate = attrs[.modificationDate] as? Date,
+                  let fileSize = attrs[.size] as? Int64 else {
+                logger.warning("Failed to read attributes for transcript blob: \(file.path)")
+                continue
+            }
+            
+            if let cached = transcriptCache[agentId],
+               cached.modDate == modDate,
+               cached.size == fileSize {
+                return cached.transcript
+            }
+            
             guard let data = try? Data(contentsOf: file) else {
                 logger.warning("Failed to read transcript blob for agent \(agentId): \(file.path)")
                 continue
@@ -545,6 +547,9 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
                 logger.warning("Transcript blob value is not transcript type for agent \(agentId): \(file.path)")
                 continue
             }
+            
+            // Cache the result
+            transcriptCache[agentId] = (modDate: modDate, size: fileSize, transcript: replica)
             
             return replica
         }
