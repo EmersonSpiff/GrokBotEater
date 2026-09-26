@@ -21,12 +21,19 @@ final class GrokBotAXWorkingService: @unchecked Sendable {
         isAvailableSubject.eraseToAnyPublisher()
     }
     
+    /// True when the AX tree is live (app visible, at least one window not minimized)
+    private let treeIsLiveSubject = CurrentValueSubject<Bool, Never>(false)
+    var treeIsLivePublisher: AnyPublisher<Bool, Never> {
+        treeIsLiveSubject.eraseToAnyPublisher()
+    }
+    
     private var timer: DispatchSourceTimer?
     private let queue = DispatchQueue(label: "com.emersonspiff.grokboteater.ax-working", qos: .utility)
     private let grokBotSupportDir: URL?
     private var lastSetPid: pid_t = -1
     private var lastAvailableState: Bool? = nil
     private var lastWorkingStates: [String: Bool] = [:]
+    private var lastTreeIsLive: Bool? = nil
     
     private var grokBotAppSupportDir: URL {
         if let override = grokBotSupportDir { return override }
@@ -79,6 +86,7 @@ final class GrokBotAXWorkingService: @unchecked Sendable {
                 lastAvailableState = false
             }
             isAvailableSubject.send(false)
+            treeIsLiveSubject.send(false)
             workingStateSubject.send([:])
             return
         }
@@ -90,6 +98,7 @@ final class GrokBotAXWorkingService: @unchecked Sendable {
                 lastAvailableState = false
             }
             isAvailableSubject.send(false)
+            treeIsLiveSubject.send(false)
             workingStateSubject.send([:])
             return
         }
@@ -103,20 +112,32 @@ final class GrokBotAXWorkingService: @unchecked Sendable {
                 lastAvailableState = false
             }
             isAvailableSubject.send(false)
+            treeIsLiveSubject.send(false)
             workingStateSubject.send([:])
             return
         }
         
-        // Create app element and set AXManualAccessibility if pid changed
+        // Create app element and check if tree is live
         let app = AXUIElementCreateApplication(pid)
-        if lastSetPid != pid {
+        let treeIsLive = isTreeLive(app: app)
+        
+        // Set AXManualAccessibility if pid changed, or if tree is not live (always reset)
+        if lastSetPid != pid || !treeIsLive {
             let result = AXUIElementSetAttributeValue(app, "AXManualAccessibility" as CFString, kCFBooleanTrue)
             if result == .success {
-                logger.info("AX: set AXManualAccessibility on pid \(pid)")
-                lastSetPid = pid
+                if lastSetPid != pid {
+                    logger.info("AX: set AXManualAccessibility on pid \(pid)")
+                    lastSetPid = pid
+                }
             } else {
                 logger.warning("AX: failed to set AXManualAccessibility on pid \(pid): \(result.rawValue)")
             }
+        }
+        
+        // Log tree liveness changes
+        if lastTreeIsLive != treeIsLive {
+            logger.info("AX tree live: \(treeIsLive, privacy: .public)")
+            lastTreeIsLive = treeIsLive
         }
         
         // Walk the tree for sand-agent-item elements
@@ -128,6 +149,7 @@ final class GrokBotAXWorkingService: @unchecked Sendable {
                 lastAvailableState = false
             }
             isAvailableSubject.send(false)
+            treeIsLiveSubject.send(treeIsLive)
             workingStateSubject.send([:])
             return
         }
@@ -148,7 +170,39 @@ final class GrokBotAXWorkingService: @unchecked Sendable {
         lastWorkingStates = workingStates
         
         isAvailableSubject.send(true)
+        treeIsLiveSubject.send(treeIsLive)
         workingStateSubject.send(workingStates)
+    }
+    
+    /// Check if the AX tree is live: app not hidden, and at least one window not minimized
+    private func isTreeLive(app: AXUIElement) -> Bool {
+        // Check if app is hidden
+        var hiddenValue: CFTypeRef?
+        let hiddenResult = AXUIElementCopyAttributeValue(app, kAXHiddenAttribute as CFString, &hiddenValue)
+        if hiddenResult == .success, let hidden = hiddenValue as? Bool, hidden {
+            return false
+        }
+        
+        // Get all windows
+        var windowsValue: CFTypeRef?
+        let windowsResult = AXUIElementCopyAttributeValue(app, kAXWindowsAttribute as CFString, &windowsValue)
+        guard windowsResult == .success, let windows = windowsValue as? [AXUIElement], !windows.isEmpty else {
+            return false
+        }
+        
+        // Check if at least one window is not minimized
+        for window in windows {
+            var minimizedValue: CFTypeRef?
+            let minimizedResult = AXUIElementCopyAttributeValue(window, kAXMinimizedAttribute as CFString, &minimizedValue)
+            if minimizedResult == .success, let minimized = minimizedValue as? Bool, !minimized {
+                return true
+            } else if minimizedResult != .success {
+                // If we can't read minimized state, assume it's not minimized
+                return true
+            }
+        }
+        
+        return false
     }
     
     private func readDesktopStatus() -> GrokBotDesktopStatus? {

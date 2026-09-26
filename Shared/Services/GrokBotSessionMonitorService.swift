@@ -29,6 +29,7 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
     private let axService: GrokBotAXWorkingService
     private var axWorkingStates: [String: Bool] = [:]
     private var axIsAvailable: Bool = false
+    private var axTreeIsLive: Bool = false
     private var axCancellables: Set<AnyCancellable> = []
     
     private var axWasWorkingIds: Set<String> = []
@@ -76,6 +77,14 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
             .sink { [weak self] available in
                 self?.queue.async {
                     self?.axIsAvailable = available
+                }
+            }
+            .store(in: &axCancellables)
+        
+        axService.treeIsLivePublisher
+            .sink { [weak self] isLive in
+                self?.queue.async {
+                    self?.axTreeIsLive = isLive
                 }
             }
             .store(in: &axCancellables)
@@ -184,14 +193,31 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
             let lastActivity = Date(timeIntervalSince1970: Double(entry.lastActivityAt) / 1000.0)
             let nameLower = entry.name.lowercased()
             
-            // Check AX working state (primary source when available)
-            let axWorking = axIsAvailable ? (axWorkingStates[nameLower] ?? false) : nil
+            // Check AX working state (primary source when available AND tree is live)
+            let axWorking: Bool?
+            if axIsAvailable && axTreeIsLive {
+                // AX tree is live - trust it
+                axWorking = axWorkingStates[nameLower] ?? false
+            } else if axIsAvailable && !axTreeIsLive {
+                // AX available but tree stale (minimized/hidden) - use file-based signals
+                axWorking = nil
+            } else {
+                // AX unavailable
+                axWorking = nil
+            }
             
-            // Track AX working → done transitions
-            if axWorking == true {
+            // Determine file-based working state for tracking when tree is stale
+            let transcript = readTranscript(supportDir: supportDir, agentId: entry.id)
+            let isStreaming = transcript?.entries.last?.isStreaming == true
+            let fileBasedWorking = isStreaming || (transcript != nil && isLastEntryUserMessage(transcript!))
+            
+            // Track working → done transitions (use AX when live, file-based when stale)
+            let workingForTracking = (axWorking == true) || (axWorking == nil && axIsAvailable && fileBasedWorking)
+            if workingForTracking {
                 axWasWorkingIds.insert(entry.id)
                 axDoneUntil[entry.id] = nil
-            } else if axWorking == false {
+            } else if axIsAvailable {
+                // Only track done transitions when AX is available (live or stale)
                 if axWasWorkingIds.remove(entry.id) != nil {
                     // Just transitioned from working to not-working
                     axDoneUntil[entry.id] = now.addingTimeInterval(axDoneDuration)
@@ -200,11 +226,11 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
             
             let axDone = axDoneUntil[entry.id].map { now < $0 } ?? false
             
-            // If AX says working or done, bypass activity window filter and treat as fresh
+            // If working (AX or file-based when stale) or done, bypass activity window
             let effectiveActivityTime: Date
             let bypassedActivityWindow: Bool
-            if axWorking == true || axDone {
-                // AX working or done - bump activity to now so it's always visible
+            if workingForTracking || axDone {
+                // Working or done - bump activity to now so it's always visible
                 effectiveActivityTime = now
                 bypassedActivityWindow = true
             } else {
@@ -212,22 +238,19 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
                 bypassedActivityWindow = false
             }
             
-            // Filter by activity window (unless AX working or done)
+            // Filter by activity window (unless working or done)
             if !bypassedActivityWindow {
                 guard now.timeIntervalSince(effectiveActivityTime) < activityWindowSeconds else {
                     continue
                 }
             }
             
-            // Check transcript for working state
-            let transcript = readTranscript(supportDir: supportDir, agentId: entry.id)
-            let isStreaming = transcript?.entries.last?.isStreaming == true
             let isWaitingOnUser = entry.awaitingUserResponse
             
             // Determine state (before runningLocally attribution)
             let state: GrokBotSessionState
             if let axWorking = axWorking {
-                // AX is available for this bot - use it as primary source
+                // AX tree is live - trust it as primary source
                 if axWorking {
                     state = .working
                 } else if isWaitingOnUser {
@@ -245,11 +268,14 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
                     }
                 }
             } else {
-                // AX unavailable - fall back to transcript heuristics
-                if isStreaming || (transcript != nil && isLastEntryUserMessage(transcript!)) {
+                // AX unavailable OR tree is stale - use file-based signals
+                if fileBasedWorking {
                     state = .working
                 } else if isWaitingOnUser {
                     state = .waitingOnUser
+                } else if axDone {
+                    // Use done tracking even when tree is stale
+                    state = .done
                 } else {
                     // Idle, but check if it's "done" (recently finished with unread output)
                     let hasUnread = entry.unreadCount > 0
