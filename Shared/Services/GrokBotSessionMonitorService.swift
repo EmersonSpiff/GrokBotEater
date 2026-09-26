@@ -258,7 +258,7 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
             }
             
             // Determine if working from real signals only
-            let hasRealSignal = (axWorking == true) || (axWorking == nil && axIsAvailable && fileBasedWorking) || detectedMissedTurn
+            let hasRealSignal = (axWorking == true) || (axWorking == nil && fileBasedWorking) || detectedMissedTurn
             
             // Set working hold ONLY on real signal (not when hold is already active)
             if hasRealSignal {
