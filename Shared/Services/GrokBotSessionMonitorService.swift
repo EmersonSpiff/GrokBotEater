@@ -31,8 +31,13 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
     private var axIsAvailable: Bool = false
     private var axCancellables: Set<AnyCancellable> = []
     
+    private var axWasWorkingIds: Set<String> = []
+    private var axDoneUntil: [String: Date] = [:]
+    private let axDoneDuration: TimeInterval = 180
+    
     private var lastLocalExecCount: Int = 0
     private var hasLoggedFirstScan: Bool = false
+    private var lastLoggedState: [String: GrokBotSessionState] = [:]
     
     private var grokBotAppSupportDir: URL {
         if let override = grokBotSupportDir { return override }
@@ -172,103 +177,136 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
             }
         }
         
-        var sessions = roster
-            .filter { !$0.isGroup && !$0.isHiddenFromSidebar }
-            .compactMap { entry -> GrokBotSession? in
-                let lastActivity = Date(timeIntervalSince1970: Double(entry.lastActivityAt) / 1000.0)
-                let nameLower = entry.name.lowercased()
-                
-                // Check AX working state (primary source when available)
-                let axWorking = axIsAvailable ? (axWorkingStates[nameLower] ?? false) : nil
-                
-                // If AX says working, bypass activity window filter and treat as fresh
-                let effectiveActivityTime: Date
-                let bypassedActivityWindow: Bool
-                if axWorking == true {
-                    // AX working - bump activity to now so it's always visible
-                    effectiveActivityTime = now
-                    bypassedActivityWindow = true
-                } else {
-                    effectiveActivityTime = lastActivity
-                    bypassedActivityWindow = false
+        // Build sessions with for loop to allow mutation of AX done tracking state
+        var sessions: [GrokBotSession] = []
+        
+        for entry in roster.filter({ !$0.isGroup && !$0.isHiddenFromSidebar }) {
+            let lastActivity = Date(timeIntervalSince1970: Double(entry.lastActivityAt) / 1000.0)
+            let nameLower = entry.name.lowercased()
+            
+            // Check AX working state (primary source when available)
+            let axWorking = axIsAvailable ? (axWorkingStates[nameLower] ?? false) : nil
+            
+            // Track AX working → done transitions
+            if axWorking == true {
+                axWasWorkingIds.insert(entry.id)
+                axDoneUntil[entry.id] = nil
+            } else if axWorking == false {
+                if axWasWorkingIds.remove(entry.id) != nil {
+                    // Just transitioned from working to not-working
+                    axDoneUntil[entry.id] = now.addingTimeInterval(axDoneDuration)
                 }
-                
-                // Filter by activity window (unless AX working)
-                if !bypassedActivityWindow {
-                    guard now.timeIntervalSince(effectiveActivityTime) < activityWindowSeconds else {
-                        return nil
-                    }
-                }
-                
-                // Check transcript for working state
-                let transcript = readTranscript(supportDir: supportDir, agentId: entry.id)
-                let isStreaming = transcript?.entries.last?.isStreaming == true
-                let isWaitingOnUser = entry.awaitingUserResponse
-                
-                // Determine state (before runningLocally attribution)
-                let state: GrokBotSessionState
-                if let axWorking = axWorking {
-                    // AX is available for this bot - use it as primary source
-                    if axWorking {
-                        state = .working
-                    } else {
-                        // AX says not working - check other states (Waiting/Done/Idle)
-                        // Do NOT fall back to transcript heuristic for Working
-                        if isWaitingOnUser {
-                            state = .waitingOnUser
-                        } else {
-                            // Check if recently finished (Done)
-                            let hasUnread = entry.unreadCount > 0
-                            let recentlyActive = Date().timeIntervalSince(lastActivity) < 600 // 10 minutes
-                            if hasUnread && recentlyActive {
-                                state = .done
-                            } else {
-                                state = .idle
-                            }
-                        }
-                    }
-                } else {
-                    // AX unavailable - fall back to transcript heuristics
-                    if isStreaming || (transcript != nil && isLastEntryUserMessage(transcript!)) {
-                        state = .working
-                    } else if isWaitingOnUser {
-                        state = .waitingOnUser
-                    } else {
-                        // Idle, but check if it's "done" (recently finished with unread output)
-                        let hasUnread = entry.unreadCount > 0
-                        let recentlyActive = Date().timeIntervalSince(lastActivity) < 600 // 10 minutes
-                        if hasUnread && recentlyActive {
-                            state = .done
-                        } else {
-                            state = .idle
-                        }
-                    }
-                }
-                
-                let lastTranscriptTimestamp = transcript?.entries.last.map { entry in
-                    Date(timeIntervalSince1970: Double(entry.timestampMs) / 1000.0)
-                }
-                
-                return GrokBotSession(
-                    id: entry.id,
-                    name: entry.name,
-                    title: entry.title,
-                    state: state,
-                    lastActivityAt: effectiveActivityTime,
-                    awaitingUserResponse: isWaitingOnUser,
-                    unreadCount: entry.unreadCount,
-                    isHiddenFromSidebar: entry.isHiddenFromSidebar,
-                    isStreaming: isStreaming,
-                    hasLocalWork: false,
-                    lastTranscriptTimestamp: lastTranscriptTimestamp
-                )
             }
+            
+            let axDone = axDoneUntil[entry.id].map { now < $0 } ?? false
+            
+            // If AX says working or done, bypass activity window filter and treat as fresh
+            let effectiveActivityTime: Date
+            let bypassedActivityWindow: Bool
+            if axWorking == true || axDone {
+                // AX working or done - bump activity to now so it's always visible
+                effectiveActivityTime = now
+                bypassedActivityWindow = true
+            } else {
+                effectiveActivityTime = lastActivity
+                bypassedActivityWindow = false
+            }
+            
+            // Filter by activity window (unless AX working or done)
+            if !bypassedActivityWindow {
+                guard now.timeIntervalSince(effectiveActivityTime) < activityWindowSeconds else {
+                    continue
+                }
+            }
+            
+            // Check transcript for working state
+            let transcript = readTranscript(supportDir: supportDir, agentId: entry.id)
+            let isStreaming = transcript?.entries.last?.isStreaming == true
+            let isWaitingOnUser = entry.awaitingUserResponse
+            
+            // Determine state (before runningLocally attribution)
+            let state: GrokBotSessionState
+            if let axWorking = axWorking {
+                // AX is available for this bot - use it as primary source
+                if axWorking {
+                    state = .working
+                } else if isWaitingOnUser {
+                    state = .waitingOnUser
+                } else if axDone {
+                    state = .done
+                } else {
+                    // Check if recently finished (Done) via transcript/unread
+                    let hasUnread = entry.unreadCount > 0
+                    let recentlyActive = Date().timeIntervalSince(lastActivity) < 180 // 3 minutes
+                    if hasUnread && recentlyActive {
+                        state = .done
+                    } else {
+                        state = .idle
+                    }
+                }
+            } else {
+                // AX unavailable - fall back to transcript heuristics
+                if isStreaming || (transcript != nil && isLastEntryUserMessage(transcript!)) {
+                    state = .working
+                } else if isWaitingOnUser {
+                    state = .waitingOnUser
+                } else {
+                    // Idle, but check if it's "done" (recently finished with unread output)
+                    let hasUnread = entry.unreadCount > 0
+                    let recentlyActive = Date().timeIntervalSince(lastActivity) < 180 // 3 minutes
+                    if hasUnread && recentlyActive {
+                        state = .done
+                    } else {
+                        state = .idle
+                    }
+                }
+            }
+            
+            let lastTranscriptTimestamp = transcript?.entries.last.map { entry in
+                Date(timeIntervalSince1970: Double(entry.timestampMs) / 1000.0)
+            }
+            
+            let session = GrokBotSession(
+                id: entry.id,
+                name: entry.name,
+                title: entry.title,
+                state: state,
+                lastActivityAt: effectiveActivityTime,
+                awaitingUserResponse: isWaitingOnUser,
+                unreadCount: entry.unreadCount,
+                isHiddenFromSidebar: entry.isHiddenFromSidebar,
+                isStreaming: isStreaming,
+                hasLocalWork: false,
+                lastTranscriptTimestamp: lastTranscriptTimestamp
+            )
+            
+            sessions.append(session)
+        }
+        
+        // Prune expired axDoneUntil entries
+        axDoneUntil = axDoneUntil.filter { $0.value > now }
+        
+        // Clear AX done tracking if AX becomes unavailable
+        if !axIsAvailable {
+            axWasWorkingIds.removeAll()
+            axDoneUntil.removeAll()
+        }
         
         // Log matched sessions for AX-working bots
         if axIsAvailable && !axWorkingStates.isEmpty {
             let workingNames = Set(axWorkingStates.filter { $0.value }.map { $0.key })
             let matchedSessions = sessions.filter { workingNames.contains($0.name.lowercased()) }.map { $0.id }
             logger.info("AX merge: matched sessions=[\(matchedSessions.joined(separator: ", "), privacy: .public)]")
+        }
+        
+        // Log state changes for debugging
+        for session in sessions {
+            let oldState = lastLoggedState[session.id]
+            if oldState != session.state {
+                let oldStr = oldState?.rawValue ?? "nil"
+                logger.info("state \(session.name, privacy: .public): \(oldStr) → \(session.state.rawValue)")
+                lastLoggedState[session.id] = session.state
+            }
         }
         
         // Attribution: If local commands are running, attribute runningLocally to a bot.
@@ -321,7 +359,7 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
             } else {
                 // Fall back to heuristic: most recent visible bot within 10 minutes
                 targetBot = sessions
-                    .filter({ $0.state != .working && $0.state != .waitingOnUser })
+                    .filter({ $0.state != .working && $0.state != .waitingOnUser && $0.state != .done })
                     .filter({ now.timeIntervalSince($0.lastActivityAt) < 600 })
                     .max(by: { $0.lastActivityAt < $1.lastActivityAt })
             }
@@ -334,15 +372,15 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
                     sessions.append(target)
                 }
                 
-                // Update state: respect precedence (working, waitingOnUser)
+                // Update state: respect precedence (working, waitingOnUser, done)
                 sessions = sessions.map { session in
                     guard session.id == target.id else { return session }
                     
                     var updated = session
                     updated.hasLocalWork = true
                     
-                    // Only change state if not already working or waitingOnUser
-                    if session.state != .working && session.state != .waitingOnUser {
+                    // Only change state if not already working, waitingOnUser, or done
+                    if session.state != .working && session.state != .waitingOnUser && session.state != .done {
                         updated.state = .runningLocally
                     }
                     
