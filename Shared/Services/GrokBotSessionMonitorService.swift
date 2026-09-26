@@ -37,6 +37,15 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
     private var hasLoggedFirstScan: Bool = false
     private var lastLoggedState: [String: GrokBotSessionState] = [:]
     
+    /// Minimum Working hold: agent id → (Date, isAXBased). Keep .working state until this time.
+    private var workingHoldUntil: [String: (until: Date, isAXBased: Bool)] = [:]
+    
+    /// Last seen assistant reply timestamp per agent (for detecting missed turns)
+    private var lastSeenReplyAt: [String: Date] = [:]
+    
+    /// Track if we've initialized lastSeenReplyAt (to avoid flashing all bots on launch)
+    private var hasInitializedReplyTracking: Bool = false
+    
     private var grokBotAppSupportDir: URL {
         if let override = grokBotSupportDir { return override }
         let home: String
@@ -74,6 +83,10 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
             .sink { [weak self] available in
                 self?.queue.async {
                     self?.axIsAvailable = available
+                    // Clear AX-based working holds when AX becomes unavailable
+                    if !available {
+                        self?.workingHoldUntil = self?.workingHoldUntil.filter { !$0.value.isAXBased } ?? [:]
+                    }
                 }
             }
             .store(in: &axCancellables)
@@ -186,6 +199,12 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
         // Build sessions with for loop to allow mutation of AX done tracking state
         var sessions: [GrokBotSession] = []
         
+        // Prune expired working holds
+        let expiredHolds = workingHoldUntil.filter { $0.value.until < now }.keys
+        for agentId in expiredHolds {
+            workingHoldUntil.removeValue(forKey: agentId)
+        }
+        
         for entry in roster.filter({ !$0.isGroup && !$0.isHiddenFromSidebar }) {
             let lastActivity = Date(timeIntervalSince1970: Double(entry.lastActivityAt) / 1000.0)
             let nameLower = entry.name.lowercased()
@@ -208,8 +227,60 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
             let isStreaming = transcript?.entries.last?.isStreaming == true
             let fileBasedWorking = isStreaming || (transcript != nil && isLastEntryUserMessage(transcript!))
             
-            // Determine if working (use AX when live, file-based when stale)
-            let isWorking = (axWorking == true) || (axWorking == nil && axIsAvailable && fileBasedWorking)
+            // Detect missed turns: check if we have a new assistant reply we haven't seen
+            let latestReplyTimestamp = transcript?.entries.last(where: { $0.kind == "send-message" && $0.role == nil }).map {
+                Date(timeIntervalSince1970: Double($0.timestampMs) / 1000.0)
+            }
+            
+            var detectedMissedTurn = false
+            if hasInitializedReplyTracking, let latestReply = latestReplyTimestamp {
+                let previousReply = lastSeenReplyAt[entry.id]
+                let wasNotWorking = lastLoggedState[entry.id] != .working
+                
+                if wasNotWorking, let previous = previousReply, latestReply > previous {
+                    // New reply appeared and we didn't see the bot working - missed turn
+                    detectedMissedTurn = true
+                    let holdUntil = now.addingTimeInterval(8.0)
+                    let existingHold = workingHoldUntil[entry.id]?.until ?? .distantPast
+                    if holdUntil > existingHold {
+                        // File-based detection (works with or without AX)
+                        workingHoldUntil[entry.id] = (until: holdUntil, isAXBased: false)
+                        logger.info("working hold \(entry.name, privacy: .public): reason=newReply until=\(holdUntil, privacy: .public)")
+                    }
+                } else if previousReply == nil && latestReply <= now {
+                    // First time seeing a reply for this bot - initialize without triggering
+                    lastSeenReplyAt[entry.id] = latestReply
+                }
+            } else if let latestReply = latestReplyTimestamp {
+                // First scan - initialize all reply tracking without triggering
+                lastSeenReplyAt[entry.id] = latestReply
+            }
+            
+            // After detecting/handling, update lastSeenReplyAt if we have a newer timestamp
+            if let latestReply = latestReplyTimestamp {
+                lastSeenReplyAt[entry.id] = max(lastSeenReplyAt[entry.id] ?? .distantPast, latestReply)
+            }
+            
+            // Determine if working (use AX when live, file-based when stale, or working hold)
+            var isWorking = (axWorking == true) || (axWorking == nil && axIsAvailable && fileBasedWorking)
+            
+            // Apply working hold if active (unless waitingOnUser)
+            let holdActive = (workingHoldUntil[entry.id]?.until ?? .distantPast) > now
+            if holdActive && !entry.awaitingUserResponse {
+                isWorking = true
+            }
+            
+            // Set working hold when detected as working (but not for missed turns - already set above)
+            if isWorking && !detectedMissedTurn {
+                let holdUntil = now.addingTimeInterval(8.0)
+                let previousHold = workingHoldUntil[entry.id]?.until ?? .distantPast
+                if holdUntil > previousHold {
+                    let isAXBased = (axWorking == true)
+                    workingHoldUntil[entry.id] = (until: holdUntil, isAXBased: isAXBased)
+                    let reason = isAXBased ? "ax" : "file"
+                    logger.info("working hold \(entry.name, privacy: .public): reason=\(reason, privacy: .public) until=\(holdUntil, privacy: .public)")
+                }
+            }
             
             // If working, bypass activity window
             let effectiveActivityTime: Date
@@ -378,6 +449,11 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
         
         logger.info("Grok Bot scan complete: \(sessions.count) active sessions found")
         sessionsSubject.send(sessions)
+        
+        // Mark reply tracking as initialized after first scan
+        if !hasInitializedReplyTracking {
+            hasInitializedReplyTracking = true
+        }
     }
     
     private func isAppRunning(markerPath: URL) -> Bool {
