@@ -140,6 +140,13 @@ final class GrokBotAXWorkingService: @unchecked Sendable {
             lastTreeIsLive = treeIsLive
         }
         
+        // Skip tree scan when tree is not live (minimized/hidden) - monitor ignores AX then
+        treeIsLiveSubject.send(treeIsLive)
+        if !treeIsLive {
+            // Keep previous states and availability
+            return
+        }
+        
         // Walk the tree for sand-agent-item elements
         let workingStates = scanAXTree(app: app)
         

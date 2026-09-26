@@ -49,6 +49,10 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
     /// Transcript cache: agentId → (modDate, fileSize, parsed transcript)
     private var transcriptCache: [String: (modDate: Date, size: Int64, transcript: GrokBotTranscriptReplica)] = [:]
     
+    /// Cached Grok Bot helper PIDs (refreshed when main Grok Bot PID changes)
+    private var cachedMainGrokBotPid: Int32 = 0
+    private var cachedHelperPids: Set<Int32> = []
+    
     private var grokBotAppSupportDir: URL {
         if let override = grokBotSupportDir { return override }
         let home: String
@@ -574,36 +578,39 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
     }
     
     /// Count local exec commands currently running on this Mac.
-    /// Scans the FULL process list for shells whose parent is a Grok Bot NodeService helper
-    /// and whose args match the local-exec wrapper pattern (zsh/bash -c with `<&3` snapshot).
+    /// Uses cached helper PIDs and only scans descendants of known Grok Bot helpers.
     /// Ignores long-lived MCP servers/connectors.
     private func countLocalExecCommands() -> Int {
         // Get Grok Bot processes to find NodeService helper PIDs
         let grokBotProcesses = ProcessResolver.findGrokBotProcesses()
         
         guard let mainProc = grokBotProcesses.first(where: { $0.isMainGrokBot }) else {
+            cachedMainGrokBotPid = 0
+            cachedHelperPids.removeAll()
             return 0
         }
         
-        // Find ALL NodeService helpers (not just the first one)
-        let nodeHelpers = grokBotProcesses.filter { proc in
-            proc.parentPid == mainProc.pid && proc.args.contains("--utility-sub-type=node.mojom.NodeService")
+        // Refresh helper cache only if main Grok Bot PID changed
+        if mainProc.pid != cachedMainGrokBotPid {
+            let nodeHelpers = grokBotProcesses.filter { proc in
+                proc.parentPid == mainProc.pid && proc.args.contains("--utility-sub-type=node.mojom.NodeService")
+            }
+            cachedMainGrokBotPid = mainProc.pid
+            cachedHelperPids = Set(nodeHelpers.map { $0.pid })
         }
         
-        guard !nodeHelpers.isEmpty else { return 0 }
+        guard !cachedHelperPids.isEmpty else { return 0 }
         
-        let helperPids = Set(nodeHelpers.map { $0.pid })
-        
-        // Scan FULL process list for children of NodeService helpers
+        // Scan process list for children of NodeService helpers only
         let allProcesses = ProcessResolver.listAllProcesses()
         let localExecPattern = ["<&3"]  // The local-exec wrapper snapshot pattern
         
         var count = 0
         for proc in allProcesses {
-            // Must be a child of one of the NodeService helpers
-            guard helperPids.contains(proc.parentPid) else { continue }
+            // Must be a child of one of the cached NodeService helpers
+            guard cachedHelperPids.contains(proc.parentPid) else { continue }
             
-            // Get the process path and arguments
+            // Get the process path (only for descendants)
             var pathBuffer = [CChar](repeating: 0, count: Int(MAXPATHLEN))
             let ret = proc_pidpath(proc.pid, &pathBuffer, UInt32(MAXPATHLEN))
             guard ret > 0 else { continue }
@@ -612,7 +619,7 @@ final class GrokBotSessionMonitorService: @unchecked Sendable {
             // Must be a shell (/bin/zsh or /bin/bash)
             guard path == "/bin/zsh" || path == "/bin/bash" else { continue }
             
-            // Get arguments and check for wrapper pattern
+            // Get arguments and check for wrapper pattern (only for shell processes)
             let args = ProcessResolver.getProcessArguments(pid: proc.pid)
             let hasWrapper = localExecPattern.allSatisfy { args.contains($0) }
             let hasShellFlag = args.contains("-c")

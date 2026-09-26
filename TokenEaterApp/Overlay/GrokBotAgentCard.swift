@@ -10,6 +10,8 @@ struct GrokBotAgentCard: View {
     let detailedMode: Bool
     let onTap: () -> Void
     
+    @State private var effectTick: Int = 0
+    
     private var baseWidth: CGFloat { 30 * scale }
     private var expandedWidth: CGFloat { 185 * scale }
     private var height: CGFloat { 40 * scale }
@@ -159,6 +161,12 @@ struct GrokBotAgentCard: View {
                 Spacer(minLength: 0)
             }
         }
+        .onReceive(Timer.publish(every: 3.0, on: .main, in: .common).autoconnect()) { _ in
+            // Tick symbol effects for states that animate
+            if animationsEnabled && (session.state == .working || session.state == .waitingOnUser || session.state == .runningLocally) {
+                effectTick += 1
+            }
+        }
     }
     
     @ViewBuilder
@@ -258,19 +266,15 @@ struct GrokBotAgentCard: View {
         if animationsEnabled {
             switch session.state {
             case .working:
-                view.symbolEffect(.bounce, options: .repeating)
+                view.symbolEffect(.bounce, value: effectTick)
             case .waitingOnUser:
                 if #available(macOS 15, *) {
-                    view.symbolEffect(.wiggle, options: .repeating)
+                    view.symbolEffect(.wiggle, value: effectTick)
                 } else {
-                    view.symbolEffect(.pulse, options: .repeating)
+                    view.symbolEffect(.pulse, value: effectTick)
                 }
             case .runningLocally:
-                if #available(macOS 15, *) {
-                    view.symbolEffect(.breathe)
-                } else {
-                    view.symbolEffect(.pulse)
-                }
+                view.symbolEffect(.pulse, value: effectTick)
             case .done:
                 view.symbolEffect(.scale)
             case .idle:
