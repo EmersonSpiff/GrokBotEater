@@ -18,6 +18,12 @@ struct GrokBotAgentCard: View {
         baseWidth + (expandedWidth - baseWidth) * proximity
     }
     
+    private var iconSize: CGFloat {
+        let collapsedIconSize = 15.0 * scale
+        let expandedIconSize = 16.0 * scale
+        return collapsedIconSize + (expandedIconSize - collapsedIconSize) * proximity
+    }
+    
     private var stateColor: Color {
         if detailedMode {
             switch session.state {
@@ -221,11 +227,6 @@ struct GrokBotAgentCard: View {
     
     @ViewBuilder
     private var stateIcon: some View {
-        // Scale icon size based on proximity: larger minimum for collapsed readability
-        let collapsedIconSize = 15.0 * scale
-        let expandedIconSize = 16.0 * scale
-        let iconSize = collapsedIconSize + (expandedIconSize - collapsedIconSize) * proximity
-        
         let collapsedCircleSize = 5.0 * scale
         let expandedCircleSize = 28.0 * scale
         let circleSize = collapsedCircleSize + (expandedCircleSize - collapsedCircleSize) * proximity
