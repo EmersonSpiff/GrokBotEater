@@ -139,65 +139,240 @@ struct GrokBotPacingCalculatorTests {
         #expect(result?.pacingZone == .warning)
     }
 
-    // MARK: - Daily calculation (even-pace ratio; any periodStart)
+    // MARK: - Daily calculation (today's usage ÷ today's share)
 
-    @Test("daily ≈ 100% when weekly matches elapsed even pace")
-    func dailyOnPaceHalfway() {
-        let now = Self.stableNow()
-        let periodStart = makePeriodStart(elapsedFraction: 0.5, now: now)
-        let result = GrokBotPacingCalculator.calculate(
-            weeklyPercent: 50,
-            periodStart: periodStart,
-            dailySample: nil,
-            now: now
-        )
-        #expect(result?.dailyPercent == 100)
-        #expect(result?.pacingDelta == 0)
+    private static var nyCalendar: Calendar {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(identifier: "America/New_York")!
+        return cal
     }
 
-    @Test("daily ≈ 200% when twice even pace at halfway")
-    func dailyDoublePaceHalfway() {
-        let now = Self.stableNow()
-        let periodStart = makePeriodStart(elapsedFraction: 0.5, now: now)
-        let result = GrokBotPacingCalculator.calculate(
-            weeklyPercent: 100,
-            periodStart: periodStart,
-            dailySample: nil,
-            now: now
-        )
-        #expect(result?.dailyPercent == 200)
-        #expect(result?.pacingDelta == 50)
+    private static func iso(_ raw: String) -> Date {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime]
+        return f.date(from: raw)!
     }
 
-    @Test("early window: 34% near 1/7 elapsed is ~2.4× even pace")
-    func dailyEarlyWindowHot() {
-        let now = Self.stableNow()
-        let periodStart = makePeriodStart(elapsedFraction: 1.0 / 7.0, now: now)
-        let result = GrokBotPacingCalculator.calculate(
-            weeklyPercent: 34,
-            periodStart: periodStart,
-            dailySample: nil,
-            now: now
+    // Plan upgrade reset the week at Sun Sep 27 2026 8:50 AM ET (12:50Z).
+    private static let freshPeriodStart = "2026-09-27T12:50:00Z"
+    // 46 minutes into the fresh period (9:36 AM ET).
+    private static let freshNow = iso("2026-09-27T13:36:00Z")
+
+    @Test("fresh period 46 min in, weekly 1.0, baseline 0: Daily ≈ 7%")
+    func dailyFreshPeriodLow() {
+        let sample = GrokBotDailySample(
+            dayKey: "2026-09-27",
+            weeklyAtDayStart: 0,
+            recordedAt: Self.iso(Self.freshPeriodStart),
+            dayStart: Self.iso(Self.freshPeriodStart),
+            periodStart: Self.freshPeriodStart
         )
-        #expect(result!.dailyPercent >= 220)
-        #expect(result!.dailyPercent <= 260)
-        #expect(result?.pacingZone == .hot)
+        let result = GrokBotPacingCalculator.calculate(
+            weeklyPercent: 1,
+            weeklyPercentExact: 1.0,
+            periodStart: Self.freshPeriodStart,
+            dailySample: sample,
+            now: Self.freshNow,
+            calendar: Self.nyCalendar
+        )
+        // share = 100 / 7 days ≈ 14.29%; 1.0 / 14.29 ≈ 7%
+        #expect(result?.dailyPercent == 7)
     }
 
-    @Test("any signup weekday: 3/7 elapsed + 45% used is slightly ahead")
-    func dailyAnySignupWeekday() {
-        let now = Self.stableNow()
-        let periodStart = makePeriodStart(elapsedFraction: 3.0 / 7.0, now: now)
+    @Test("fresh period with no sample baselines at 0 (period started today)")
+    func dailyFreshPeriodNoSample() {
         let result = GrokBotPacingCalculator.calculate(
-            weeklyPercent: 45,
-            periodStart: periodStart,
+            weeklyPercent: 1,
+            weeklyPercentExact: 1.0,
+            periodStart: Self.freshPeriodStart,
             dailySample: nil,
-            now: now
+            now: Self.freshNow,
+            calendar: Self.nyCalendar
         )
-        let expected = 300.0 / 7.0
-        #expect(abs(result!.pacingDelta - (45 - expected)) < 0.2)
-        #expect(result!.dailyPercent >= 100)
-        #expect(result!.dailyPercent <= 110)
+        #expect(result?.dailyPercent == 7)
+    }
+
+    @Test("fresh period ignores a legacy sample baselined to post-reset usage")
+    func dailyFreshPeriodLegacySample() {
+        let legacy = GrokBotDailySample(
+            dayKey: "2026-09-27",
+            weeklyAtDayStart: 1,
+            recordedAt: Self.iso("2026-09-27T13:00:00Z")
+        )
+        let result = GrokBotPacingCalculator.calculate(
+            weeklyPercent: 1,
+            weeklyPercentExact: 1.0,
+            periodStart: Self.freshPeriodStart,
+            dailySample: legacy,
+            now: Self.freshNow,
+            calendar: Self.nyCalendar
+        )
+        #expect(result?.dailyPercent == 7)
+    }
+
+    @Test("Daily uses the decimal usagePercent, not the rounded Int")
+    func dailyUsesDecimalUsage() {
+        let result = GrokBotPacingCalculator.calculate(
+            weeklyPercent: 1,
+            weeklyPercentExact: 0.6,
+            periodStart: Self.freshPeriodStart,
+            dailySample: nil,
+            now: Self.freshNow,
+            calendar: Self.nyCalendar
+        )
+        // 0.6 / 14.29 ≈ 4.2% (the rounded Int 1 would give 7%)
+        #expect(result?.dailyPercent == 4)
+    }
+
+    // Mid-week: period started Thu Sep 24 8:50 AM ET, now Sun Sep 27 2:00 PM ET.
+    private static let midPeriodStart = "2026-09-24T12:50:00Z"
+    private static let midNow = iso("2026-09-27T18:00:00Z")
+    private static var midSample: GrokBotDailySample {
+        GrokBotDailySample(
+            dayKey: "2026-09-27",
+            weeklyAtDayStart: 40,
+            recordedAt: iso("2026-09-27T04:05:00Z"),
+            dayStart: iso("2026-09-27T04:00:00Z"), // local midnight
+            periodStart: midPeriodStart
+        )
+    }
+
+    @Test("mid-week: today's usage over today's share of the remaining budget")
+    func dailyMidWeek() {
+        let result = GrokBotPacingCalculator.calculate(
+            weeklyPercent: 48,
+            weeklyPercentExact: 47.5,
+            periodStart: Self.midPeriodStart,
+            dailySample: Self.midSample,
+            now: Self.midNow,
+            calendar: Self.nyCalendar
+        )
+        // daysRemaining = midnight → Thu 8:50 AM = 4.368; share = 60 / 4.368 = 13.74%
+        // today = 7.5% → 54.6% of today's share
+        #expect(result?.dailyPercent == 55)
+    }
+
+    @Test("mid-week over budget reads above 100%")
+    func dailyMidWeekOverBudget() {
+        let result = GrokBotPacingCalculator.calculate(
+            weeklyPercent: 70,
+            weeklyPercentExact: 70,
+            periodStart: Self.midPeriodStart,
+            dailySample: Self.midSample,
+            now: Self.midNow,
+            calendar: Self.nyCalendar
+        )
+        // 30 / 13.74 ≈ 218%
+        #expect(result?.dailyPercent == 218)
+    }
+
+    @Test("mid-week with no usage today reads 0%")
+    func dailyMidWeekNoUsage() {
+        let result = GrokBotPacingCalculator.calculate(
+            weeklyPercent: 40,
+            weeklyPercentExact: 40,
+            periodStart: Self.midPeriodStart,
+            dailySample: Self.midSample,
+            now: Self.midNow,
+            calendar: Self.nyCalendar
+        )
+        #expect(result?.dailyPercent == 0)
+    }
+
+    // MARK: - Daily baseline (shared with the daily-budget alert)
+
+    @Test("dayStart is the later of local midnight and period start")
+    func dayStartLaterOfMidnightAndPeriodStart() {
+        let cal = Self.nyCalendar
+        #expect(GrokBotDailyBudget.dayStart(now: Self.freshNow, periodStart: Self.iso(Self.freshPeriodStart), calendar: cal)
+                == Self.iso(Self.freshPeriodStart))
+        #expect(GrokBotDailyBudget.dayStart(now: Self.midNow, periodStart: Self.iso(Self.midPeriodStart), calendar: cal)
+                == Self.iso("2026-09-27T04:00:00Z"))
+    }
+
+    @Test("a baseline of 0 persists and is not overwritten")
+    func zeroBaselinePersists() {
+        let cal = Self.nyCalendar
+        let sample = GrokBotDailySample(
+            dayKey: "2026-09-27",
+            weeklyAtDayStart: 0,
+            recordedAt: Self.iso(Self.freshPeriodStart),
+            dayStart: Self.iso(Self.freshPeriodStart),
+            periodStart: Self.freshPeriodStart
+        )
+        // Several refreshes later in the same period/day, usage climbing.
+        for (offset, weekly) in [(0.0, 0.0), (1800.0, 1.0), (7200.0, 3.2)] {
+            let resolved = GrokBotDailyBudget.resolveSample(
+                existing: sample,
+                weeklyNow: weekly,
+                periodStart: Self.freshPeriodStart,
+                now: Self.freshNow.addingTimeInterval(offset),
+                calendar: cal
+            )
+            #expect(resolved.rebaselined == false)
+            #expect(resolved.sample.weeklyAtDayStart == 0)
+        }
+        // The alert path uses the same validity check: stored 0 is valid, nil is unset.
+        #expect(GrokBotDailyBudget.isBaselineValid(
+            storedWeekly: 0, storedDayStart: Self.iso(Self.freshPeriodStart),
+            currentDayStart: Self.iso(Self.freshPeriodStart), weeklyNow: 3.2))
+        #expect(!GrokBotDailyBudget.isBaselineValid(
+            storedWeekly: nil, storedDayStart: Self.iso(Self.freshPeriodStart),
+            currentDayStart: Self.iso(Self.freshPeriodStart), weeklyNow: 3.2))
+    }
+
+    @Test("baseline resets when the day rolls over")
+    func baselineResetsOnNewDay() {
+        let cal = Self.nyCalendar
+        let yesterday = GrokBotDailySample(
+            dayKey: "2026-09-26",
+            weeklyAtDayStart: 30,
+            recordedAt: Self.iso("2026-09-26T04:05:00Z"),
+            dayStart: Self.iso("2026-09-26T04:00:00Z"),
+            periodStart: Self.midPeriodStart
+        )
+        let resolved = GrokBotDailyBudget.resolveSample(
+            existing: yesterday, weeklyNow: 40, periodStart: Self.midPeriodStart,
+            now: Self.midNow, calendar: cal
+        )
+        #expect(resolved.rebaselined)
+        #expect(resolved.sample.weeklyAtDayStart == 40)
+        #expect(resolved.sample.dayKey == "2026-09-27")
+    }
+
+    @Test("baseline resets when a new period starts")
+    func baselineResetsOnNewPeriod() {
+        let cal = Self.nyCalendar
+        let oldPeriod = GrokBotDailySample(
+            dayKey: "2026-09-27",
+            weeklyAtDayStart: 62,
+            recordedAt: Self.iso("2026-09-27T04:05:00Z"),
+            dayStart: Self.iso("2026-09-27T04:00:00Z"),
+            periodStart: "2026-09-21T12:50:00Z"
+        )
+        let resolved = GrokBotDailyBudget.resolveSample(
+            existing: oldPeriod, weeklyNow: 1.0, periodStart: Self.freshPeriodStart,
+            now: Self.freshNow, calendar: cal
+        )
+        #expect(resolved.rebaselined)
+        #expect(resolved.sample.weeklyAtDayStart == 0)
+        #expect(resolved.sample.dayStart == Self.iso(Self.freshPeriodStart))
+    }
+
+    @Test("baseline resets when weekly usage drops below it")
+    func baselineResetsOnUsageDrop() {
+        #expect(!GrokBotDailyBudget.isBaselineValid(
+            storedWeekly: 62, storedDayStart: Self.iso("2026-09-27T04:00:00Z"),
+            currentDayStart: Self.iso("2026-09-27T04:00:00Z"), weeklyNow: 1))
+    }
+
+    @Test("legacy sample with Int weeklyAtDayStart decodes")
+    func legacySampleDecodes() throws {
+        let json = #"{"dayKey":"2026-09-27","weeklyAtDayStart":0,"recordedAt":0}"#
+        let sample = try JSONDecoder().decode(GrokBotDailySample.self, from: Data(json.utf8))
+        #expect(sample.weeklyAtDayStart == 0)
+        #expect(sample.dayStart == nil)
+        #expect(sample.periodStart == nil)
     }
 
     // MARK: - Workweek pacing (schedule-adjusted)
@@ -247,8 +422,9 @@ struct GrokBotPacingCalculatorTests {
         #expect(rolling != nil)
         #expect(workweek != nil)
         // Both should produce finite dials; workweek elapsed may differ.
-        #expect(rolling!.dailyPercent > 0)
-        #expect(workweek!.dailyPercent > 0)
+        // Daily no longer depends on the pacing schedule (no sample → 0 today).
+        #expect(rolling!.dailyPercent >= 0)
+        #expect(workweek!.dailyPercent == rolling!.dailyPercent)
     }
 
 
@@ -336,7 +512,7 @@ struct GrokBotPacingCalculatorTests {
             now: now
         )
         #expect(result?.pacingMessage != nil)
-        #expect(result?.pacingMessage?.isEmpty == false)
+        #expect(result?.pacingMessage.isEmpty == false)
     }
 
     // MARK: - ISO8601 parsing
