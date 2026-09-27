@@ -540,7 +540,8 @@ final class NotificationService: NotificationServiceProtocol {
     // MARK: - Daily Budget Alerts
     
     func evaluateGrokBotDailyBudget(
-        weeklyUsedPercent: Int,
+        weeklyUsedPercent: Double,
+        periodStart: Date?,
         resetDate: Date?,
         now: Date = Date(),
         toggles: NotificationToggles
@@ -548,77 +549,86 @@ final class NotificationService: NotificationServiceProtocol {
         guard toggles.masterEnabled, toggles.trackGrokBotDailyBudget, let resetDate else { return }
         
         let calendar = Calendar.current
+        let defaults = UserDefaults.standard
         let startOfToday = calendar.startOfDay(for: now)
+        // Budgeting day starts at the later of local midnight and the period start
+        // (shared with the Daily dial via GrokBotDailyBudget).
+        let dayStart = GrokBotDailyBudget.dayStart(now: now, periodStart: periodStart, calendar: calendar)
         
-        // Store weekly usage at start of day (first refresh after midnight)
+        // Weekly usage at the start of the budgeting day
         let dayStartWeeklyKey = "dayStartWeekly_grokBotDaily"
         let dayStartDateKey = "dayStartDate_grokBotDaily"
         let lastMidnightKey = "lastMidnight_grokBotDaily"
         let lastMidnight = state.lastResetsAt(forKey: lastMidnightKey)
-        let midnightChanged = lastMidnight == nil || !calendar.isDate(lastMidnight!, inSameDayAs: startOfToday)
         
-        var weeklyAtDayStart: Int
+        var weeklyAtDayStart: Double
         var justSetBaseline = false
         
-        // Migration: if lastMidnight is today's midnight and we have a baseline, treat it as today's
-        let storedDayStart = UserDefaults.standard.integer(forKey: dayStartWeeklyKey)
-        let storedDateTimestamp = UserDefaults.standard.double(forKey: dayStartDateKey)
-        let storedDate = storedDateTimestamp > 0 ? Date(timeIntervalSince1970: storedDateTimestamp) : nil
+        // Unset is `nil`; a stored 0 is a real baseline (older builds stored an Int).
+        let storedDayStart = (defaults.object(forKey: dayStartWeeklyKey) as? NSNumber)?.doubleValue
+        var storedDate = (defaults.object(forKey: dayStartDateKey) as? NSNumber)
+            .map { Date(timeIntervalSince1970: $0.doubleValue) }
         
-        if storedDate == nil, let lastMidnight, calendar.isDate(lastMidnight, inSameDayAs: startOfToday), storedDayStart > 0 {
+        if storedDate == nil, storedDayStart != nil, let lastMidnight,
+           calendar.isDate(lastMidnight, inSameDayAs: startOfToday), dayStart == startOfToday {
             // Migration: lastMidnight is today, baseline exists, but no date stored yet
-            UserDefaults.standard.set(startOfToday.timeIntervalSince1970, forKey: dayStartDateKey)
+            storedDate = startOfToday
+            defaults.set(startOfToday.timeIntervalSince1970, forKey: dayStartDateKey)
             logger.info("Daily budget: migrated baseline date from lastMidnight")
         }
         
-        // Check for weekly reset mid-day (usage dropped)
-        let weeklyReset = storedDayStart > 0 && weeklyUsedPercent < storedDayStart
+        let baselineValid = GrokBotDailyBudget.isBaselineValid(
+            storedWeekly: storedDayStart,
+            storedDayStart: storedDate,
+            currentDayStart: dayStart,
+            weeklyNow: weeklyUsedPercent
+        )
         
-        if midnightChanged || weeklyReset {
-            // First refresh after midnight OR weekly reset detected
-            weeklyAtDayStart = weeklyUsedPercent
-            UserDefaults.standard.set(weeklyAtDayStart, forKey: dayStartWeeklyKey)
-            UserDefaults.standard.set(startOfToday.timeIntervalSince1970, forKey: dayStartDateKey)
+        if let storedDayStart, baselineValid {
+            weeklyAtDayStart = storedDayStart
+        } else {
+            // No baseline yet, new day, new period, or weekly reset (usage dropped)
+            weeklyAtDayStart = GrokBotDailyBudget.freshBaseline(
+                weeklyNow: weeklyUsedPercent, now: now, periodStart: periodStart, calendar: calendar
+            )
+            defaults.set(weeklyAtDayStart, forKey: dayStartWeeklyKey)
+            defaults.set(dayStart.timeIntervalSince1970, forKey: dayStartDateKey)
             state.setLastResetsAt(startOfToday, forKey: lastMidnightKey)
             justSetBaseline = true
             
-            let reason = weeklyReset ? "weekly reset detected" : "new day started"
+            let reason: String
+            if storedDayStart == nil {
+                reason = "first run"
+            } else if let storedDate, abs(storedDate.timeIntervalSince(dayStart)) < 1 {
+                reason = "weekly reset detected"
+            } else if dayStart > startOfToday {
+                reason = "new period started"
+            } else {
+                reason = "new day started"
+            }
             logger.info("Daily budget: \(reason), weekly at day start = \(weeklyAtDayStart)%")
             
-            // Re-arm level at midnight
+            // Re-arm level with the new baseline
             let key = "lastLevel_grokBotDaily"
             let previousRaw = state.lastLevel(forKey: key)
             if previousRaw != UsageLevel.green.rawValue {
-                logger.info("Daily budget re-armed at midnight: \(previousRaw)→green")
+                logger.info("Daily budget re-armed at new baseline: \(previousRaw)→green")
                 state.setLastLevel(UsageLevel.green.rawValue, forKey: key)
-            }
-        } else {
-            // Use stored day start value
-            weeklyAtDayStart = storedDayStart
-            if weeklyAtDayStart == 0 {
-                // First run - set baseline but don't fire
-                weeklyAtDayStart = weeklyUsedPercent
-                UserDefaults.standard.set(weeklyAtDayStart, forKey: dayStartWeeklyKey)
-                UserDefaults.standard.set(startOfToday.timeIntervalSince1970, forKey: dayStartDateKey)
-                justSetBaseline = true
-                logger.info("Daily budget: first run, setting baseline = \(weeklyAtDayStart)%")
-            } else {
-                // Baseline is valid for today - confirm the date is set
-                if storedDate == nil || !calendar.isDate(storedDate!, inSameDayAs: startOfToday) {
-                    UserDefaults.standard.set(startOfToday.timeIntervalSince1970, forKey: dayStartDateKey)
-                    logger.info("Daily budget: confirmed baseline date for today")
-                }
             }
         }
         
-        // Calculate today's consumption as the difference
-        let todayConsumptionPercent = max(0.0, Double(weeklyUsedPercent - weeklyAtDayStart))
-        
-        // Calculate daily budget share using weekly usage at START of day
-        let daysRemaining = max(0.1, resetDate.timeIntervalSince(startOfToday) / 86400.0)
-        let remainingBudget = max(0.0, 100.0 - Double(weeklyAtDayStart))
-        let todayShare = remainingBudget / daysRemaining
-        let todayShareUsedPercent = todayShare > 0 ? (todayConsumptionPercent / todayShare) * 100.0 : 0.0
+        // Today's consumption vs. today's share of the remaining weekly budget
+        let todayConsumptionPercent = GrokBotDailyBudget.todayUsage(
+            weeklyNow: weeklyUsedPercent, weeklyAtDayStart: weeklyAtDayStart
+        )
+        let daysRemaining = GrokBotDailyBudget.daysRemaining(dayStart: dayStart, resetsAt: resetDate)
+        let todayShare = GrokBotDailyBudget.todayShare(
+            weeklyAtDayStart: weeklyAtDayStart, dayStart: dayStart, resetsAt: resetDate
+        )
+        let todayShareUsedPercent = GrokBotDailyBudget.percentOfTodayShare(
+            weeklyNow: weeklyUsedPercent, weeklyAtDayStart: weeklyAtDayStart,
+            dayStart: dayStart, resetsAt: resetDate
+        )
         
         logger.info("Daily budget: today=\(todayConsumptionPercent)% / share=\(todayShare)% = \(todayShareUsedPercent)% used, weeklyAtDayStart=\(weeklyAtDayStart)%, weeklyNow=\(weeklyUsedPercent)%, days remaining=\(daysRemaining)")
         
@@ -667,7 +677,7 @@ final class NotificationService: NotificationServiceProtocol {
                                   String(format: "%.1f", todayShareUsedPercent),
                                   String(format: "%.1f", todayConsumptionPercent),
                                   String(format: "%.1f", todayShare),
-                                  weeklyUsedPercent,
+                                  Int(weeklyUsedPercent.rounded()),
                                   NotificationBodyFormatter.formatDateTime(resetDate))
             sendAndPersist(id: "daily_budget_grokBot", content: content, onSuccess: {
                 self.state.setLastLevel(current.rawValue, forKey: key)

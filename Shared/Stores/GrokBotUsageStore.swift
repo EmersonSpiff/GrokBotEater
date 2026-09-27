@@ -81,31 +81,37 @@ final class GrokBotUsageStore: ObservableObject {
         hasGrokBot = snap.hasGrokBot
         currentPeriodStart = snap.currentPeriodStart
         lastUpdate = snap.lastSync
-        recomputePacingAndPublish(weeklyPercent: snap.usagePercent, periodStart: snap.currentPeriodStart)
+        recomputePacingAndPublish(weeklyPercent: snap.usagePercent, weeklyPercentExact: nil, periodStart: snap.currentPeriodStart)
     }
 
     /// Derive Daily / Pacing from weekly % + period start and write the shared snapshot.
-    private func recomputePacingAndPublish(weeklyPercent: Int, periodStart: String?) {
+    /// `weeklyPercentExact` is the decimal API value (nil when only the cached Int is known).
+    private func recomputePacingAndPublish(weeklyPercent: Int, weeklyPercentExact: Double?, periodStart: String?) {
         let now = Date()
-        let todayKey = GrokBotPacingCalculator.dayKey(for: now)
+        let weeklyNow = weeklyPercentExact ?? Double(weeklyPercent)
 
         // New billing period (plan upgrade / weekly reset) must drop the old day sample.
         let previousPeriod = sharedFileService.grokBotSnapshot?.currentPeriodStart
         let periodChanged = previousPeriod != nil && periodStart != nil && previousPeriod != periodStart
 
-        var dailySample = sharedFileService.grokBotDailySample
-        if periodChanged || dailySample == nil || dailySample?.dayKey != todayKey {
-            dailySample = GrokBotDailySample(
-                dayKey: todayKey,
-                weeklyAtDayStart: weeklyPercent,
-                recordedAt: now
-            )
-            sharedFileService.updateGrokBotDailySample(dailySample!)
+        // Same baseline / day-start rules as the daily-budget alert: re-baseline
+        // on a new day or new period; a stored 0 is a real baseline.
+        let resolved = GrokBotDailyBudget.resolveSample(
+            existing: periodChanged ? nil : sharedFileService.grokBotDailySample,
+            weeklyNow: weeklyNow,
+            periodStart: periodStart,
+            now: now
+        )
+        let dailySample = resolved.sample
+        if resolved.rebaselined {
+            sharedFileService.updateGrokBotDailySample(dailySample)
+            logger.info("Grok Bot daily baseline set: weeklyAtDayStart=\(dailySample.weeklyAtDayStart)%")
         }
 
         let pacingSchedule = sharedFileService.pacingSchedule
         let pacing = GrokBotPacingCalculator.calculate(
             weeklyPercent: weeklyPercent,
+            weeklyPercentExact: weeklyPercentExact,
             periodStart: periodStart,
             dailySample: dailySample,
             now: now,
@@ -234,7 +240,7 @@ final class GrokBotUsageStore: ObservableObject {
             statusMessage = "Grok Bot: Usage data unavailable"
         }
         
-        recomputePacingAndPublish(weeklyPercent: usagePercent, periodStart: currentPeriodStart)
+        recomputePacingAndPublish(weeklyPercent: usagePercent, weeklyPercentExact: response.usagePercent, periodStart: currentPeriodStart)
         logger.info("Grok Bot refresh succeeded: \(self.usagePercent)% used, shouldDrawRing=\(self.shouldShowRing), daily=\(self.sharedFileService.grokBotSnapshot?.dailyPercent ?? -1)")
         
         // Record history snapshot
@@ -263,7 +269,8 @@ final class GrokBotUsageStore: ObservableObject {
         if let resetDate = nextResetDate {
             let now = Date()
             notificationService.evaluateGrokBotDailyBudget(
-                weeklyUsedPercent: usagePercent,
+                weeklyUsedPercent: lastResponse?.usagePercent ?? Double(usagePercent),
+                periodStart: Self.parsePeriodStart(currentPeriodStart),
                 resetDate: resetDate,
                 now: now,
                 toggles: toggles

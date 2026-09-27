@@ -6,10 +6,13 @@ enum GrokBotPacingCalculator {
     ///
     /// Weekly % itself always comes from the Cursor API — this only derives dials.
     ///
-    /// **Daily calculation** (signup-agnostic):
-    /// - Expected so far = elapsedFraction × 100 from THIS user’s periodStart
-    /// - Floor elapsed at 2 hours of the window so early refresh doesn’t explode
-    /// - Daily dial = (actualWeekly / expectedSoFar) × 100 (100% = even pace)
+    /// **Daily calculation** (share of today's budget, see `GrokBotDailyBudget`):
+    /// - Today's usage = weeklyNow − weeklyAtDayStart (start-of-day baseline)
+    /// - Today's share = (100 − weeklyAtDayStart) ÷ daysRemaining, where
+    ///   daysRemaining = (reset − dayStart) ÷ 24h and dayStart is the later of
+    ///   local midnight and the current period start
+    /// - Daily dial = today's usage ÷ today's share × 100 (floored at 0; >100 = over budget)
+    /// - Uses `weeklyPercentExact` (the decimal API value) when provided
     ///
     /// **Pacing calculation**: Ahead/behind vs. even burn across the period.
     /// - Expected = elapsed fraction × 100 (respects workweek active time)
@@ -17,12 +20,14 @@ enum GrokBotPacingCalculator {
     /// - Zone: chill / onTrack / warning / hot based on margin
     static func calculate(
         weeklyPercent: Int,
+        weeklyPercentExact: Double? = nil,
         periodStart: String?,
         dailySample: GrokBotDailySample?,
         now: Date = Date(),
         margin: Double = 10,
         activeDays: Set<Int> = PacingSchedule.allDays,
-        activeHours: (start: Int, end: Int)? = nil
+        activeHours: (start: Int, end: Int)? = nil,
+        calendar: Calendar = .current
     ) -> (dailyPercent: Int, pacingDelta: Double, pacingZone: PacingZone, pacingMessage: String)? {
         guard let periodStartDate = parsePeriodStart(periodStart) else { return nil }
         
@@ -52,15 +57,24 @@ enum GrokBotPacingCalculator {
             clampedElapsed = total > 0 ? min(max(elapsed / total, 0), 1) : 0
         }
         
-        // MARK: - Daily (even-pace ratio from THIS user’s periodStart → reset)
-        // Signup-agnostic: only periodStart differs. Floor expected at 2h of the
-        // window so a brand-new period doesn’t report ∞×.
-        let minElapsed = (2.0 * 3600.0) / periodDuration
-        let expectedForDaily = max(clampedElapsed, minElapsed) * 100
-        let dailyPercent = expectedForDaily > 0
-            ? Int((Double(weeklyPercent) / expectedForDaily * 100).rounded())
-            : 0
-        _ = dailySample
+        // MARK: - Daily (today's usage ÷ today's share of the remaining budget)
+        let weeklyNow = weeklyPercentExact ?? Double(weeklyPercent)
+        let resolved = GrokBotDailyBudget.resolveSample(
+            existing: dailySample,
+            weeklyNow: weeklyNow,
+            periodStart: periodStart,
+            now: now,
+            calendar: calendar
+        )
+        let dayStart = resolved.sample.dayStart
+            ?? GrokBotDailyBudget.dayStart(now: now, periodStart: periodStartDate, calendar: calendar)
+        let dailyRaw = GrokBotDailyBudget.percentOfTodayShare(
+            weeklyNow: weeklyNow,
+            weeklyAtDayStart: resolved.sample.weeklyAtDayStart,
+            dayStart: dayStart,
+            resetsAt: resetDate
+        )
+        let dailyPercent = max(0, Int(dailyRaw.rounded()))
         
         // MARK: - Pacing (true elapsed vs actual; same clock as Daily)
         let expectedUsage = clampedElapsed * 100
@@ -125,7 +139,7 @@ enum GrokBotPacingCalculator {
         return pool[index]
     }
     
-    private static func parsePeriodStart(_ raw: String?) -> Date? {
+    static func parsePeriodStart(_ raw: String?) -> Date? {
         guard let raw, !raw.isEmpty else { return nil }
         let fractional = ISO8601DateFormatter()
         fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -133,5 +147,123 @@ enum GrokBotPacingCalculator {
         let plain = ISO8601DateFormatter()
         plain.formatOptions = [.withInternetDateTime]
         return plain.date(from: raw)
+    }
+}
+
+// MARK: - Daily budget (shared by the Daily dial and the daily-budget alert)
+
+/// Start-of-day baseline and today's-share math. Used by
+/// `GrokBotPacingCalculator` (Daily dial) and
+/// `NotificationService.evaluateGrokBotDailyBudget` so both agree.
+enum GrokBotDailyBudget {
+    static let dayDuration: TimeInterval = 24 * 3600
+
+    /// Weekly usage can only drop within a day when the window resets.
+    /// Tolerance covers legacy baselines stored as rounded Ints.
+    static let resetDropTolerance: Double = 0.5
+
+    /// Start of "today" for budgeting: the later of local midnight and the
+    /// current period start (a period that began today starts the day there).
+    static func dayStart(now: Date, periodStart: Date?, calendar: Calendar = .current) -> Date {
+        let midnight = calendar.startOfDay(for: now)
+        guard let periodStart, periodStart > midnight, periodStart <= now else { return midnight }
+        return periodStart
+    }
+
+    /// Baseline to record when (re)baselining. A period that began today
+    /// started at 0% used, so its baseline is 0 even if the first refresh
+    /// lands later; otherwise it's the current weekly usage.
+    static func freshBaseline(weeklyNow: Double, now: Date, periodStart: Date?, calendar: Calendar = .current) -> Double {
+        let midnight = calendar.startOfDay(for: now)
+        if let periodStart, periodStart >= midnight, periodStart <= now { return 0 }
+        return weeklyNow
+    }
+
+    /// Whether a stored baseline still applies. `storedWeekly == nil` means
+    /// unset; a stored 0 is a real baseline. Invalid when the day start moved
+    /// (new day or new period) or usage dropped below it (window reset).
+    static func isBaselineValid(
+        storedWeekly: Double?,
+        storedDayStart: Date?,
+        currentDayStart: Date,
+        weeklyNow: Double
+    ) -> Bool {
+        guard let storedWeekly, let storedDayStart else { return false }
+        guard abs(storedDayStart.timeIntervalSince(currentDayStart)) < 1 else { return false }
+        if weeklyNow < storedWeekly - resetDropTolerance { return false }
+        return true
+    }
+
+    static func daysRemaining(dayStart: Date, resetsAt: Date) -> Double {
+        max(0.1, resetsAt.timeIntervalSince(dayStart) / dayDuration)
+    }
+
+    static func todayUsage(weeklyNow: Double, weeklyAtDayStart: Double) -> Double {
+        max(0, weeklyNow - weeklyAtDayStart)
+    }
+
+    static func todayShare(weeklyAtDayStart: Double, dayStart: Date, resetsAt: Date) -> Double {
+        max(0, 100 - weeklyAtDayStart) / daysRemaining(dayStart: dayStart, resetsAt: resetsAt)
+    }
+
+    /// Today's usage as a percentage of today's share (≥ 0; > 100 = over budget).
+    static func percentOfTodayShare(weeklyNow: Double, weeklyAtDayStart: Double, dayStart: Date, resetsAt: Date) -> Double {
+        let share = todayShare(weeklyAtDayStart: weeklyAtDayStart, dayStart: dayStart, resetsAt: resetsAt)
+        guard share > 0 else { return 0 }
+        return todayUsage(weeklyNow: weeklyNow, weeklyAtDayStart: weeklyAtDayStart) / share * 100
+    }
+
+    /// Keep `existing` if it is still today's baseline for this period, else
+    /// return a fresh one. `rebaselined` tells the caller to persist it.
+    static func resolveSample(
+        existing: GrokBotDailySample?,
+        weeklyNow: Double,
+        periodStart: String?,
+        now: Date,
+        calendar: Calendar = .current
+    ) -> (sample: GrokBotDailySample, rebaselined: Bool) {
+        let periodStartDate = GrokBotPacingCalculator.parsePeriodStart(periodStart)
+        let currentDayStart = dayStart(now: now, periodStart: periodStartDate, calendar: calendar)
+        let todayKey = GrokBotPacingCalculator.dayKey(for: now, calendar: calendar)
+
+        if let existing,
+           existing.periodStart == nil || periodStart == nil || existing.periodStart == periodStart {
+            let storedDayStart = existing.dayStart
+                ?? legacyDayStart(existing, todayKey: todayKey, currentDayStart: currentDayStart, now: now, calendar: calendar)
+            if isBaselineValid(
+                storedWeekly: existing.weeklyAtDayStart,
+                storedDayStart: storedDayStart,
+                currentDayStart: currentDayStart,
+                weeklyNow: weeklyNow
+            ) {
+                return (existing, false)
+            }
+        }
+
+        let fresh = GrokBotDailySample(
+            dayKey: todayKey,
+            weeklyAtDayStart: freshBaseline(weeklyNow: weeklyNow, now: now, periodStart: periodStartDate, calendar: calendar),
+            recordedAt: now,
+            dayStart: currentDayStart,
+            periodStart: periodStart
+        )
+        return (fresh, true)
+    }
+
+    /// Samples written before `dayStart` was stored: trust them only for a
+    /// plain midnight day start. On a day a period started, older builds
+    /// baselined to the post-reset usage, so re-baseline instead.
+    private static func legacyDayStart(
+        _ sample: GrokBotDailySample,
+        todayKey: String,
+        currentDayStart: Date,
+        now: Date,
+        calendar: Calendar
+    ) -> Date? {
+        let midnight = calendar.startOfDay(for: now)
+        guard sample.dayKey == todayKey,
+              currentDayStart == midnight,
+              sample.recordedAt >= midnight else { return nil }
+        return midnight
     }
 }

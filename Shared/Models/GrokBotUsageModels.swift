@@ -63,15 +63,35 @@ struct CachedGrokBotUsage: Codable {
 
 // MARK: - Daily Sample (for daily dial tracking)
 
-/// Tracks the weekly usage % at the start of each local calendar day.
+/// Tracks the weekly usage % at the start of each budgeting day.
 /// Used to compute today's burn: `max(0, currentWeekly - weeklyAtDayStart)`.
 struct GrokBotDailySample: Codable, Equatable {
     /// Local calendar day key (yyyy-MM-dd) in the user's timezone.
     let dayKey: String
-    /// Weekly usage % at the first refresh of this day.
-    let weeklyAtDayStart: Int
+    /// Weekly usage % at the start of this day (decimal; 0 is a real value).
+    /// Older builds stored an Int, which decodes into Double unchanged.
+    let weeklyAtDayStart: Double
     /// When this sample was recorded.
     let recordedAt: Date
+    /// Start of the budgeting day: later of local midnight and period start.
+    /// Nil for samples written by older builds.
+    let dayStart: Date?
+    /// Period start (ISO 8601) the sample belongs to. Nil for older samples.
+    let periodStart: String?
+
+    init(
+        dayKey: String,
+        weeklyAtDayStart: Double,
+        recordedAt: Date,
+        dayStart: Date? = nil,
+        periodStart: String? = nil
+    ) {
+        self.dayKey = dayKey
+        self.weeklyAtDayStart = weeklyAtDayStart
+        self.recordedAt = recordedAt
+        self.dayStart = dayStart
+        self.periodStart = periodStart
+    }
 }
 
 
