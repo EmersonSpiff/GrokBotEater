@@ -205,7 +205,9 @@ final class OnboardingViewModel: ObservableObject {
             }
             
             // Convert tokens to session cookie and save
-            let sessionCookie = CursorBrowserAuthService.convertToSessionCookie(tokens: tokens)
+            guard let sessionCookie = CursorBrowserAuthService.convertToSessionCookie(tokens: tokens) else {
+                throw CursorBrowserAuthService.AuthError.invalidResponse
+            }
             sessionStore.save(cookie: sessionCookie)
             
             // Now test the connection with the new cookie

@@ -166,10 +166,9 @@ final class CursorBrowserAuthService: @unchecked Sendable {
     }
     
     /// Converts Cursor access/refresh tokens to a WorkosCursorSessionToken cookie value.
-    /// The access token itself is the cookie value used by the Grok Bot API.
-    static func convertToSessionCookie(tokens: AuthTokens) -> String {
-        // The accessToken is what we use as the session cookie value
-        return tokens.accessToken
+    /// cursor.com expects `{userId}%3A%3A{accessToken}`, where userId comes from the JWT `sub`.
+    static func convertToSessionCookie(tokens: AuthTokens) -> String? {
+        CursorIDETokenReader.cookieValue(fromJWT: tokens.accessToken)
     }
 }
 
