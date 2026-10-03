@@ -35,6 +35,16 @@ struct ConnectCard: View {
                     .foregroundStyle(DS.Palette.textSecondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+        
+        case .waitingForBrowser:
+            VStack(spacing: 8) {
+                ProgressView().tint(DS.Palette.brandPrimary)
+                Text("onboarding.card.connect.waiting.browser")
+                    .font(.system(size: 10))
+                    .foregroundStyle(DS.Palette.textSecondary)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
         case .success, .rateLimited:
             VStack(spacing: 8) {
@@ -111,6 +121,21 @@ struct ConnectCard: View {
             actionButton(label: "onboarding.card.connect.retry") {
                 viewModel.connectionStatus = .idle
             }
+        case .waitingForBrowser:
+            VStack(spacing: 6) {
+                actionButton(label: "onboarding.card.connect.cancel") {
+                    viewModel.cancelBrowserAuth()
+                }
+                Button {
+                    viewModel.openFallbackWebLogin()
+                } label: {
+                    Text("onboarding.card.connect.fallback")
+                        .font(.system(size: 10))
+                        .foregroundStyle(DS.Palette.textSecondary)
+                        .underline()
+                }
+                .buttonStyle(.plain)
+            }
         case .connecting, .success, .rateLimited:
             EmptyView()
         }
@@ -140,6 +165,7 @@ struct ConnectCard: View {
         switch viewModel.connectionStatus {
         case .idle:        return "onboarding.card.connect.status.idle"
         case .connecting:  return "onboarding.card.connect.status.connecting"
+        case .waitingForBrowser: return "onboarding.card.connect.status.waiting"
         case .success, .rateLimited:
             return "onboarding.card.connect.status.success"
         case .failed:      return "onboarding.card.connect.status.failed"
@@ -148,7 +174,7 @@ struct ConnectCard: View {
 
     private var statusColor: Color {
         switch viewModel.connectionStatus {
-        case .idle, .connecting: return DS.Palette.brandPrimary
+        case .idle, .connecting, .waitingForBrowser: return DS.Palette.brandPrimary
         case .success, .rateLimited: return DS.Palette.brandPrimary
         case .failed: return DS.Palette.semanticError
         }

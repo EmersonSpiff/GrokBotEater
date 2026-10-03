@@ -13,6 +13,7 @@ enum GrokBotSessionStatus {
 enum ConnectionStatus {
     case idle
     case connecting
+    case waitingForBrowser(uuid: String, verifier: String, task: Task<Void, Never>)
     case success(GrokBotUsageResponse)
     case rateLimited
     case failed(String)
@@ -138,7 +139,7 @@ final class OnboardingViewModel: ObservableObject {
         notificationService.sendTest()
     }
 
-    /// Connect: try saved/scraped cookie → fetchUsage; otherwise open web login.
+    /// Connect: try saved/scraped cookie → fetchUsage; otherwise start browser auth.
     func connect() {
         connectionStatus = .connecting
         showCursorLogin = false
@@ -149,10 +150,8 @@ final class OnboardingViewModel: ObservableObject {
             let cookie = await Self.cookieOffMain(reader)
 
             guard let cookie else {
-                // No cookie at all — open in-app cursor.com login.
-                connectionStatus = .idle
-                showCursorLogin = true
-                NSApp.activate(ignoringOtherApps: true)
+                // No cookie at all — start browser authentication flow.
+                startBrowserAuth()
                 return
             }
 
@@ -165,15 +164,93 @@ final class OnboardingViewModel: ObservableObject {
                 connectionStatus = .rateLimited
                 grokBotStatus = .detected
             case .cookieRejected:
-                // Stale Keychain / scraped cookie — clear and prompt web login.
+                // Stale Keychain / scraped cookie — clear and start browser auth.
                 sessionStore.clear()
-                connectionStatus = .idle
-                showCursorLogin = true
+                startBrowserAuth()
             case .failed(let message):
                 connectionStatus = .failed(message)
             }
             NSApp.activate(ignoringOtherApps: true)
         }
+    }
+    
+    /// Starts the browser-based PKCE authentication flow.
+    private func startBrowserAuth() {
+        guard let (url, uuid, verifier) = CursorBrowserAuthService.createLoginURL() else {
+            connectionStatus = .failed(String(localized: "onboarding.browser.auth.error.setup"))
+            return
+        }
+        
+        // Open the URL in the user's default browser
+        NSWorkspace.shared.open(url)
+        
+        // Start polling in the background
+        let pollTask = Task { @MainActor in
+            await self.pollForBrowserAuth(uuid: uuid, verifier: verifier)
+        }
+        
+        connectionStatus = .waitingForBrowser(uuid: uuid, verifier: verifier, task: pollTask)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+    
+    /// Polls for browser authentication completion.
+    private func pollForBrowserAuth(uuid: String, verifier: String) async {
+        do {
+            let tokens = try await CursorBrowserAuthService.pollForTokens(
+                uuid: uuid,
+                verifier: verifier
+            ) { progress in
+                // Progress updates could be shown in UI if desired
+                logger.debug("Browser auth progress: \(progress)")
+            }
+            
+            // Convert tokens to session cookie and save
+            let sessionCookie = CursorBrowserAuthService.convertToSessionCookie(tokens: tokens)
+            sessionStore.save(cookie: sessionCookie)
+            
+            // Now test the connection with the new cookie
+            grokBotStatus = .detected
+            connectionStatus = .connecting
+            
+            let api = grokBotAPI
+            let outcome = await Self.fetchOutcome(api: api, cookie: sessionCookie)
+            switch outcome {
+            case .success(let usage):
+                connectionStatus = .success(usage)
+            case .rateLimited:
+                connectionStatus = .rateLimited
+            case .cookieRejected:
+                sessionStore.clear()
+                connectionStatus = .failed(String(localized: "onboarding.connection.failed.notoken"))
+                grokBotStatus = .notFound
+            case .failed(let message):
+                connectionStatus = .failed(message)
+            }
+        } catch let error as CursorBrowserAuthService.AuthError {
+            connectionStatus = .failed(error.localizedDescription ?? String(localized: "onboarding.browser.auth.error.unknown"))
+        } catch {
+            connectionStatus = .failed(error.localizedDescription)
+        }
+        
+        NSApp.activate(ignoringOtherApps: true)
+    }
+    
+    /// Cancels the browser authentication flow.
+    func cancelBrowserAuth() {
+        if case .waitingForBrowser(_, _, let task) = connectionStatus {
+            task.cancel()
+            connectionStatus = .idle
+        }
+    }
+    
+    /// Opens the fallback in-app web view login.
+    func openFallbackWebLogin() {
+        if case .waitingForBrowser(_, _, let task) = connectionStatus {
+            task.cancel()
+        }
+        connectionStatus = .idle
+        showCursorLogin = true
+        NSApp.activate(ignoringOtherApps: true)
     }
 
     /// Called when the web login sheet finishes (success or cancel).

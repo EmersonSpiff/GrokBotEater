@@ -910,18 +910,32 @@
 "onboarding.card.connect.title" = "Connect";
 "onboarding.card.connect.status.idle" = "tap to test Grok Bot";
 "onboarding.card.connect.status.connecting" = "connecting to cursor.com...";
+"onboarding.card.connect.status.waiting" = "waiting for browser sign-in...";
 "onboarding.card.connect.status.success" = "connected";
 "onboarding.card.connect.status.failed" = "access denied";
 "onboarding.card.connect.connecting" = "calling Grok Bot usage...";
+"onboarding.card.connect.waiting.browser" = "Waiting for sign-in\nin your browser...";
 "onboarding.card.connect.success.scene" = "connected - finish unlocked";
 "onboarding.card.connect.failed.scene" = "access denied";
 "onboarding.card.connect.authorize" = "Connect";
 "onboarding.card.connect.retry" = "Retry";
-"onboarding.card.connect.idle.scene" = "Opens cursor.com to sign in\nand connect Grok Bot usage.";
+"onboarding.card.connect.cancel" = "Cancel";
+"onboarding.card.connect.fallback" = "Sign in another way";
+"onboarding.card.connect.idle.scene" = "Opens cursor.com in your browser\nto sign in and connect Grok Bot usage.";
+
+/* Onboarding - Browser auth */
+"onboarding.browser.auth.error.cancelled" = "Sign-in cancelled";
+"onboarding.browser.auth.error.timeout" = "Sign-in timed out. Please try again.";
+"onboarding.browser.auth.error.network" = "Network error: ";
+"onboarding.browser.auth.error.invalid" = "Invalid response from server";
+"onboarding.browser.auth.error.unknown" = "Authentication failed";
+"onboarding.browser.auth.error.setup" = "Could not set up authentication";
+"onboarding.browser.auth.polling" = "Waiting for sign-in...";
 
 /* Onboarding - Web login sheet */
 "onboarding.weblogin.title" = "Sign in to Cursor";
 "onboarding.weblogin.cancel" = "Cancel";
+"onboarding.weblogin.check" = "Check";
 "onboarding.weblogin.status.waiting" = "Sign in at cursor.com — we capture your session automatically.";
 "onboarding.weblogin.status.captured" = "Session saved. Connecting…";
 
