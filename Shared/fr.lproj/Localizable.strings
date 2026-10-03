@@ -121,6 +121,8 @@
 "settings.connected" = "Connecté";
 "settings.disconnected" = "Non connecté";
 "settings.redetect" = "Re-détecter";
+"settings.signout" = "Se déconnecter";
+"settings.signout.success" = "Déconnexion réussie. Cliquez sur Connecter pour se connecter à nouveau.";
 "settings.general.title" = "Général";
 "settings.launchAtLogin" = "Lancer au démarrage";
 "settings.launchAtLogin.hint" = "Ouvre GrokBotEater automatiquement quand vous vous connectez à macOS. Vous pouvez aussi gérer ce réglage depuis Réglages système → Général → Éléments de connexion.";

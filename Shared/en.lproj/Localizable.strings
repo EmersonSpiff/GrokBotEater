@@ -121,6 +121,8 @@
 "settings.connected" = "Grok Bot connected";
 "settings.disconnected" = "Grok Bot not connected";
 "settings.redetect" = "Re-check session";
+"settings.signout" = "Sign Out";
+"settings.signout.success" = "Signed out successfully. Click Connect to sign in again.";
 "settings.general.title" = "General";
 "settings.launchAtLogin" = "Launch at login";
 "settings.launchAtLogin.hint" = "Open GrokBotEater automatically when you sign in to macOS. You can toggle this from System Settings → General → Login Items as well.";

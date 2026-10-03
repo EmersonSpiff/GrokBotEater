@@ -52,6 +52,15 @@ struct SettingsSectionView: View {
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(.blue)
                         .disabled(isImporting || grokBotUsageStore.isLoading)
+                        
+                        if grokConnected {
+                            Button(String(localized: "settings.signout")) {
+                                signOut()
+                            }
+                            .buttonStyle(.plain)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(.red)
+                        }
                     }
                     Text(grokBotUsageStore.statusMessage)
                         .font(.system(size: 11))
@@ -385,6 +394,13 @@ struct SettingsSectionView: View {
             testResult = result
             isImporting = false
         }
+    }
+    
+    private func signOut() {
+        grokBotUsageStore.signOut()
+        testResult = nil
+        importMessage = String(localized: "settings.signout.success")
+        importSuccess = true
     }
 }
 

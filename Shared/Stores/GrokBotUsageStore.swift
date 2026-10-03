@@ -48,6 +48,35 @@ final class GrokBotUsageStore: ObservableObject {
     
     var refreshIntervalSeconds: TimeInterval = 300 // 5 minutes, match Claude
     
+    /// Clears all stored credentials and cached usage data, returning to disconnected state.
+    /// Used when the user explicitly signs out or wants to reauthenticate.
+    func signOut() {
+        // Cancel any ongoing refresh
+        refreshTask?.cancel()
+        autoRefreshTask?.cancel()
+        
+        // Clear Keychain session
+        GrokBotSessionStore.shared.clear()
+        
+        // Clear shared cache
+        sharedFileService.clear()
+        
+        // Reset published state
+        usagePercent = 0
+        lastUpdate = nil
+        hasGrokBot = false
+        shouldShowRing = false
+        errorState = .none
+        currentPeriodStart = nil
+        lastResponse = nil
+        statusMessage = "Not connected"
+        
+        // Reload widgets to show offline state
+        WidgetReloader.scheduleReload()
+        
+        logger.info("User signed out - all credentials and cache cleared")
+    }
+    
     /// Closure that returns the current notification toggles bundle. Wired by
     /// `StatusBarController` at bootstrap once SettingsStore is available so
     /// the store can fire notifications based on the latest user-facing toggles

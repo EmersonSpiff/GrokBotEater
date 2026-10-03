@@ -140,14 +140,16 @@ final class OnboardingViewModel: ObservableObject {
     }
 
     /// Connect: try saved/scraped cookie → fetchUsage; otherwise start browser auth.
-    func connect() {
+    /// If `forceBrowserAuth` is true, skips cookie detection and goes straight to browser flow.
+    func connect(forceBrowserAuth: Bool = false) {
         connectionStatus = .connecting
         showCursorLogin = false
 
         let reader = cookieReader
         let api = grokBotAPI
         Task {
-            let cookie = await Self.cookieOffMain(reader)
+            // Skip auto-detection if forcing browser auth (e.g., after explicit sign-out)
+            let cookie = forceBrowserAuth ? nil : await Self.cookieOffMain(reader)
 
             guard let cookie else {
                 // No cookie at all — start browser authentication flow.
