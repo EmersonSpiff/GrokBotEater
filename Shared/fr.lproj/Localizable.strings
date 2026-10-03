@@ -121,6 +121,7 @@
 "settings.connected" = "Connecté";
 "settings.disconnected" = "Non connecté";
 "settings.redetect" = "Re-détecter";
+"settings.signin" = "Se connecter";
 "settings.signout" = "Se déconnecter";
 "settings.signout.success" = "Déconnexion réussie. Cliquez sur Connecter pour se connecter à nouveau.";
 "settings.general.title" = "Général";

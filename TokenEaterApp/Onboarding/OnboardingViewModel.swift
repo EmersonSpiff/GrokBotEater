@@ -46,18 +46,21 @@ final class OnboardingViewModel: ObservableObject {
     private let notificationService: NotificationServiceProtocol
     private let settingsStore: SettingsStore
     private let sessionStore: GrokBotSessionStore
+    private let sharedFileService: SharedFileServiceProtocol
 
     init(
         cookieReader: CursorCookieReaderProtocol = CursorCookieReader(),
         grokBotAPI: GrokBotAPIClientProtocol = GrokBotAPIClient(),
         notificationService: NotificationServiceProtocol = NotificationService(),
         settingsStore: SettingsStore? = nil,
-        sessionStore: GrokBotSessionStore = .shared
+        sessionStore: GrokBotSessionStore = .shared,
+        sharedFileService: SharedFileServiceProtocol = SharedFileService()
     ) {
         self.cookieReader = cookieReader
         self.grokBotAPI = grokBotAPI
         self.notificationService = notificationService
         self.sessionStore = sessionStore
+        self.sharedFileService = sharedFileService
         let store = settingsStore ?? SettingsStore(
             notificationService: notificationService
         )
@@ -147,9 +150,11 @@ final class OnboardingViewModel: ObservableObject {
 
         let reader = cookieReader
         let api = grokBotAPI
+        let isSignedOut = sharedFileService.isSignedOut
+        
         Task {
-            // Skip auto-detection if forcing browser auth (e.g., after explicit sign-out)
-            let cookie = forceBrowserAuth ? nil : await Self.cookieOffMain(reader)
+            // Skip auto-detection if forcing browser auth or if user is signed out
+            let cookie = (forceBrowserAuth || isSignedOut) ? nil : await Self.cookieOffMain(reader)
 
             guard let cookie else {
                 // No cookie at all — start browser authentication flow.
@@ -162,9 +167,13 @@ final class OnboardingViewModel: ObservableObject {
             case .success(let usage):
                 connectionStatus = .success(usage)
                 grokBotStatus = .detected
+                // Clear signed-out flag on successful connection
+                sharedFileService.setSignedOut(false)
             case .rateLimited:
                 connectionStatus = .rateLimited
                 grokBotStatus = .detected
+                // Clear signed-out flag on successful connection
+                sharedFileService.setSignedOut(false)
             case .cookieRejected:
                 // Stale Keychain / scraped cookie — clear and start browser auth.
                 sessionStore.clear()
@@ -211,6 +220,9 @@ final class OnboardingViewModel: ObservableObject {
                 throw CursorBrowserAuthService.AuthError.invalidResponse
             }
             sessionStore.save(cookie: sessionCookie)
+            
+            // Clear signed-out flag after successful browser authentication
+            sharedFileService.setSignedOut(false)
             
             // Now test the connection with the new cookie
             grokBotStatus = .detected
@@ -276,6 +288,10 @@ final class OnboardingViewModel: ObservableObject {
                 connectionStatus = .failed(String(localized: "onboarding.connection.failed.notoken"))
                 return
             }
+            
+            // Clear signed-out flag after successful fallback login
+            sharedFileService.setSignedOut(false)
+            
             let outcome = await Self.fetchOutcome(api: api, cookie: cookie)
             switch outcome {
             case .success(let usage):

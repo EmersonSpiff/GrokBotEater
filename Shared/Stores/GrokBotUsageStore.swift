@@ -58,6 +58,9 @@ final class GrokBotUsageStore: ObservableObject {
         // Clear Keychain session
         GrokBotSessionStore.shared.clear()
         
+        // Set signed-out flag in shared container (persists across launches, visible to widget)
+        sharedFileService.setSignedOut(true)
+        
         // Clear shared cache
         sharedFileService.clear()
         
@@ -69,12 +72,18 @@ final class GrokBotUsageStore: ObservableObject {
         errorState = .none
         currentPeriodStart = nil
         lastResponse = nil
-        statusMessage = "Not connected"
+        statusMessage = "Signed out"
         
         // Reload widgets to show offline state
         WidgetReloader.scheduleReload()
         
         logger.info("User signed out - all credentials and cache cleared")
+    }
+    
+    /// Clears the signed-out flag after successful authentication.
+    /// Called when the user explicitly signs in (browser or in-app fallback).
+    func clearSignedOutFlag() {
+        sharedFileService.setSignedOut(false)
     }
     
     /// Closure that returns the current notification toggles bundle. Wired by
@@ -167,6 +176,15 @@ final class GrokBotUsageStore: ObservableObject {
     func refresh(force: Bool = false) async {
         guard !isLoading else { return }
         
+        // Skip auto-detection if signed out
+        if sharedFileService.isSignedOut {
+            errorState = .none
+            statusMessage = "Signed out"
+            hasGrokBot = false
+            shouldShowRing = false
+            return
+        }
+        
         // Interval check
         if !force, let last = lastUpdate,
            Date().timeIntervalSince(last) < refreshIntervalSeconds {
@@ -197,6 +215,13 @@ final class GrokBotUsageStore: ObservableObject {
     }
     
     func reloadConfig() {
+        // Skip if signed out
+        if sharedFileService.isSignedOut {
+            errorState = .none
+            statusMessage = "Signed out"
+            return
+        }
+        
         // Start with loading state immediately (non-blocking)
         errorState = .none
         statusMessage = "Loading..."
@@ -238,6 +263,14 @@ final class GrokBotUsageStore: ObservableObject {
     }
     
     func testConnection() async -> ConnectionTestResult {
+        // Skip if signed out
+        if sharedFileService.isSignedOut {
+            return ConnectionTestResult(
+                success: false,
+                message: "Signed out. Click 'Sign In' to authenticate."
+            )
+        }
+        
         guard let cookie = cookieReader.readCookie() else {
             return ConnectionTestResult(
                 success: false,

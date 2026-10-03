@@ -121,6 +121,7 @@
 "settings.connected" = "Grok Bot connected";
 "settings.disconnected" = "Grok Bot not connected";
 "settings.redetect" = "Re-check session";
+"settings.signin" = "Sign In";
 "settings.signout" = "Sign Out";
 "settings.signout.success" = "Signed out successfully. Click Connect to sign in again.";
 "settings.general.title" = "General";
