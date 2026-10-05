@@ -123,7 +123,7 @@
 "settings.redetect" = "Re-check session";
 "settings.signin" = "Sign In";
 "settings.signout" = "Sign Out";
-"settings.signout.success" = "Signed out successfully. Click Connect to sign in again.";
+"settings.signout.success" = "Signed out successfully. Click Sign In to sign in again.";
 "settings.general.title" = "General";
 "settings.launchAtLogin" = "Launch at login";
 "settings.launchAtLogin.hint" = "Open GrokBotEater automatically when you sign in to macOS. You can toggle this from System Settings → General → Login Items as well.";
@@ -138,20 +138,20 @@
 "connect.subtitle" = "Detect Cursor session for Grok Bot usage";
 "connect.oauth.success" = "Connected via Cursor session";
 "connect.method.oauth" = "Cursor session (auto)";
-"connect.noclaudecode" = "Cursor session not found. Sign in at cursor.com (Onboarding → Connect).";
+"connect.noclaudecode" = "Cursor session not found. Sign in at cursor.com (Settings → Sign In).";
 
 /* Guide */
 "guide.title" = "Setup Guide";
 "guide.oauth.title" = "Cursor";
 "guide.oauth.badge" = "Recommended";
 "guide.oauth.step1" = "Install **Grok Bot**";
-"guide.oauth.step2" = "Open GrokBotEater and click **Connect**";
+"guide.oauth.step2" = "Open GrokBotEater and click **Sign In**";
 "guide.oauth.step3" = "Done - token refreshes automatically";
 "guide.widget" = "Add the widget";
 "guide.widget.detail" = "Right-click desktop > **Edit Widgets** > **GrokBotEater**";
 
 /* Errors - API */
-"error.notoken" = "Cursor session not found. Open GrokBotEater and Connect.";
+"error.notoken" = "Cursor session not found. Open GrokBotEater and Sign In.";
 "error.tokenexpired" = "OAuth token expired - restart Grok Bot to refresh it";
 "error.invalidurl" = "Invalid URL";
 "error.invalidresponse" = "Invalid server response";
@@ -439,7 +439,7 @@
 "onboarding.mode.detailed" = "Detailed";
 
 /* Onboarding - Connection (kept: referenced by OnboardingViewModel) */
-"onboarding.connection.failed.notoken" = "Couldn't read your Cursor session. Use Connect to sign in at cursor.com in the app.";
+"onboarding.connection.failed.notoken" = "Couldn't read your Cursor session. Use Sign In to sign in at cursor.com in the app.";
 
 /* Settings - Onboarding reset */
 "settings.onboarding.reset" = "Run setup again";
@@ -886,8 +886,8 @@
 "onboarding.card.grokbot.checking" = "checking...";
 "onboarding.card.grokbot.status.checking" = "looking for Cursor login";
 "onboarding.card.grokbot.status.detected" = "Cursor session ready";
-"onboarding.card.grokbot.status.notfound" = "sign in via Connect, then retry";
-"onboarding.card.grokbot.notfound.step1" = "tap Connect to open cursor.com";
+"onboarding.card.grokbot.status.notfound" = "sign in via Sign In, then retry";
+"onboarding.card.grokbot.notfound.step1" = "tap Sign In to open cursor.com";
 "onboarding.card.grokbot.notfound.step2" = "sign in inside the app window";
 "onboarding.card.grokbot.notfound.step3" = "or reopen Cursor and retry";
 "onboarding.card.grokbot.retry" = "Retry";

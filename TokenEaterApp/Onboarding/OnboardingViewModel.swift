@@ -82,9 +82,10 @@ final class OnboardingViewModel: ObservableObject {
     }
     
     /// Clears the signed-out flag and triggers GrokBotUsageStore to reload.
-    private func clearSignedOutAndRefresh() {
+    private func clearSignedOutAndRefresh() async {
         sharedFileService.setSignedOut(false)
-        grokBotUsageStore?.reloadConfig()
+        grokBotUsageStore?.isSignedOut = false
+        await grokBotUsageStore?.refresh(force: true)
     }
 
     /// Finish requires Grok Bot session detected AND Connect success/rateLimited.
@@ -181,11 +182,11 @@ final class OnboardingViewModel: ObservableObject {
             case .success(let usage):
                 connectionStatus = .success(usage)
                 grokBotStatus = .detected
-                clearSignedOutAndRefresh()
+                await clearSignedOutAndRefresh()
             case .rateLimited:
                 connectionStatus = .rateLimited
                 grokBotStatus = .detected
-                clearSignedOutAndRefresh()
+                await clearSignedOutAndRefresh()
             case .cookieRejected:
                 // Stale Keychain / scraped cookie — clear and start browser auth.
                 sessionStore.clear()
@@ -233,7 +234,7 @@ final class OnboardingViewModel: ObservableObject {
             }
             sessionStore.save(cookie: sessionCookie)
             
-            clearSignedOutAndRefresh()
+            await clearSignedOutAndRefresh()
             
             // Now test the connection with the new cookie
             grokBotStatus = .detected
@@ -300,7 +301,7 @@ final class OnboardingViewModel: ObservableObject {
                 return
             }
             
-            clearSignedOutAndRefresh()
+            await clearSignedOutAndRefresh()
             
             let outcome = await Self.fetchOutcome(api: api, cookie: cookie)
             switch outcome {

@@ -194,8 +194,11 @@ final class GrokBotUsageStore: ObservableObject {
     func refresh(force: Bool = false) async {
         guard !isLoading else { return }
         
+        // Sync the published flag first
+        isSignedOut = sharedFileService.isSignedOut
+        
         // Skip auto-detection if signed out
-        if sharedFileService.isSignedOut {
+        if isSignedOut {
             logger.info("Refresh skipped: signedOut flag is true")
             errorState = .none
             statusMessage = "Signed out"
