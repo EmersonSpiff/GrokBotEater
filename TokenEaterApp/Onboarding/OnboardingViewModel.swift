@@ -4,6 +4,10 @@ import os.log
 
 private let logger = Logger(subsystem: "com.emersonspiff.grokboteater.app", category: "Onboarding")
 
+extension Notification.Name {
+    static let grokBotAuthCompleted = Notification.Name("grokBotAuthCompleted")
+}
+
 enum GrokBotSessionStatus {
     case checking
     case detected
@@ -99,6 +103,12 @@ final class OnboardingViewModel: ObservableObject {
             store.objectWillChange.send()
         }
         logger.info("Refresh complete after sign-in, objectWillChange sent")
+        
+        // Post notification to force Settings UI refresh
+        await MainActor.run {
+            NotificationCenter.default.post(name: .grokBotAuthCompleted, object: nil)
+            logger.info("Posted grokBotAuthCompleted notification")
+        }
     }
 
     /// Finish requires Grok Bot session detected AND Connect success/rateLimited.
