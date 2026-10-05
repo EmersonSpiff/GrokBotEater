@@ -83,9 +83,22 @@ final class OnboardingViewModel: ObservableObject {
     
     /// Clears the signed-out flag and triggers GrokBotUsageStore to reload.
     private func clearSignedOutAndRefresh() async {
+        guard let store = grokBotUsageStore else {
+            logger.error("grokBotUsageStore is nil, cannot refresh")
+            return
+        }
+        
         sharedFileService.setSignedOut(false)
-        grokBotUsageStore?.isSignedOut = false
-        await grokBotUsageStore?.refresh(force: true)
+        store.isSignedOut = false
+        
+        logger.info("Triggering refresh after sign-in")
+        await store.refresh(force: true)
+        
+        // Force objectWillChange to ensure SwiftUI updates all observers
+        await MainActor.run {
+            store.objectWillChange.send()
+        }
+        logger.info("Refresh complete after sign-in, objectWillChange sent")
     }
 
     /// Finish requires Grok Bot session detected AND Connect success/rateLimited.
