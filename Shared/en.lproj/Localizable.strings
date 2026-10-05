@@ -123,7 +123,7 @@
 "settings.redetect" = "Re-check session";
 "settings.signin" = "Sign In";
 "settings.signout" = "Sign Out";
-"settings.signout.success" = "Signed out successfully. Click Sign In to sign in again.";
+"settings.signout.success" = "Signed out successfully.";
 "settings.general.title" = "General";
 "settings.launchAtLogin" = "Launch at login";
 "settings.launchAtLogin.hint" = "Open GrokBotEater automatically when you sign in to macOS. You can toggle this from System Settings → General → Login Items as well.";
