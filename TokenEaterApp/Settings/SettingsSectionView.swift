@@ -389,7 +389,7 @@ struct SettingsSectionView: View {
     }
     
     private var isSignedOut: Bool {
-        grokBotUsageStore.sharedFileService.isSignedOut
+        grokBotUsageStore.isSignedOut
     }
 
     private func reconnectGrokBot() {

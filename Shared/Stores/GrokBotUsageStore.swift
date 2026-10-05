@@ -36,6 +36,9 @@ final class GrokBotUsageStore: ObservableObject {
     /// Human-readable status for onboarding/settings
     @Published var statusMessage: String = "Not connected"
     
+    /// Mirror of sharedFileService.isSignedOut, published for UI observation
+    @Published var isSignedOut: Bool = false
+    
     private(set) var lastResponse: GrokBotUsageResponse?
     private let apiClient: GrokBotAPIClientProtocol
     private let cookieReader: CursorCookieReaderProtocol
@@ -69,6 +72,7 @@ final class GrokBotUsageStore: ObservableObject {
         // Set signed-out flag in shared container (persists across launches, visible to widget)
         // This MUST come after clear() since clear() creates an empty SharedData
         sharedFileService.setSignedOut(true)
+        isSignedOut = true
         logger.info("Set signedOut flag to true in shared container")
         
         // Verify the flag was set
@@ -115,6 +119,9 @@ final class GrokBotUsageStore: ObservableObject {
         self.sharedFileService = sharedFileService
         self.notificationService = notificationService
         self.historyService = historyService
+        
+        // Sync the published isSignedOut with shared file state
+        self.isSignedOut = sharedFileService.isSignedOut
         
         loadCached()
     }
@@ -228,8 +235,11 @@ final class GrokBotUsageStore: ObservableObject {
     }
     
     func reloadConfig() {
+        // Sync the published flag
+        isSignedOut = sharedFileService.isSignedOut
+        
         // Skip if signed out
-        if sharedFileService.isSignedOut {
+        if isSignedOut {
             logger.info("reloadConfig skipped: signedOut flag is true")
             errorState = .none
             statusMessage = "Signed out"

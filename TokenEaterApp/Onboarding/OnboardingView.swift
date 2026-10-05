@@ -8,7 +8,14 @@ import SwiftUI
 /// The chrome (rounded background, modal radius) is provided by the parent
 /// `MainAppView.onboardingContent`; this view stays transparent on top.
 struct OnboardingView: View {
-    @StateObject private var viewModel = OnboardingViewModel()
+    @EnvironmentObject private var grokBotUsageStore: GrokBotUsageStore
+    @StateObject private var viewModel: OnboardingViewModel
+    
+    init() {
+        // We need to defer the viewModel init until we have grokBotUsageStore.
+        // Use a workaround: create a temporary placeholder, then update in onAppear.
+        _viewModel = StateObject(wrappedValue: OnboardingViewModel())
+    }
 
     var body: some View {
         VStack(spacing: 16) {
@@ -18,6 +25,10 @@ struct OnboardingView: View {
         .padding(.horizontal, 24)
         .padding(.top, 22)
         .padding(.bottom, 18)
+        .onAppear {
+            // Inject the store when the view appears
+            viewModel.setGrokBotUsageStore(grokBotUsageStore)
+        }
         .sheet(isPresented: $viewModel.showCursorLogin) {
             CursorWebLoginView { success in
                 viewModel.handleWebLoginFinished(success: success)
