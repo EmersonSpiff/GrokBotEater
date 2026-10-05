@@ -420,8 +420,8 @@ struct SettingsSectionView: View {
     private func signOut() {
         grokBotUsageStore.signOut()
         testResult = nil
-        importMessage = String(localized: "settings.signout.success")
-        importSuccess = true
+        importMessage = nil
+        importSuccess = false
     }
 }
 
