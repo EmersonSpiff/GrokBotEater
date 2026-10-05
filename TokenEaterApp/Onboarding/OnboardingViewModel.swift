@@ -4,10 +4,6 @@ import os.log
 
 private let logger = Logger(subsystem: "com.emersonspiff.grokboteater.app", category: "Onboarding")
 
-extension Notification.Name {
-    static let grokBotAuthCompleted = Notification.Name("grokBotAuthCompleted")
-}
-
 enum GrokBotSessionStatus {
     case checking
     case detected
@@ -92,23 +88,13 @@ final class OnboardingViewModel: ObservableObject {
             return
         }
         
-        sharedFileService.setSignedOut(false)
+        // Use the store's SharedFileService to avoid cache poisoning
+        store.clearSignedOutFlag()
         store.isSignedOut = false
         
         logger.info("Triggering refresh after sign-in")
         await store.refresh(force: true)
-        
-        // Force objectWillChange to ensure SwiftUI updates all observers
-        await MainActor.run {
-            store.objectWillChange.send()
-        }
-        logger.info("Refresh complete after sign-in, objectWillChange sent")
-        
-        // Post notification to force Settings UI refresh
-        await MainActor.run {
-            NotificationCenter.default.post(name: .grokBotAuthCompleted, object: nil)
-            logger.info("Posted grokBotAuthCompleted notification")
-        }
+        logger.info("Refresh complete after sign-in")
     }
 
     /// Finish requires Grok Bot session detected AND Connect success/rateLimited.

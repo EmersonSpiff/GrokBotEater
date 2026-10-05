@@ -1,9 +1,5 @@
 import SwiftUI
 
-extension Notification.Name {
-    static let grokBotAuthCompleted = Notification.Name("grokBotAuthCompleted")
-}
-
 struct SettingsSectionView: View {
     @EnvironmentObject private var usageStore: UsageStore
     @EnvironmentObject private var grokBotUsageStore: GrokBotUsageStore
@@ -17,7 +13,6 @@ struct SettingsSectionView: View {
     @State private var importMessage: String?
     @State private var importSuccess = false
     @State private var brewCopied = false
-    @State private var forceRefreshTrigger = false
     /// Local mirror of the status poll interval for the slider (seconds).
     /// @State + .onChange instead of Binding(get:set:), per the SwiftUI rules.
     @State private var statusPollIntervalSeconds: Double
@@ -342,11 +337,6 @@ struct SettingsSectionView: View {
         .onChange(of: settingsStore.statusPollInterval) { _, v in
             if Int(statusPollIntervalSeconds) != v { statusPollIntervalSeconds = Double(v) }
         }
-        .onReceive(NotificationCenter.default.publisher(for: .grokBotAuthCompleted)) { _ in
-            // Force view refresh when auth completes
-            forceRefreshTrigger.toggle()
-        }
-        .id(forceRefreshTrigger)
     }
 
     private var brewMigrationBanner: some View {

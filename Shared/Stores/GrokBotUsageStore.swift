@@ -194,7 +194,11 @@ final class GrokBotUsageStore: ObservableObject {
     func refresh(force: Bool = false) async {
         guard !isLoading else { return }
         
-        // Sync the published flag first
+        // Invalidate cache to ensure we read fresh signedOut state
+        // (handles cross-instance writes from OnboardingViewModel or other stores)
+        sharedFileService.invalidateCache()
+        
+        // Sync the published flag from fresh disk state
         isSignedOut = sharedFileService.isSignedOut
         
         // Skip auto-detection if signed out
@@ -238,6 +242,9 @@ final class GrokBotUsageStore: ObservableObject {
     }
     
     func reloadConfig() {
+        // Invalidate cache to ensure we read fresh signedOut state
+        sharedFileService.invalidateCache()
+        
         // Sync the published flag
         isSignedOut = sharedFileService.isSignedOut
         
