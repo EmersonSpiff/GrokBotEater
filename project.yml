@@ -14,7 +14,7 @@ settings:
     CODE_SIGN_STYLE: Automatic
     DEVELOPMENT_TEAM: "S7B8M9JYF4"
     MARKETING_VERSION: "5.13.3"
-    CURRENT_PROJECT_VERSION: "561"
+    CURRENT_PROJECT_VERSION: "562"
     ARCHS: "arm64 x86_64"
 
 targets:
@@ -77,8 +77,10 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.emersonspiff.grokboteater.app.widget
         PRODUCT_NAME: GrokBotEaterWidgetExtension
-        MARKETING_VERSION: "5.13.3"
-        CURRENT_PROJECT_VERSION: "554"
+        # Version/build are inherited from the project-level settings so the
+        # widget's CFBundleVersion always matches the app. A pinned value here
+        # left the installed .appex at 554 while the app moved to 561, so
+        # WidgetKit never saw a new extension build after reinstalls.
         CODE_SIGN_ENTITLEMENTS: TokenEaterWidget/TokenEaterWidget.entitlements
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks"
     info:
