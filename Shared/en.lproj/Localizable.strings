@@ -121,6 +121,9 @@
 "settings.connected" = "Grok Bot connected";
 "settings.disconnected" = "Grok Bot not connected";
 "settings.redetect" = "Re-check session";
+"settings.signin" = "Sign In";
+"settings.signout" = "Sign Out";
+"settings.signout.success" = "Signed out successfully.";
 "settings.general.title" = "General";
 "settings.launchAtLogin" = "Launch at login";
 "settings.launchAtLogin.hint" = "Open GrokBotEater automatically when you sign in to macOS. You can toggle this from System Settings → General → Login Items as well.";
@@ -135,20 +138,20 @@
 "connect.subtitle" = "Detect Cursor session for Grok Bot usage";
 "connect.oauth.success" = "Connected via Cursor session";
 "connect.method.oauth" = "Cursor session (auto)";
-"connect.noclaudecode" = "Cursor session not found. Sign in at cursor.com (Onboarding → Connect).";
+"connect.noclaudecode" = "Cursor session not found. Sign in at cursor.com (Settings → Sign In).";
 
 /* Guide */
 "guide.title" = "Setup Guide";
 "guide.oauth.title" = "Cursor";
 "guide.oauth.badge" = "Recommended";
 "guide.oauth.step1" = "Install **Grok Bot**";
-"guide.oauth.step2" = "Open GrokBotEater and click **Connect**";
+"guide.oauth.step2" = "Open GrokBotEater and click **Sign In**";
 "guide.oauth.step3" = "Done - token refreshes automatically";
 "guide.widget" = "Add the widget";
 "guide.widget.detail" = "Right-click desktop > **Edit Widgets** > **GrokBotEater**";
 
 /* Errors - API */
-"error.notoken" = "Cursor session not found. Open GrokBotEater and Connect.";
+"error.notoken" = "Cursor session not found. Open GrokBotEater and Sign In.";
 "error.tokenexpired" = "OAuth token expired - restart Grok Bot to refresh it";
 "error.invalidurl" = "Invalid URL";
 "error.invalidresponse" = "Invalid server response";
@@ -436,7 +439,7 @@
 "onboarding.mode.detailed" = "Detailed";
 
 /* Onboarding - Connection (kept: referenced by OnboardingViewModel) */
-"onboarding.connection.failed.notoken" = "Couldn't read your Cursor session. Use Connect to sign in at cursor.com in the app.";
+"onboarding.connection.failed.notoken" = "Couldn't read your Cursor session. Use Sign In to sign in at cursor.com in the app.";
 
 /* Settings - Onboarding reset */
 "settings.onboarding.reset" = "Run setup again";
@@ -883,8 +886,8 @@
 "onboarding.card.grokbot.checking" = "checking...";
 "onboarding.card.grokbot.status.checking" = "looking for Cursor login";
 "onboarding.card.grokbot.status.detected" = "Cursor session ready";
-"onboarding.card.grokbot.status.notfound" = "sign in via Connect, then retry";
-"onboarding.card.grokbot.notfound.step1" = "tap Connect to open cursor.com";
+"onboarding.card.grokbot.status.notfound" = "sign in via Sign In, then retry";
+"onboarding.card.grokbot.notfound.step1" = "tap Sign In to open cursor.com";
 "onboarding.card.grokbot.notfound.step2" = "sign in inside the app window";
 "onboarding.card.grokbot.notfound.step3" = "or reopen Cursor and retry";
 "onboarding.card.grokbot.retry" = "Retry";
@@ -910,18 +913,32 @@
 "onboarding.card.connect.title" = "Connect";
 "onboarding.card.connect.status.idle" = "tap to test Grok Bot";
 "onboarding.card.connect.status.connecting" = "connecting to cursor.com...";
+"onboarding.card.connect.status.waiting" = "waiting for browser sign-in...";
 "onboarding.card.connect.status.success" = "connected";
 "onboarding.card.connect.status.failed" = "access denied";
 "onboarding.card.connect.connecting" = "calling Grok Bot usage...";
+"onboarding.card.connect.waiting.browser" = "Waiting for sign-in\nin your browser...";
 "onboarding.card.connect.success.scene" = "connected - finish unlocked";
 "onboarding.card.connect.failed.scene" = "access denied";
 "onboarding.card.connect.authorize" = "Connect";
 "onboarding.card.connect.retry" = "Retry";
-"onboarding.card.connect.idle.scene" = "Opens cursor.com to sign in\nand connect Grok Bot usage.";
+"onboarding.card.connect.cancel" = "Cancel";
+"onboarding.card.connect.fallback" = "Sign in another way";
+"onboarding.card.connect.idle.scene" = "Opens cursor.com in your browser\nto sign in and connect Grok Bot usage.";
+
+/* Onboarding - Browser auth */
+"onboarding.browser.auth.error.cancelled" = "Sign-in cancelled";
+"onboarding.browser.auth.error.timeout" = "Sign-in timed out. Please try again.";
+"onboarding.browser.auth.error.network" = "Network error: ";
+"onboarding.browser.auth.error.invalid" = "Invalid response from server";
+"onboarding.browser.auth.error.unknown" = "Authentication failed";
+"onboarding.browser.auth.error.setup" = "Could not set up authentication";
+"onboarding.browser.auth.polling" = "Waiting for sign-in...";
 
 /* Onboarding - Web login sheet */
 "onboarding.weblogin.title" = "Sign in to Cursor";
 "onboarding.weblogin.cancel" = "Cancel";
+"onboarding.weblogin.check" = "Check";
 "onboarding.weblogin.status.waiting" = "Sign in at cursor.com — we capture your session automatically.";
 "onboarding.weblogin.status.captured" = "Session saved. Connecting…";
 

@@ -36,6 +36,9 @@ final class GrokBotUsageStore: ObservableObject {
     /// Human-readable status for onboarding/settings
     @Published var statusMessage: String = "Not connected"
     
+    /// Mirror of sharedFileService.isSignedOut, published for UI observation
+    @Published var isSignedOut: Bool = false
+    
     private(set) var lastResponse: GrokBotUsageResponse?
     private let apiClient: GrokBotAPIClientProtocol
     private let cookieReader: CursorCookieReaderProtocol
@@ -47,6 +50,56 @@ final class GrokBotUsageStore: ObservableObject {
     private var autoRefreshTask: Task<Void, Never>?
     
     var refreshIntervalSeconds: TimeInterval = 300 // 5 minutes, match Claude
+    
+    /// Clears all stored credentials and cached usage data, returning to disconnected state.
+    /// Used when the user explicitly signs out or wants to reauthenticate.
+    func signOut() {
+        logger.info("Sign out initiated")
+        
+        // Cancel any ongoing refresh
+        refreshTask?.cancel()
+        autoRefreshTask?.cancel()
+        
+        // Clear Keychain session
+        GrokBotSessionStore.shared.clear()
+        logger.debug("Cleared Keychain session")
+        
+        // Clear shared cache (usage data, but NOT signedOut flag)
+        // We must clear usage first, then set signedOut, because clear() wipes everything
+        sharedFileService.clear()
+        logger.debug("Cleared shared cache")
+        
+        // Set signed-out flag in shared container (persists across launches, visible to widget)
+        // This MUST come after clear() since clear() creates an empty SharedData
+        sharedFileService.setSignedOut(true)
+        isSignedOut = true
+        logger.info("Set signedOut flag to true in shared container")
+        
+        // Verify the flag was set
+        let isSet = sharedFileService.isSignedOut
+        logger.info("Verified signedOut flag: \(isSet)")
+        
+        // Reset published state
+        usagePercent = 0
+        lastUpdate = nil
+        hasGrokBot = false
+        shouldShowRing = false
+        errorState = .none
+        currentPeriodStart = nil
+        lastResponse = nil
+        statusMessage = "Signed out"
+        
+        // Reload widgets to show offline state
+        WidgetReloader.scheduleReload()
+        
+        logger.info("Sign out complete - all credentials and cache cleared, signedOut flag set")
+    }
+    
+    /// Clears the signed-out flag after successful authentication.
+    /// Called when the user explicitly signs in (browser or in-app fallback).
+    func clearSignedOutFlag() {
+        sharedFileService.setSignedOut(false)
+    }
     
     /// Closure that returns the current notification toggles bundle. Wired by
     /// `StatusBarController` at bootstrap once SettingsStore is available so
@@ -66,6 +119,9 @@ final class GrokBotUsageStore: ObservableObject {
         self.sharedFileService = sharedFileService
         self.notificationService = notificationService
         self.historyService = historyService
+        
+        // Sync the published isSignedOut with shared file state
+        self.isSignedOut = sharedFileService.isSignedOut
         
         loadCached()
     }
@@ -138,6 +194,23 @@ final class GrokBotUsageStore: ObservableObject {
     func refresh(force: Bool = false) async {
         guard !isLoading else { return }
         
+        // Invalidate cache to ensure we read fresh signedOut state
+        // (handles cross-instance writes from OnboardingViewModel or other stores)
+        sharedFileService.invalidateCache()
+        
+        // Sync the published flag from fresh disk state
+        isSignedOut = sharedFileService.isSignedOut
+        
+        // Skip auto-detection if signed out
+        if isSignedOut {
+            logger.info("Refresh skipped: signedOut flag is true")
+            errorState = .none
+            statusMessage = "Signed out"
+            hasGrokBot = false
+            shouldShowRing = false
+            return
+        }
+        
         // Interval check
         if !force, let last = lastUpdate,
            Date().timeIntervalSince(last) < refreshIntervalSeconds {
@@ -153,6 +226,7 @@ final class GrokBotUsageStore: ObservableObject {
             return
         }
         
+        logger.debug("Refresh proceeding with cookie")
         isLoading = true
         defer { isLoading = false }
         
@@ -168,6 +242,21 @@ final class GrokBotUsageStore: ObservableObject {
     }
     
     func reloadConfig() {
+        // Invalidate cache to ensure we read fresh signedOut state
+        sharedFileService.invalidateCache()
+        
+        // Sync the published flag
+        isSignedOut = sharedFileService.isSignedOut
+        
+        // Skip if signed out
+        if isSignedOut {
+            logger.info("reloadConfig skipped: signedOut flag is true")
+            errorState = .none
+            statusMessage = "Signed out"
+            return
+        }
+        
+        logger.debug("reloadConfig proceeding")
         // Start with loading state immediately (non-blocking)
         errorState = .none
         statusMessage = "Loading..."
@@ -209,6 +298,14 @@ final class GrokBotUsageStore: ObservableObject {
     }
     
     func testConnection() async -> ConnectionTestResult {
+        // Skip if signed out
+        if sharedFileService.isSignedOut {
+            return ConnectionTestResult(
+                success: false,
+                message: "Signed out. Click 'Sign In' to authenticate."
+            )
+        }
+        
         guard let cookie = cookieReader.readCookie() else {
             return ConnectionTestResult(
                 success: false,

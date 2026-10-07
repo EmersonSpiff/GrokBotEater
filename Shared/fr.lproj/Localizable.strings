@@ -121,6 +121,9 @@
 "settings.connected" = "Connecté";
 "settings.disconnected" = "Non connecté";
 "settings.redetect" = "Re-détecter";
+"settings.signin" = "Se connecter";
+"settings.signout" = "Se déconnecter";
+"settings.signout.success" = "Déconnexion réussie.";
 "settings.general.title" = "Général";
 "settings.launchAtLogin" = "Lancer au démarrage";
 "settings.launchAtLogin.hint" = "Ouvre GrokBotEater automatiquement quand vous vous connectez à macOS. Vous pouvez aussi gérer ce réglage depuis Réglages système → Général → Éléments de connexion.";
@@ -903,18 +906,32 @@
 "onboarding.card.connect.title" = "Connecter";
 "onboarding.card.connect.status.idle" = "clique pour tester Grok Bot";
 "onboarding.card.connect.status.connecting" = "connexion à cursor.com...";
+"onboarding.card.connect.status.waiting" = "attente de connexion navigateur...";
 "onboarding.card.connect.status.success" = "connecté";
 "onboarding.card.connect.status.failed" = "accès refusé";
 "onboarding.card.connect.connecting" = "appel usage Grok Bot...";
+"onboarding.card.connect.waiting.browser" = "En attente de connexion\ndans votre navigateur...";
 "onboarding.card.connect.success.scene" = "connecté - bouton Terminer débloqué";
 "onboarding.card.connect.failed.scene" = "accès refusé";
 "onboarding.card.connect.authorize" = "Connecter";
 "onboarding.card.connect.retry" = "Réessayer";
-"onboarding.card.connect.idle.scene" = "Ouvre cursor.com pour te connecter\net lier l'usage Grok Bot.";
+"onboarding.card.connect.cancel" = "Annuler";
+"onboarding.card.connect.fallback" = "Se connecter autrement";
+"onboarding.card.connect.idle.scene" = "Ouvre cursor.com dans votre navigateur\npour se connecter et lier l'usage Grok Bot.";
+
+/* Onboarding - Browser auth */
+"onboarding.browser.auth.error.cancelled" = "Connexion annulée";
+"onboarding.browser.auth.error.timeout" = "Délai dépassé. Veuillez réessayer.";
+"onboarding.browser.auth.error.network" = "Erreur réseau : ";
+"onboarding.browser.auth.error.invalid" = "Réponse invalide du serveur";
+"onboarding.browser.auth.error.unknown" = "Échec de l'authentification";
+"onboarding.browser.auth.error.setup" = "Impossible de configurer l'authentification";
+"onboarding.browser.auth.polling" = "En attente de connexion...";
 
 /* Onboarding - Web login sheet */
 "onboarding.weblogin.title" = "Connexion à Cursor";
 "onboarding.weblogin.cancel" = "Annuler";
+"onboarding.weblogin.check" = "Vérifier";
 "onboarding.weblogin.status.waiting" = "Connecte-toi sur cursor.com — la session est capturée automatiquement.";
 "onboarding.weblogin.status.captured" = "Session enregistrée. Connexion…";
 

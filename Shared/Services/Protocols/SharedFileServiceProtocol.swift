@@ -14,6 +14,7 @@ protocol SharedFileServiceProtocol: Sendable {
     var lastWeekTotalsRefreshedAt: Date? { get }
     var grokBotSnapshot: GrokBotSharedSnapshot? { get }
     var grokBotDailySample: GrokBotDailySample? { get }
+    var isSignedOut: Bool { get }
 
     func invalidateCache()
     func updateAfterSync(usage: CachedUsage, syncDate: Date)
@@ -24,5 +25,6 @@ protocol SharedFileServiceProtocol: Sendable {
     func updateLastWeekDailyTotals(_ totals: [Int], refreshedAt: Date)
     func updateGrokBotSnapshot(_ snapshot: GrokBotSharedSnapshot)
     func updateGrokBotDailySample(_ sample: GrokBotDailySample)
+    func setSignedOut(_ signedOut: Bool)
     func clear()
 }

@@ -32,6 +32,7 @@ final class MockSharedFileService: SharedFileServiceProtocol, @unchecked Sendabl
     var lastWeekTotalsRefreshedAt: Date? { _lastWeekTotalsRefreshedAt }
     var grokBotSnapshot: GrokBotSharedSnapshot? = nil
     var grokBotDailySample: GrokBotDailySample? = nil
+    var _isSignedOut: Bool = false
 
     func updateAfterSync(usage: CachedUsage, syncDate: Date) {
         updateAfterSyncCallCount += 1
@@ -67,6 +68,9 @@ final class MockSharedFileService: SharedFileServiceProtocol, @unchecked Sendabl
         _lastWeekDailyTotals = totals
         _lastWeekTotalsRefreshedAt = refreshedAt
     }
+    
+    var isSignedOut: Bool { _isSignedOut }
+    func setSignedOut(_ signedOut: Bool) { _isSignedOut = signedOut }
 
     func invalidateCache() {}
 

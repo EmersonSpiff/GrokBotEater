@@ -45,13 +45,34 @@ struct SettingsSectionView: View {
                         if isImporting || grokBotUsageStore.isLoading {
                             ProgressView().scaleEffect(0.6)
                         }
-                        Button(String(localized: "settings.redetect")) {
-                            reconnectGrokBot()
+                        
+                        if isSignedOut {
+                            // Show Sign In button when signed out
+                            Button(String(localized: "settings.signin")) {
+                                startSignIn()
+                            }
+                            .buttonStyle(.plain)
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(.blue)
+                        } else {
+                            // Show Re-check when connected or just disconnected
+                            Button(String(localized: "settings.redetect")) {
+                                reconnectGrokBot()
+                            }
+                            .buttonStyle(.plain)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(.blue)
+                            .disabled(isImporting || grokBotUsageStore.isLoading)
+                            
+                            if grokConnected {
+                                Button(String(localized: "settings.signout")) {
+                                    signOut()
+                                }
+                                .buttonStyle(.plain)
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(.red)
+                            }
                         }
-                        .buttonStyle(.plain)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(.blue)
-                        .disabled(isImporting || grokBotUsageStore.isLoading)
                     }
                     Text(grokBotUsageStore.statusMessage)
                         .font(.system(size: 11))
@@ -366,6 +387,10 @@ struct SettingsSectionView: View {
         grokBotUsageStore.hasGrokBot
             || (grokBotUsageStore.lastUpdate != nil && !grokBotUsageStore.errorState.hasError)
     }
+    
+    private var isSignedOut: Bool {
+        grokBotUsageStore.isSignedOut
+    }
 
     private func reconnectGrokBot() {
         isImporting = true
@@ -385,6 +410,18 @@ struct SettingsSectionView: View {
             testResult = result
             isImporting = false
         }
+    }
+    
+    private func startSignIn() {
+        // Open onboarding to start browser sign-in flow
+        settingsStore.hasCompletedOnboarding = false
+    }
+    
+    private func signOut() {
+        grokBotUsageStore.signOut()
+        testResult = nil
+        importMessage = nil
+        importSuccess = false
     }
 }
 

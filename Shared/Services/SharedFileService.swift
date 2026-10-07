@@ -141,6 +141,10 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
         var grokBotSnapshot: GrokBotSharedSnapshot?
         /// Grok Bot daily sample for today's burn tracking (one sample per local day).
         var grokBotDailySample: GrokBotDailySample?
+        /// User explicitly signed out. When true, all auto-detection (IDE token,
+        /// browser cookies) is skipped and Connect goes straight to browser flow.
+        /// Cleared only after successful explicit sign-in.
+        var signedOut: Bool?
     }
 
     /// In-memory cache - avoids redundant disk reads within the same process.
@@ -306,6 +310,16 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
     func updateGrokBotDailySample(_ sample: GrokBotDailySample) {
         var data = loadFresh()
         data.grokBotDailySample = sample
+        save(data)
+    }
+    
+    var isSignedOut: Bool {
+        load().signedOut ?? false
+    }
+    
+    func setSignedOut(_ signedOut: Bool) {
+        var data = loadFresh()
+        data.signedOut = signedOut
         save(data)
     }
 
