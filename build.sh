@@ -77,7 +77,11 @@ if [ -n "$APP_PATH" ]; then
     echo -e "${GREEN}Build OK!${NC}"
     echo -e "App: ${BLUE}$APP_PATH${NC}"
     echo ""
-    echo "To install:"
+    echo "To install (quit the app and stop the old widget extension first,"
+    echo "otherwise WidgetKit can keep a stale extension process alive and the"
+    echo "widget stops updating):"
+    echo "  killall GrokBotEater GrokBotEaterWidgetExtension 2>/dev/null"
+    echo "  rm -rf /Applications/GrokBotEater.app"
     echo "  cp -R \"$APP_PATH\" /Applications/"
     echo "  open \"/Applications/GrokBotEater.app\""
 else
